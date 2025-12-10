@@ -1,0 +1,136 @@
+# Selenium Python Test Template
+
+import json
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+
+class TestCaptiveTest:
+    def __init__(self):
+        self.driver = None
+        self.data = None
+        
+    def setup(self):
+        """Setup test environment and load test data"""
+        # Load test data
+        with open('test_data.json', 'r') as f:
+            self.data = json.load(f)
+            
+        # Setup Chrome options
+        chrome_options = Options()
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        
+        # Initialize WebDriver
+        self.driver = webdriver.Chrome(options=chrome_options)
+        self.driver.maximize_window()
+        
+    def teardown(self):
+        """Clean up after test"""
+        if self.driver:
+            self.driver.quit()
+            
+    def test_recorded_flow(self):
+        """Generated test case from recorded interactions"""
+        try:
+            self.setup()
+            
+            {{#events}}
+            {{#if (eq event 'navigation')}}
+            # Navigate to {{page.title}}
+            {{#if isFirstNavigation}}
+            self.driver.get("{{page.url}}")
+            {{else}}
+            # Verify URL change
+            WebDriverWait(self.driver, 10).until(EC.url_contains("{{page.url}}"))
+            {{/if}}
+            time.sleep(2)
+            
+            {{else if (eq event 'click')}}
+            # Click {{#if element.text}}"{{element.text}}"{{else}}element{{/if}}
+            {{#if element.testid}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="{{element.testid}}"]'))
+            )
+            {{else if element.id}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.ID, "{{element.id}}"))
+            )
+            {{else if element.name}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.NAME, "{{element.name}}"))
+            )
+            {{else}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "{{element.xpath}}"))
+            )
+            {{/if}}
+            element.click()
+            time.sleep(1)
+            
+            {{else if (or (eq event 'change') (eq event 'input'))}}
+            # Enter text in {{#if element.name}}"{{element.name}}"{{else if element.id}}"{{element.id}}"{{else}}input field{{/if}}
+            {{#if element.testid}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="{{element.testid}}"]'))
+            )
+            {{else if element.id}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, "{{element.id}}"))
+            )
+            {{else if element.name}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.NAME, "{{element.name}}"))
+            )
+            {{else}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "{{element.xpath}}"))
+            )
+            {{/if}}
+            element.clear()
+            {{#if value}}
+            # Use test data from JSON file
+            test_value = self.data.get("{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}field_value{{/if}}")
+            element.send_keys(test_value)
+            {{else}}
+            element.send_keys(self.data.get("{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}field_value{{/if}}", ""))
+            {{/if}}
+            time.sleep(0.5)
+            
+            {{else if (eq event 'keydown')}}
+            # Key press: {{value}}
+            from selenium.webdriver.common.keys import Keys
+            {{#if element.id}}
+            element = self.driver.find_element(By.ID, "{{element.id}}")
+            {{else if element.name}}
+            element = self.driver.find_element(By.NAME, "{{element.name}}")
+            {{else}}
+            element = self.driver.find_element(By.XPATH, "{{element.xpath}}")
+            {{/if}}
+            {{#if (eq value 'Enter')}}
+            element.send_keys(Keys.RETURN)
+            {{else if (eq value 'Tab')}}
+            element.send_keys(Keys.TAB)
+            {{else if (eq value 'Escape')}}
+            element.send_keys(Keys.ESCAPE)
+            {{else}}
+            element.send_keys("{{value}}")
+            {{/if}}
+            time.sleep(0.5)
+            
+            {{/if}}
+            {{/events}}
+            
+            print("Test completed successfully!")
+            
+        except Exception as e:
+            print(f"Test failed with error: {e}")
+            raise
+        finally:
+            self.teardown()
+
+if __name__ == "__main__":
+    test = TestCaptiveTest()
+    test.test_recorded_flow()

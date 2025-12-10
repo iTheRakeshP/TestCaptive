@@ -1,0 +1,1172 @@
+{
+  "id": "session_1765337681653",
+  "timestamp": "2025-12-10T03:35:08.589Z",
+  "events": [
+    {
+      "type": "navigation",
+      "timestamp": "2025-12-10T03:34:41.653Z",
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page"
+      },
+      "sessionId": "session_1765337681653"
+    },
+    {
+      "type": "focus",
+      "timestamp": "2025-12-10T03:34:42.884Z",
+      "element": {
+        "tag": "input",
+        "id": "firstName",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "",
+        "type": "text",
+        "name": "",
+        "placeholder": "Enter your first name",
+        "testid": "input-first-name",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"firstName\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 322,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#firstName"
+    },
+    {
+      "type": "click",
+      "timestamp": "2025-12-10T03:34:43.011Z",
+      "element": {
+        "tag": "input",
+        "id": "firstName",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "",
+        "type": "text",
+        "name": "",
+        "placeholder": "Enter your first name",
+        "testid": "input-first-name",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"firstName\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 322,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#firstName",
+      "clickPosition": {
+        "clientX": 748,
+        "clientY": 339
+      }
+    },
+    {
+      "type": "input",
+      "timestamp": "2025-12-10T03:34:44.408Z",
+      "element": {
+        "tag": "input",
+        "id": "firstName",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "test",
+        "type": "text",
+        "name": "",
+        "placeholder": "Enter your first name",
+        "testid": "input-first-name",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"firstName\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 322,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#firstName",
+      "inputValue": "test"
+    },
+    {
+      "type": "blur",
+      "timestamp": "2025-12-10T03:34:46.332Z",
+      "element": {
+        "tag": "input",
+        "id": "firstName",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "test",
+        "type": "text",
+        "name": "",
+        "placeholder": "Enter your first name",
+        "testid": "input-first-name",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"firstName\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 322,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#firstName"
+    },
+    {
+      "type": "focus",
+      "timestamp": "2025-12-10T03:34:46.332Z",
+      "element": {
+        "tag": "input",
+        "id": "lastName",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "",
+        "type": "text",
+        "name": "",
+        "placeholder": "Enter your last name",
+        "testid": "input-last-name",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"lastName\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 408,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#lastName"
+    },
+    {
+      "type": "input",
+      "timestamp": "2025-12-10T03:34:48.249Z",
+      "element": {
+        "tag": "input",
+        "id": "lastName",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "rakesh",
+        "type": "text",
+        "name": "",
+        "placeholder": "Enter your last name",
+        "testid": "input-last-name",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"lastName\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 408,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#lastName",
+      "inputValue": "rakesh"
+    },
+    {
+      "type": "blur",
+      "timestamp": "2025-12-10T03:34:49.882Z",
+      "element": {
+        "tag": "input",
+        "id": "lastName",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "rakesh",
+        "type": "text",
+        "name": "",
+        "placeholder": "Enter your last name",
+        "testid": "input-last-name",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"lastName\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 408,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#lastName"
+    },
+    {
+      "type": "focus",
+      "timestamp": "2025-12-10T03:34:49.882Z",
+      "element": {
+        "tag": "input",
+        "id": "email",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "",
+        "type": "email",
+        "name": "",
+        "placeholder": "your.email@example.com",
+        "testid": "input-email",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"email\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 493,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#email"
+    },
+    {
+      "type": "input",
+      "timestamp": "2025-12-10T03:34:51.841Z",
+      "element": {
+        "tag": "input",
+        "id": "email",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "rak@",
+        "type": "email",
+        "name": "",
+        "placeholder": "your.email@example.com",
+        "testid": "input-email",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"email\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 493,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#email",
+      "inputValue": "rak@"
+    },
+    {
+      "type": "input",
+      "timestamp": "2025-12-10T03:34:53.618Z",
+      "element": {
+        "tag": "input",
+        "id": "email",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "rak@yahoo.com",
+        "type": "email",
+        "name": "",
+        "placeholder": "your.email@example.com",
+        "testid": "input-email",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"email\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 493,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#email",
+      "inputValue": "rak@yahoo.com"
+    },
+    {
+      "type": "blur",
+      "timestamp": "2025-12-10T03:34:53.817Z",
+      "element": {
+        "tag": "input",
+        "id": "email",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "rak@yahoo.com",
+        "type": "email",
+        "name": "",
+        "placeholder": "your.email@example.com",
+        "testid": "input-email",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"email\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 493,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#email"
+    },
+    {
+      "type": "focus",
+      "timestamp": "2025-12-10T03:34:53.817Z",
+      "element": {
+        "tag": "input",
+        "id": "phone",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "",
+        "type": "tel",
+        "name": "",
+        "placeholder": "(555) 123-4567",
+        "testid": "input-phone",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"phone\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 578,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#phone"
+    },
+    {
+      "type": "input",
+      "timestamp": "2025-12-10T03:34:55.461Z",
+      "element": {
+        "tag": "input",
+        "id": "phone",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "787888888",
+        "type": "tel",
+        "name": "",
+        "placeholder": "(555) 123-4567",
+        "testid": "input-phone",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"phone\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 578,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#phone",
+      "inputValue": "787888888"
+    },
+    {
+      "type": "blur",
+      "timestamp": "2025-12-10T03:34:55.646Z",
+      "element": {
+        "tag": "input",
+        "id": "phone",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "787888888",
+        "type": "tel",
+        "name": "",
+        "placeholder": "(555) 123-4567",
+        "testid": "input-phone",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"phone\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 578,
+        "width": 720,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#phone"
+    },
+    {
+      "type": "focus",
+      "timestamp": "2025-12-10T03:34:55.646Z",
+      "element": {
+        "tag": "select",
+        "id": "country",
+        "className": "testcaptive-recordable",
+        "text": "\n                    Select Country\n                    United States\n                    Canada\n   ",
+        "value": "",
+        "type": "select-one",
+        "name": "",
+        "placeholder": "",
+        "testid": "select-country",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"country\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 663,
+        "width": 700,
+        "height": 38
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#country"
+    },
+    {
+      "type": "click",
+      "timestamp": "2025-12-10T03:34:57.259Z",
+      "element": {
+        "tag": "select",
+        "id": "country",
+        "className": "testcaptive-recordable",
+        "text": "\n                    Select Country\n                    United States\n                    Canada\n   ",
+        "value": "",
+        "type": "select-one",
+        "name": "",
+        "placeholder": "",
+        "testid": "select-country",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"country\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 663,
+        "width": 700,
+        "height": 38
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#country",
+      "clickPosition": {
+        "clientX": 873,
+        "clientY": 686
+      }
+    },
+    {
+      "type": "change",
+      "timestamp": "2025-12-10T03:34:58.524Z",
+      "element": {
+        "tag": "select",
+        "id": "country",
+        "className": "testcaptive-recordable",
+        "text": "\n                    Select Country\n                    United States\n                    Canada\n   ",
+        "value": "de",
+        "type": "select-one",
+        "name": "",
+        "placeholder": "",
+        "testid": "select-country",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"country\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 663,
+        "width": 700,
+        "height": 38
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#country",
+      "inputValue": "de"
+    },
+    {
+      "type": "click",
+      "timestamp": "2025-12-10T03:34:58.524Z",
+      "element": {
+        "tag": "select",
+        "id": "country",
+        "className": "testcaptive-recordable",
+        "text": "\n                    Select Country\n                    United States\n                    Canada\n   ",
+        "value": "de",
+        "type": "select-one",
+        "name": "",
+        "placeholder": "",
+        "testid": "select-country",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"country\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 663,
+        "width": 700,
+        "height": 38
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#country",
+      "clickPosition": {
+        "clientX": 662,
+        "clientY": 663
+      }
+    },
+    {
+      "type": "blur",
+      "timestamp": "2025-12-10T03:34:59.036Z",
+      "element": {
+        "tag": "select",
+        "id": "country",
+        "className": "testcaptive-recordable",
+        "text": "\n                    Select Country\n                    United States\n                    Canada\n   ",
+        "value": "de",
+        "type": "select-one",
+        "name": "",
+        "placeholder": "",
+        "testid": "select-country",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"country\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 663,
+        "width": 700,
+        "height": 38
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#country"
+    },
+    {
+      "type": "focus",
+      "timestamp": "2025-12-10T03:34:59.036Z",
+      "element": {
+        "tag": "textarea",
+        "id": "comments",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "",
+        "type": "textarea",
+        "name": "",
+        "placeholder": "Any additional comments...",
+        "testid": "textarea-comments",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"comments\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 749,
+        "width": 720,
+        "height": 84
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#comments"
+    },
+    {
+      "type": "click",
+      "timestamp": "2025-12-10T03:34:59.139Z",
+      "element": {
+        "tag": "textarea",
+        "id": "comments",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "",
+        "type": "textarea",
+        "name": "",
+        "placeholder": "Any additional comments...",
+        "testid": "textarea-comments",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"comments\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 749,
+        "width": 720,
+        "height": 84
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#comments",
+      "clickPosition": {
+        "clientX": 731,
+        "clientY": 781
+      }
+    },
+    {
+      "type": "input",
+      "timestamp": "2025-12-10T03:35:00.322Z",
+      "element": {
+        "tag": "textarea",
+        "id": "comments",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "test",
+        "type": "textarea",
+        "name": "",
+        "placeholder": "Any additional comments...",
+        "testid": "textarea-comments",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"comments\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 749,
+        "width": 720,
+        "height": 84
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#comments",
+      "inputValue": "test"
+    },
+    {
+      "type": "blur",
+      "timestamp": "2025-12-10T03:35:01.678Z",
+      "element": {
+        "tag": "textarea",
+        "id": "comments",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "test",
+        "type": "textarea",
+        "name": "",
+        "placeholder": "Any additional comments...",
+        "testid": "textarea-comments",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"comments\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 749,
+        "width": 720,
+        "height": 84
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#comments"
+    },
+    {
+      "type": "focus",
+      "timestamp": "2025-12-10T03:35:01.679Z",
+      "element": {
+        "tag": "input",
+        "id": "newsletter",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "on",
+        "type": "checkbox",
+        "name": "",
+        "placeholder": "",
+        "testid": "checkbox-newsletter",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"newsletter\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 862,
+        "width": 13,
+        "height": 13
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#newsletter"
+    },
+    {
+      "type": "click",
+      "timestamp": "2025-12-10T03:35:01.780Z",
+      "element": {
+        "tag": "input",
+        "id": "newsletter",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "on",
+        "type": "checkbox",
+        "name": "",
+        "placeholder": "",
+        "testid": "checkbox-newsletter",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"newsletter\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 862,
+        "width": 13,
+        "height": 13
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#newsletter",
+      "clickPosition": {
+        "clientX": 663,
+        "clientY": 872
+      }
+    },
+    {
+      "type": "change",
+      "timestamp": "2025-12-10T03:35:01.780Z",
+      "element": {
+        "tag": "input",
+        "id": "newsletter",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "on",
+        "type": "checkbox",
+        "name": "",
+        "placeholder": "",
+        "testid": "checkbox-newsletter",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"newsletter\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 862,
+        "width": 13,
+        "height": 13
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#newsletter",
+      "inputValue": "on"
+    },
+    {
+      "type": "blur",
+      "timestamp": "2025-12-10T03:35:02.195Z",
+      "element": {
+        "tag": "input",
+        "id": "newsletter",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "on",
+        "type": "checkbox",
+        "name": "",
+        "placeholder": "",
+        "testid": "checkbox-newsletter",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"newsletter\"]"
+      },
+      "position": {
+        "x": 662,
+        "y": 862,
+        "width": 13,
+        "height": 13
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "#newsletter"
+    },
+    {
+      "type": "click",
+      "timestamp": "2025-12-10T03:35:02.308Z",
+      "element": {
+        "tag": "html",
+        "id": "",
+        "className": "",
+        "text": "\n    \n    \n    TestCaptive Demo Page\n    \n        body {\n            font-family: Arial, sans-serif;",
+        "value": "",
+        "type": "",
+        "name": "",
+        "placeholder": "",
+        "testid": "",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "/html[1]"
+      },
+      "position": {
+        "x": 0,
+        "y": 0,
+        "width": 2025,
+        "height": 1364
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "html",
+      "clickPosition": {
+        "clientX": 437,
+        "clientY": 843
+      }
+    },
+    {
+      "type": "focus",
+      "timestamp": "2025-12-10T03:35:02.868Z",
+      "element": {
+        "tag": "button",
+        "id": "",
+        "className": "testcaptive-recordable",
+        "text": "Submit Form",
+        "value": "",
+        "type": "submit",
+        "name": "",
+        "placeholder": "",
+        "testid": "btn-submit",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "/html/body/div[1]/div[2]/div[8]/button[3]"
+      },
+      "position": {
+        "x": 1136,
+        "y": 904,
+        "width": 227,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "[data-testid=\"btn-submit\"]"
+    },
+    {
+      "type": "click",
+      "timestamp": "2025-12-10T03:35:03.003Z",
+      "element": {
+        "tag": "button",
+        "id": "",
+        "className": "testcaptive-recordable",
+        "text": "Submit Form",
+        "value": "",
+        "type": "submit",
+        "name": "",
+        "placeholder": "",
+        "testid": "btn-submit",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "/html/body/div[1]/div[2]/div[8]/button[3]"
+      },
+      "position": {
+        "x": 1136,
+        "y": 903,
+        "width": 227,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "[data-testid=\"btn-submit\"]",
+      "clickPosition": {
+        "clientX": 1280,
+        "clientY": 934
+      }
+    },
+    {
+      "type": "blur",
+      "timestamp": "2025-12-10T03:35:04.180Z",
+      "element": {
+        "tag": "button",
+        "id": "",
+        "className": "testcaptive-recordable",
+        "text": "Submit Form",
+        "value": "",
+        "type": "submit",
+        "name": "",
+        "placeholder": "",
+        "testid": "btn-submit",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "/html/body/div[1]/div[2]/div[8]/button[3]"
+      },
+      "position": {
+        "x": 1136,
+        "y": 903,
+        "width": 227,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "[data-testid=\"btn-submit\"]"
+    },
+    {
+      "type": "focus",
+      "timestamp": "2025-12-10T03:35:04.180Z",
+      "element": {
+        "tag": "button",
+        "id": "",
+        "className": "testcaptive-recordable",
+        "text": "Submit Form",
+        "value": "",
+        "type": "submit",
+        "name": "",
+        "placeholder": "",
+        "testid": "btn-submit",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "/html/body/div[1]/div[2]/div[8]/button[3]"
+      },
+      "position": {
+        "x": 1136,
+        "y": 903,
+        "width": 227,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "[data-testid=\"btn-submit\"]"
+    },
+    {
+      "type": "blur",
+      "timestamp": "2025-12-10T03:35:05.988Z",
+      "element": {
+        "tag": "button",
+        "id": "",
+        "className": "testcaptive-recordable",
+        "text": "Submit Form",
+        "value": "",
+        "type": "submit",
+        "name": "",
+        "placeholder": "",
+        "testid": "btn-submit",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "/html/body/div[1]/div[2]/div[8]/button[3]"
+      },
+      "position": {
+        "x": 1136,
+        "y": 905,
+        "width": 227,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "[data-testid=\"btn-submit\"]"
+    },
+    {
+      "type": "focus",
+      "timestamp": "2025-12-10T03:35:05.988Z",
+      "element": {
+        "tag": "button",
+        "id": "",
+        "className": "testcaptive-recordable",
+        "text": "Submit Form",
+        "value": "",
+        "type": "submit",
+        "name": "",
+        "placeholder": "",
+        "testid": "btn-submit",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "/html/body/div[1]/div[2]/div[8]/button[3]"
+      },
+      "position": {
+        "x": 1136,
+        "y": 905,
+        "width": 227,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "[data-testid=\"btn-submit\"]"
+    },
+    {
+      "type": "blur",
+      "timestamp": "2025-12-10T03:35:07.421Z",
+      "element": {
+        "tag": "button",
+        "id": "",
+        "className": "testcaptive-recordable",
+        "text": "Submit Form",
+        "value": "",
+        "type": "submit",
+        "name": "",
+        "placeholder": "",
+        "testid": "btn-submit",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "/html/body/div[1]/div[2]/div[8]/button[3]"
+      },
+      "position": {
+        "x": 1136,
+        "y": 905,
+        "width": 227,
+        "height": 37
+      },
+      "page": {
+        "url": "file:///G:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1765337681653",
+      "selector": "[data-testid=\"btn-submit\"]"
+    }
+  ],
+  "framework": "playwright"
+}

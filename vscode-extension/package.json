@@ -1,0 +1,93 @@
+{
+  "name": "testcaptive",
+  "displayName": "TestCaptive - UI Behavior Recorder",
+  "description": "Generate test scripts by recording user interactions in the browser",
+  "version": "1.0.0",
+  "publisher": "testcaptive",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/testcaptive/testcaptive.git"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Testing",
+    "Other"
+  ],  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {    "commands": [
+      {
+        "command": "testcaptive.start",
+        "title": "Start TestCaptive",
+        "icon": "$(record)"
+      },
+      {
+        "command": "testcaptive.showSetup",
+        "title": "TestCaptive: Show Setup Panel"
+      },
+      {
+        "command": "testcaptive.showReview",
+        "title": "TestCaptive: Show Review Panel"
+      },
+      {
+        "command": "testcaptive.loadRecentSession",
+        "title": "TestCaptive: Load Recent Session"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "testcaptive",
+          "title": "TestCaptive",
+          "icon": "$(record)"
+        }
+      ]
+    },    "views": {
+      "testcaptive": [
+        {
+          "type": "webview",
+          "id": "testcaptive.mainView",
+          "name": "TestCaptive Professional"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "TestCaptive",
+      "properties": {
+        "testcaptive.defaultFramework": {
+          "type": "string",
+          "enum": [
+            "selenium",
+            "playwright",
+            "cypress"
+          ],
+          "default": "selenium",
+          "description": "Default test framework to use"
+        },
+        "testcaptive.outputDirectory": {
+          "type": "string",
+          "default": "./tests",
+          "description": "Directory to save generated test files"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.74.0",
+    "@vscode/vsce": "^3.4.2",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  }
+}

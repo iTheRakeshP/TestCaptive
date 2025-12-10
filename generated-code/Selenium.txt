@@ -1,0 +1,265 @@
+# Selenium Python Test Template
+
+import json
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+
+class TestCaptiveTest:
+    def __init__(self):
+        self.driver = None
+        self.data = None
+        
+    def setup(self):
+        """Setup test environment and load test data"""
+        # Load test data
+        with open('test_data.json', 'r') as f:
+            self.data = json.load(f)
+            
+        # Setup Chrome options
+        chrome_options = Options()
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        
+        # Initialize WebDriver
+        self.driver = webdriver.Chrome(options=chrome_options)
+        self.driver.maximize_window()
+        
+    def teardown(self):
+        """Clean up after test"""
+        if self.driver:
+            self.driver.quit()
+            
+    def test_recorded_flow(self):
+        """Generated test case from recorded interactions"""
+        try:
+            self.setup()
+            
+                        
+            # Navigate to TestCaptive Demo Page
+            {{#if isFirstNavigation}}
+            self.driver.get("file:///G:/Projects/Advance/TestCaptive/demo.html")
+            {{else}}
+            # Verify URL change
+            WebDriverWait(self.driver, 10).until(EC.url_contains("file:///G:/Projects/Advance/TestCaptive/demo.html"))
+            {{/if}}
+            time.sleep(2)
+            
+            
+            
+            # Click element
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="input-first-name"]'))
+            )
+            
+            element.click()
+            time.sleep(1)
+            
+            
+            
+            # Enter text in "firstName"
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="input-first-name"]'))
+            )
+            
+            element.clear()
+            
+            # Use test data from JSON file
+            test_value = self.data.get("input-first-name")
+            element.send_keys(test_value)
+            
+            time.sleep(0.5)
+            
+            
+            
+            # Enter text in "lastName"
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="input-last-name"]'))
+            )
+            
+            element.clear()
+            
+            # Use test data from JSON file
+            test_value = self.data.get("input-last-name")
+            element.send_keys(test_value)
+            
+            time.sleep(0.5)
+            
+            
+            
+            # Enter text in "email"
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="input-email"]'))
+            )
+            
+            element.clear()
+            
+            # Use test data from JSON file
+            test_value = self.data.get("input-email")
+            element.send_keys(test_value)
+            
+            time.sleep(0.5)
+            
+            
+            
+            # Enter text in "phone"
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="input-phone"]'))
+            )
+            
+            element.clear()
+            
+            # Use test data from JSON file
+            test_value = self.data.get("input-phone")
+            element.send_keys(test_value)
+            
+            time.sleep(0.5)
+            
+            
+            
+            # Click "
+                    Select Country
+                    United States
+                    Canada
+   "
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="select-country"]'))
+            )
+            
+            element.click()
+            time.sleep(1)
+            
+            
+            
+            # Enter text in "country"
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="select-country"]'))
+            )
+            
+            element.clear()
+            
+            # Use test data from JSON file
+            test_value = self.data.get("select-country")
+            element.send_keys(test_value)
+            
+            time.sleep(0.5)
+            
+            
+            
+            # Click "
+                    Select Country
+                    United States
+                    Canada
+   "
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="select-country"]'))
+            )
+            
+            element.click()
+            time.sleep(1)
+            
+            
+            
+            # Click element
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="textarea-comments"]'))
+            )
+            
+            element.click()
+            time.sleep(1)
+            
+            
+            
+            # Enter text in "comments"
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="textarea-comments"]'))
+            )
+            
+            element.clear()
+            
+            # Use test data from JSON file
+            test_value = self.data.get("textarea-comments")
+            element.send_keys(test_value)
+            
+            time.sleep(0.5)
+            
+            
+            
+            # Click element
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="checkbox-newsletter"]'))
+            )
+            
+            element.click()
+            time.sleep(1)
+            
+            
+            
+            # Enter text in "newsletter"
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="checkbox-newsletter"]'))
+            )
+            
+            element.clear()
+            
+            # Use test data from JSON file
+            test_value = self.data.get("checkbox-newsletter")
+            element.send_keys(test_value)
+            
+            time.sleep(0.5)
+            
+            
+            
+            # Click "
+    
+    
+    TestCaptive Demo Page
+    
+        body {
+            font-family: Arial, sans-serif;"
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "/html[1]"))
+            )
+            
+            element.click()
+            time.sleep(1)
+            
+            
+            
+            # Click "Submit Form"
+            
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="btn-submit"]'))
+            )
+            
+            element.click()
+            time.sleep(1)
+            
+            
+            
+            print("Test completed successfully!")
+            
+        except Exception as e:
+            print(f"Test failed with error: {e}")
+            raise
+        finally:
+            self.teardown()
+
+if __name__ == "__main__":
+    test = TestCaptiveTest()
+    test.test_recorded_flow()

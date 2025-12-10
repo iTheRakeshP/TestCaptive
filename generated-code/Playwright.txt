@@ -1,0 +1,266 @@
+# Playwright Python Test Template
+
+import json
+import asyncio
+from playwright.async_api import async_playwright
+
+class TestCaptiveTest:
+    def __init__(self):
+        self.browser = None
+        self.page = None
+        self.data = None
+        
+    async def setup(self):
+        """Setup test environment and load test data"""
+        # Load test data
+        with open('test_data.json', 'r') as f:
+            self.data = json.load(f)
+            
+        # Launch browser
+        playwright = await async_playwright().start()
+        self.browser = await playwright.chromium.launch(headless=False)
+        self.page = await self.browser.new_page()
+        
+    async def teardown(self):
+        """Clean up after test"""
+        if self.browser:
+            await self.browser.close()
+            
+    async def test_recorded_flow(self):
+        """Generated test case from recorded interactions"""
+        try:
+            await self.setup()
+            
+                        
+            # Navigate to TestCaptive Demo Page
+            {{#if isFirstNavigation}}
+            await self.page.goto("file:///G:/Projects/Advance/TestCaptive/demo.html")
+            {{else}}
+            # Verify URL change
+            await expect(self.page).to_have_url("file:///G:/Projects/Advance/TestCaptive/demo.html")
+            {{/if}}
+            
+            
+            
+            # Click element
+            
+            await self.page.get_by_test_id("input-first-name").click()
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").click()
+            
+            
+            
+            
+            # Enter text in "firstName"
+            
+            await self.page.get_by_test_id("input-first-name").fill('')
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
+            
+            
+            # Use test data from JSON file
+            test_value = self.data.get("input-first-name")
+            
+            
+            await self.page.get_by_test_id("input-first-name").fill(test_value)
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
+            
+            
+            
+            
+            
+            # Enter text in "lastName"
+            
+            await self.page.get_by_test_id("input-last-name").fill('')
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
+            
+            
+            # Use test data from JSON file
+            test_value = self.data.get("input-last-name")
+            
+            
+            await self.page.get_by_test_id("input-last-name").fill(test_value)
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
+            
+            
+            
+            
+            
+            # Enter text in "email"
+            
+            await self.page.get_by_test_id("input-email").fill('')
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
+            
+            
+            # Use test data from JSON file
+            test_value = self.data.get("input-email")
+            
+            
+            await self.page.get_by_test_id("input-email").fill(test_value)
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
+            
+            
+            
+            
+            
+            # Enter text in "phone"
+            
+            await self.page.get_by_test_id("input-phone").fill('')
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
+            
+            
+            # Use test data from JSON file
+            test_value = self.data.get("input-phone")
+            
+            
+            await self.page.get_by_test_id("input-phone").fill(test_value)
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
+            
+            
+            
+            
+            
+            # Click "
+                    Select Country
+                    United States
+                    Canada
+   "
+            
+            await self.page.get_by_test_id("select-country").click()
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").click()
+            
+            
+            
+            
+            # Enter text in "country"
+            
+            await self.page.get_by_test_id("select-country").fill('')
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
+            
+            
+            # Use test data from JSON file
+            test_value = self.data.get("select-country")
+            
+            
+            await self.page.get_by_test_id("select-country").fill(test_value)
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
+            
+            
+            
+            
+            
+            # Click "
+                    Select Country
+                    United States
+                    Canada
+   "
+            
+            await self.page.get_by_test_id("select-country").click()
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").click()
+            
+            
+            
+            
+            # Click element
+            
+            await self.page.get_by_test_id("textarea-comments").click()
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").click()
+            
+            
+            
+            
+            # Enter text in "comments"
+            
+            await self.page.get_by_test_id("textarea-comments").fill('')
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
+            
+            
+            # Use test data from JSON file
+            test_value = self.data.get("textarea-comments")
+            
+            
+            await self.page.get_by_test_id("textarea-comments").fill(test_value)
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
+            
+            
+            
+            
+            
+            # Click element
+            
+            await self.page.get_by_test_id("checkbox-newsletter").click()
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").click()
+            
+            
+            
+            
+            # Enter text in "newsletter"
+            
+            await self.page.get_by_test_id("checkbox-newsletter").fill('')
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
+            
+            
+            # Use test data from JSON file
+            test_value = self.data.get("checkbox-newsletter")
+            
+            
+            await self.page.get_by_test_id("checkbox-newsletter").fill(test_value)
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
+            
+            
+            
+            
+            
+            # Click "
+    
+    
+    TestCaptive Demo Page
+    
+        body {
+            font-family: Arial, sans-serif;"
+            
+            await self.page.click('{{element.cssSelector}}')
+            
+            
+            
+            
+            # Click "Submit Form"
+            
+            await self.page.get_by_test_id("btn-submit").click()
+            {{else if element.ariaLabel}}
+            await self.page.get_by_label("{{element.ariaLabel}}").click()
+            
+            
+            
+            
+            print("Test completed successfully!")
+            
+        except Exception as e:
+            print(f"Test failed with error: {e}")
+            raise
+        finally:
+            await self.teardown()
+
+async def main():
+    test = TestCaptiveTest()
+    await test.test_recorded_flow()
+
+if __name__ == "__main__":
+    asyncio.run(main())

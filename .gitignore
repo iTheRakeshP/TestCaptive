@@ -1,0 +1,67 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+out/
+*.vsix
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug files
+debug/
+test-debug/
+diagnostic-*.html
+*-debug.js
+*-diagnostic.js
+test-extension.html
+
+# Temporary scripts
+start-*.ps1
+start-*.bat
+*.temp.js
+
+# Temporary documentation
+*_FIX.md
+*_STATUS.md
+*_GUIDE.md
+CLEANUP*.md
+STRUCTURE*.md
+EVENT_*.md
+PERMISSIONS_*.md
+SERVICE_WORKER_*.md
+UI_*.md
+VSCODE_*.md
+WEBSOCKET_*.md

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TestCaptive Recorder</title>
+    <style>
+        body { 
+            width: 350px; 
+            padding: 20px; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 300;
+        }
+        
+        .status-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .connected { background-color: #4CAF50; }
+        .disconnected { background-color: #f44336; }
+        .recording { background-color: #ff9800; animation: pulse 1s infinite; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .primary-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+        }
+        
+        .danger-btn {
+            background: linear-gradient(45deg, #f44336, #da190b);
+        }
+        
+        .session-info {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .log {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.2);
+            max-height: 100px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>🎯 TestCaptive</h2>
+    </div>
+
+    <div class="status-panel">
+        <div class="status-row">
+            <span>Extension:</span>
+            <span><span class="status-indicator connected"></span>Active</span>
+        </div>
+        <div class="status-row">
+            <span>Recording:</span>
+            <span><span class="status-indicator" id="recordingStatus"></span><span id="recordingText">Stopped</span></span>
+        </div>
+        <div class="session-info" id="sessionInfo" style="display: block;">
+            Events Captured: <span id="eventCount">0</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="startBtn" class="primary-btn">🔴 Start Recording</button>
+        <button id="stopBtn" class="danger-btn" disabled>⏹️ Stop Recording</button>
+    </div>
+
+    <div class="log" id="log">Ready to record UI interactions...</div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

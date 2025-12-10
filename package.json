@@ -1,0 +1,39 @@
+{
+  "name": "testcaptive",
+  "version": "1.0.0",
+  "description": "Professional UI Behavior Recording Tool - Captures user interactions and generates test automation scripts",
+  "main": "test-server.js",
+  "scripts": {
+    "start": "node test-server.js",
+    "build:chrome": "cd chrome-extension && npm run build",
+    "build:vscode": "cd vscode-extension && npm run compile",
+    "build:all": "npm run build:chrome && npm run build:vscode",
+    "install-all": "npm install && cd chrome-extension && npm install && cd ../vscode-extension && npm install",
+    "clean": "cd vscode-extension && rm -rf out"
+  },
+  "keywords": [
+    "test-automation",
+    "ui-testing",
+    "selenium",
+    "playwright",
+    "cypress",
+    "chrome-extension",
+    "vscode-extension",
+    "recording",
+    "behavior-capture"
+  ],
+  "author": "TestCaptive Team",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/testcaptive.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/testcaptive/issues"
+  },
+  "homepage": "https://github.com/your-org/testcaptive#readme"
+}

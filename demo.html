@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TestCaptive Demo Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+        }
+        
+        .status {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .detected { color: #4CAF50; }
+        .not-detected { color: #f44336; }
+        
+        .form-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .form-group {
+            margin: 15px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .button-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 TestCaptive Demo Page</h1>
+        
+        <div class="status" id="status">
+            <span id="statusText">Checking extension...</span>
+        </div>
+        
+        <div class="form-section">
+            <h2>User Registration Form</h2>
+            
+            <div class="form-group">
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" data-testid="input-first-name" placeholder="Enter your first name">
+            </div>
+            
+            <div class="form-group">
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" data-testid="input-last-name" placeholder="Enter your last name">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" data-testid="input-email" placeholder="your.email@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone:</label>
+                <input type="tel" id="phone" data-testid="input-phone" placeholder="(555) 123-4567">
+            </div>
+            
+            <div class="form-group">
+                <label for="country">Country:</label>
+                <select id="country" data-testid="select-country">
+                    <option value="">Select Country</option>
+                    <option value="us">United States</option>
+                    <option value="ca">Canada</option>
+                    <option value="uk">United Kingdom</option>
+                    <option value="de">Germany</option>
+                    <option value="fr">France</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="comments">Comments:</label>
+                <textarea id="comments" rows="4" data-testid="textarea-comments" placeholder="Any additional comments..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <input type="checkbox" id="newsletter" data-testid="checkbox-newsletter" style="width: auto; margin-right: 10px;">
+                <label for="newsletter" style="display: inline;">Subscribe to newsletter</label>
+            </div>
+            
+            <div class="button-row">
+                <button onclick="validateForm()" data-testid="btn-validate">Validate Form</button>
+                <button onclick="clearForm()" data-testid="btn-clear">Clear Form</button>
+                <button onclick="submitForm()" data-testid="btn-submit">Submit Form</button>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h2>Interactive Elements</h2>
+            
+            <div class="button-row">
+                <button onclick="showAlert()">Show Alert</button>
+                <button onclick="changeColor()">Change Color</button>
+                <button onclick="addItem()">Add Item</button>
+                <button onclick="toggleElement()">Toggle Element</button>
+            </div>
+            
+            <div id="dynamicContent" style="margin-top: 20px;">
+                <h3>Dynamic Content</h3>
+                <ul id="itemList">
+                    <li>Initial item</li>
+                </ul>
+                <div id="toggleDiv" style="padding: 10px; background: rgba(255,255,255,0.2); border-radius: 5px; margin-top: 10px;">
+                    This div can be toggled
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>        // Check for TestCaptive extension
+        function checkExtension() {
+            const method1 = window.testCaptiveContentScript === true;
+            const method2 = window.__TESTCAPTIVE_LOADED__ === true;
+            const method3 = document.testCaptiveContentScript === true;
+            const method4 = sessionStorage.getItem('testCaptiveActive') === 'true';
+            const method5 = document.getElementById('__testcaptive_flag__') !== null;
+            
+            const detected = method1 || method2 || method3 || method4 || method5;
+            
+            const statusDiv = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+            
+            if (detected) {
+                statusDiv.className = 'status';
+                statusText.innerHTML = '<span class="detected">✅ TestCaptive Extension Detected - Ready to Record!</span>';
+            } else {
+                statusDiv.className = 'status';
+                statusText.innerHTML = '<span class="not-detected">❌ TestCaptive Extension Not Detected</span>';
+            }
+            
+            // Log detection methods for debugging
+            console.log('Detection methods:', {
+                window_flag: method1,
+                loaded_flag: method2,
+                document_flag: method3,
+                session_storage: method4,
+                dom_element: method5,
+                overall: detected
+            });
+        }
+        
+        // Form functions
+        function validateForm() {
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            
+            if (!firstName || !lastName || !email) {
+                alert('Please fill in all required fields');
+            } else {
+                alert('Form validation passed!');
+            }
+        }
+        
+        function clearForm() {
+            document.getElementById('firstName').value = '';
+            document.getElementById('lastName').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('country').value = '';
+            document.getElementById('comments').value = '';
+            document.getElementById('newsletter').checked = false;
+        }
+        
+        function submitForm() {
+            validateForm();
+            setTimeout(() => {
+                alert('Form submitted successfully!');
+            }, 1000);
+        }
+        
+        // Interactive functions
+        function showAlert() {
+            alert('Button clicked! This is an alert.');
+        }
+        
+        function changeColor() {
+            const colors = ['#74b9ff', '#fd79a8', '#fdcb6e', '#6c5ce7', '#a29bfe'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            document.body.style.background = `linear-gradient(135deg, ${randomColor} 0%, #0984e3 100%)`;
+        }
+        
+        function addItem() {
+            const list = document.getElementById('itemList');
+            const item = document.createElement('li');
+            item.textContent = `Dynamic item ${list.children.length}`;
+            list.appendChild(item);
+        }
+        
+        function toggleElement() {
+            const element = document.getElementById('toggleDiv');
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+            } else {
+                element.style.display = 'none';
+            }
+        }
+        
+        // Check extension on load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkExtension();
+            setInterval(checkExtension, 3000);
+        });
+    </script>
+</body>
+</html>
