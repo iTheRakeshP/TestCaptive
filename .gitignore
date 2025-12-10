@@ -65,3 +65,6 @@ SERVICE_WORKER_*.md
 UI_*.md
 VSCODE_*.md
 WEBSOCKET_*.md
+
+# Test files
+test-event-coalescing.html

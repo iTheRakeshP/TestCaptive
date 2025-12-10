@@ -1,0 +1,6 @@
+{
+  "name": "testcaptive-chrome-extension",
+  "version": "1.0.0",
+  "description": "TestCaptive Chrome Extension for recording user interactions",
+  "private": true
+}
