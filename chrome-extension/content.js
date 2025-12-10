@@ -74,6 +74,14 @@
     // Event coalescing variables
     let eventQueue = [];
     let coalescingTimer = null;
+    
+    // Coalescing time windows (in milliseconds)
+    const FOCUS_CLICK_WINDOW = 200;  // Time window to merge focus + click
+    const CLICK_INPUT_WINDOW = 300;  // Time window to merge click + input
+    const COALESCING_DELAY = 100;    // Delay before processing event queue
+    
+    // Meaningful keyboard keys to capture
+    const MEANINGFUL_KEYS = ['Enter', 'Tab', 'Escape', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'];
 
     function flushPendingInput() {
         if (pendingInputEvent) {
@@ -82,7 +90,7 @@
             const recentClickIndex = eventQueue.findIndex(e => 
                 e.type === 'click' && 
                 isSameElement(e, pendingInputEvent) &&
-                timeDiff(e, pendingInputEvent) < 300
+                timeDiff(e, pendingInputEvent) < CLICK_INPUT_WINDOW
             );
             
             if (recentClickIndex !== -1) {
@@ -121,10 +129,10 @@
             const current = eventQueue[i];
             const next = eventQueue[i + 1];
             
-            // Skip focus if followed by click on same element (within 200ms)
+            // Skip focus if followed by click on same element (within FOCUS_CLICK_WINDOW)
             if (current.type === 'focus' && next && next.type === 'click' &&
                 isSameElement(current, next) && 
-                timeDiff(current, next) < 200) {
+                timeDiff(current, next) < FOCUS_CLICK_WINDOW) {
                 continue; // Skip this focus event
             }
             
@@ -271,8 +279,7 @@
             
             // Handle keydown events - only capture meaningful keys
             if (event.type === 'keydown') {
-                const meaningfulKeys = ['Enter', 'Tab', 'Escape', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'];
-                if (!meaningfulKeys.includes(event.key)) {
+                if (!MEANINGFUL_KEYS.includes(event.key)) {
                     return; // Ignore other keys (regular typing)
                 }
                 eventData.key = event.key;
@@ -310,7 +317,7 @@
                 eventQueue.push(eventData);
                 
                 clearTimeout(coalescingTimer);
-                coalescingTimer = setTimeout(coalesceEvents, 100); // 100ms coalescing window
+                coalescingTimer = setTimeout(coalesceEvents, COALESCING_DELAY);
                 return;
             }
 
