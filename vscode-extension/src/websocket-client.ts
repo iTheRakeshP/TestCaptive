@@ -89,7 +89,7 @@ export class WebSocketClient {
         this.attemptReconnect();
       });
 
-      this.ws.on('error', (error) => {
+      this.ws.on('error', (error: Error) => {
         console.error('TestCaptive: WebSocket error:', error);
         this.onConnectionStatusChangedHandler?.(false);
       });

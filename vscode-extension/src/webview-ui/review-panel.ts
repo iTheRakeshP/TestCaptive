@@ -54,7 +54,6 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         });
     }
 
-<<<<<<< HEAD
     private importSession(jsonContent: string): void {
         try {
             const sessionData = JSON.parse(jsonContent);
@@ -63,68 +62,6 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             vscode.window.showInformationMessage(`Successfully imported session: ${sessionId}`);
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to import session: ${error}`);
-=======
-        // Initial connection check
-        this.checkConnection();    }    private async startRecording(applicationUrl: string): Promise<void> {
-        try {
-            console.log('TestCaptive: Starting recording session with URL:', applicationUrl);
-            
-            const sessionId = `session_${Date.now()}`;
-            console.log('TestCaptive: Generated session ID:', sessionId);
-            
-            this.testDataManager.startSession(sessionId);
-            this.currentSessionId = sessionId;
-            console.log('TestCaptive: Calling wsClient.startSession with:', sessionId, applicationUrl);
-            
-            // First, open the URL in the default browser to ensure browser is running
-            console.log('TestCaptive: Opening URL in default browser to ensure browser is running...');
-            try {
-                // Use VSCode's openExternal to open the URL in default browser
-                await vscode.env.openExternal(vscode.Uri.parse(applicationUrl));
-                
-                // Wait a moment for browser to start, then send auto-launch command
-                setTimeout(() => {
-                    console.log('TestCaptive: Sending auto-launch command to extension...');
-                    this.wsClient.startSession(sessionId, applicationUrl);
-                }, 2000); // 2 second delay to let browser start and extension connect
-                
-            } catch (error) {
-                console.warn('TestCaptive: Browser auto-start failed, sending auto-launch anyway:', error);
-                this.wsClient.startSession(sessionId, applicationUrl);
-            }
-            
-            if (this._view) {
-                this._view.webview.postMessage({
-                    type: 'sessionStarted',
-                    sessionId: sessionId
-                });
-            }        } catch (error) {
-            console.error('TestCaptive: Error in startRecording:', error);
-            vscode.window.showErrorMessage(`Error starting recording: ${error}`);
-        }
-    }
-
-    private async stopRecording(): Promise<void> {
-        if (this.currentSessionId) {
-            this.testDataManager.endSession(this.currentSessionId);
-            
-            if (this._view) {
-                this._view.webview.postMessage({
-                    type: 'sessionEnded'
-                });
-            }
-        }
-    }
-
-    private async checkConnection(): Promise<void> {
-        const connected = await this.wsClient.isConnected();
-        
-        if (this._view) {
-            this._view.webview.postMessage({
-                type: 'connectionStatus',
-                connected: connected
-            });
->>>>>>> b88ef7ee0f23a8ca3beb23b4963704be4293f3aa
         }
     }
 

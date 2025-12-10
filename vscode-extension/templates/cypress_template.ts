@@ -60,12 +60,32 @@ describe('TestCaptive Generated Test', () => {
     
     {{else if (eq event 'keydown')}}
     // Key press: {{value}}
+    {{#if (eq value 'Enter')}}
     {{#if element.id}}
-    cy.get('#{{element.id}}').type('{{"{{" + value + "}}"}}');
+    cy.get('#{{element.id}}').type('{enter}');
     {{else if element.name}}
-    cy.get('[name="{{element.name}}"]').type('{{"{{" + value + "}}"}}');
+    cy.get('[name="{{element.name}}"]').type('{enter}');
     {{else}}
-    cy.get('{{element.cssSelector}}').type('{{"{{" + value + "}}"}}');
+    cy.get('{{element.cssSelector}}').type('{enter}');
+    {{/if}}
+    {{else if (eq value 'Tab')}}
+    {{#if element.id}}
+    cy.get('#{{element.id}}').type('{tab}');
+    {{else if element.name}}
+    cy.get('[name="{{element.name}}"]').type('{tab}');
+    {{else}}
+    cy.get('{{element.cssSelector}}').type('{tab}');
+    {{/if}}
+    {{else if (eq value 'Escape')}}
+    {{#if element.id}}
+    cy.get('#{{element.id}}').type('{esc}');
+    {{else if element.name}}
+    cy.get('[name="{{element.name}}"]').type('{esc}');
+    {{else}}
+    cy.get('{{element.cssSelector}}').type('{esc}');
+    {{/if}}
+    {{else}}
+    // Unsupported key: {{value}}
     {{/if}}
     cy.wait(500);
     

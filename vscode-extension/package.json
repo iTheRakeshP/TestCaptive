@@ -14,11 +14,13 @@
   "categories": [
     "Testing",
     "Other"
-  ],  "activationEvents": [
+  ],
+  "activationEvents": [
     "*"
   ],
   "main": "./out/extension.js",
-  "contributes": {    "commands": [
+  "contributes": {
+    "commands": [
       {
         "command": "testcaptive.start",
         "title": "Start TestCaptive",
@@ -45,7 +47,8 @@
           "icon": "$(record)"
         }
       ]
-    },    "views": {
+    },
+    "views": {
       "testcaptive": [
         {
           "type": "webview",
@@ -84,10 +87,12 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.74.0",
+    "@types/ws": "^8.18.1",
     "@vscode/vsce": "^3.4.2",
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "handlebars": "^4.7.8",
     "puppeteer": "^21.0.0"
   }
 }
