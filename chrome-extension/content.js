@@ -67,12 +67,29 @@
     let sessionId = null;
     let recordedEvents = [];
     
-    // Debounce variables
+    // Debounce variables for input events
     let inputDebounceTimer = null;
     let pendingInputEvent = null;
 
+    // Event coalescing variables
+    let eventQueue = [];
+    let coalescingTimer = null;
+
     function flushPendingInput() {
         if (pendingInputEvent) {
+            // Before sending the input event, check if there's a recent click event in the queue
+            // for the same element and remove it (click + input merge)
+            const recentClickIndex = eventQueue.findIndex(e => 
+                e.type === 'click' && 
+                isSameElement(e, pendingInputEvent) &&
+                timeDiff(e, pendingInputEvent) < 300
+            );
+            
+            if (recentClickIndex !== -1) {
+                // Remove the click event from the queue
+                eventQueue.splice(recentClickIndex, 1);
+            }
+            
             sendEvent(pendingInputEvent);
             pendingInputEvent = null;
             if (inputDebounceTimer) {
@@ -80,6 +97,43 @@
                 inputDebounceTimer = null;
             }
         }
+    }
+
+    // Helper function to check if two events target the same element
+    function isSameElement(event1, event2) {
+        const id1 = event1.selector || (event1.element && event1.element.xpath) || (event1.element && event1.element.id);
+        const id2 = event2.selector || (event2.element && event2.element.xpath) || (event2.element && event2.element.id);
+        return id1 && id2 && id1 === id2;
+    }
+
+    // Helper function to calculate time difference in milliseconds
+    function timeDiff(event1, event2) {
+        return new Date(event2.timestamp).getTime() - new Date(event1.timestamp).getTime();
+    }
+
+    // Smart event coalescing function
+    function coalesceEvents() {
+        if (eventQueue.length === 0) return;
+        
+        const processed = [];
+        
+        for (let i = 0; i < eventQueue.length; i++) {
+            const current = eventQueue[i];
+            const next = eventQueue[i + 1];
+            
+            // Skip focus if followed by click on same element (within 200ms)
+            if (current.type === 'focus' && next && next.type === 'click' &&
+                isSameElement(current, next) && 
+                timeDiff(current, next) < 200) {
+                continue; // Skip this focus event
+            }
+            
+            processed.push(current);
+        }
+        
+        // Send processed events
+        processed.forEach(event => sendEvent(event));
+        eventQueue = [];
     }
 
     function sendEvent(eventData) {
@@ -108,6 +162,14 @@
                 
             case 'stop-recording':
                 flushPendingInput(); // Flush any pending input before stopping
+                
+                // Flush event queue
+                if (coalescingTimer) {
+                    clearTimeout(coalescingTimer);
+                    coalescingTimer = null;
+                }
+                coalesceEvents(); // Flush any remaining events in the queue
+                
                 const eventCount = stopRecording();
                 sendResponse({ success: true, eventCount });
                 break;
@@ -207,6 +269,17 @@
                 };
             }
             
+            // Handle keydown events - only capture meaningful keys
+            if (event.type === 'keydown') {
+                const meaningfulKeys = ['Enter', 'Tab', 'Escape', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'];
+                if (!meaningfulKeys.includes(event.key)) {
+                    return; // Ignore other keys (regular typing)
+                }
+                eventData.key = event.key;
+                eventData.keyCode = event.keyCode;
+                eventData.inputValue = event.key; // Store key as value for template usage
+            }
+            
             // Handle Input Debouncing
             if (event.type === 'input') {
                 // Ignore input events for SELECT, CHECKBOX, RADIO elements (rely on change event)
@@ -232,6 +305,16 @@
                 }
             }
 
+            // Add to event queue for coalescing (focus, blur, click)
+            if (['focus', 'click', 'blur'].includes(event.type)) {
+                eventQueue.push(eventData);
+                
+                clearTimeout(coalescingTimer);
+                coalescingTimer = setTimeout(coalesceEvents, 100); // 100ms coalescing window
+                return;
+            }
+
+            // Send immediately for other event types (navigation, submit, change on select/checkbox, keydown)
             sendEvent(eventData);
             
         } catch (error) {
@@ -305,7 +388,7 @@
     }
     
     // Event listeners for UI interactions
-    const eventTypes = ['click', 'input', 'change', 'submit', 'focus', 'blur'];
+    const eventTypes = ['click', 'input', 'change', 'submit', 'focus', 'blur', 'keydown'];
     const eventHandlers = {};
     
     function attachEventListeners() {
