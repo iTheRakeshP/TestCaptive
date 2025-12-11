@@ -1,0 +1,102 @@
+@startuml ROI Comparison
+!theme plain
+
+title TestCaptive - ROI Analysis: Manual vs TestCaptive
+
+participant "QA Engineer" as QA
+participant "TestCaptive" as TC
+participant "Generated Test" as Test
+participant "CI/CD Pipeline" as CICD
+
+== Traditional Manual Approach ==
+
+group Manual Test Creation (8-16 hours per test)
+    QA -> QA: Analyze requirements (1 hr)
+    QA -> QA: Design test cases (1 hr)
+    QA -> QA: Write test code manually (4-8 hrs)
+    note right
+      - Research framework syntax
+      - Find selectors manually (inspect element)
+      - Write assertions
+      - Handle waits/timeouts
+      - Debug syntax errors
+    end note
+    QA -> QA: Create test data (1 hr)
+    QA -> QA: Debug and fix issues (2-4 hrs)
+    QA -> Test: Commit test to repository
+end
+
+group Test Maintenance (4-8 hours per UI change)
+    QA -> QA: UI changed, test broke
+    QA -> QA: Find broken selectors
+    QA -> QA: Update code manually
+    QA -> QA: Re-test and debug
+end
+
+note over QA
+  **Cost per Test: $400-$800**
+  (assuming $50/hr)
+  
+  **Annual Maintenance: $200-$400/test**
+  
+  **For 100 tests: $40,000-$80,000**
+end note
+
+== TestCaptive Approach ==
+
+group TestCaptive Test Creation (1-2 hours per test)
+    QA -> TC: Record user flow (15 min)
+    activate TC
+    TC -> TC: Smart event capture
+    TC -> TC: Extract selectors automatically
+    TC -> TC: Generate code for 3 frameworks
+    TC -> Test: Export ready-to-use tests
+    deactivate TC
+    
+    QA -> Test: Review and customize (30 min)
+    note right
+      - Add assertions (if needed)
+      - Adjust waits
+      - Customize data
+    end note
+    QA -> CICD: Integrate with pipeline (15 min)
+end
+
+group Test Maintenance (1 hour per UI change)
+    QA -> TC: Re-record affected flow (10 min)
+    TC -> Test: Generate updated test (5 min)
+    QA -> Test: Review changes (15 min)
+    QA -> CICD: Deploy update (5 min)
+end
+
+note over QA, TC
+  **Cost per Test: $50-$100**
+  (assuming $50/hr)
+  
+  **Annual Maintenance: $50/test**
+  
+  **For 100 tests: $5,000-$10,000**
+  
+  ⭐ **80-90% Cost Reduction**
+  ⭐ **10x Faster Test Creation**
+  ⭐ **Enable non-technical QA**
+end note
+
+== ROI Summary ==
+
+note over QA, CICD
+  **Year 1 Savings (100 tests):**
+  Manual: $40,000 - $80,000
+  TestCaptive: $5,000 - $10,000
+  **SAVINGS: $35,000 - $70,000**
+  
+  **Additional Benefits:**
+  ✅ Faster time-to-market
+  ✅ Better test coverage
+  ✅ Reduced technical debt
+  ✅ Enable business analysts to write tests
+  ✅ Consistent test quality
+  ✅ Multi-framework support (no vendor lock-in)
+end note
+
+@enduml

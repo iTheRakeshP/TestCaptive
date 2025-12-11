@@ -82,7 +82,8 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "package": "vsce package"
+    "package": "vsce package",
+    "clean": "node -e \"const fs = require('fs'); if (fs.existsSync('out')) fs.rmSync('out', { recursive: true }); console.log('✅ Cleaned out folder'); const vsix = require('fs').readdirSync('.').filter(f => f.endsWith('.vsix')); vsix.forEach(f => fs.unlinkSync(f)); if (vsix.length) console.log('✅ Removed .vsix files');\""
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

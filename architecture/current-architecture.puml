@@ -1,0 +1,84 @@
+@startuml TestCaptive Current Architecture
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+title TestCaptive - Current Architecture (MVP)
+
+package "Browser Layer" {
+    component "Chrome Extension" as Chrome
+    component "Content Script\n(Event Capture)" as ContentScript
+    component "Background Script\n(Session Manager)" as BackgroundScript
+    component "Web Application" as WebApp
+    
+    ContentScript -up-> Chrome
+    BackgroundScript -up-> Chrome
+    ContentScript --> WebApp : Monitors DOM\nCaptures Events
+}
+
+package "Development Environment" {
+    component "VS Code Extension" as VSCode
+    component "Review Panel\n(Webview UI)" as ReviewPanel
+    component "Code Generator\n(Template Engine)" as CodeGen
+    component "Test Data Manager\n(Session Storage)" as TestDataMgr
+    
+    ReviewPanel -up-> VSCode
+    CodeGen -up-> VSCode
+    TestDataMgr -up-> VSCode
+}
+
+package "Storage Layer" {
+    database "Session Files\n(.json)" as SessionDB
+}
+
+package "Output Layer" {
+    file "Selenium Test\n(.py)" as SeleniumOutput
+    file "Playwright Test\n(.py)" as PlaywrightOutput
+    file "Cypress Test\n(.ts)" as CypressOutput
+    file "Test Data\n(.json)" as TestDataOutput
+}
+
+' Workflow
+WebApp --> [Content Script\n(Event Capture)] : User Actions
+[Content Script\n(Event Capture)] --> [Background Script\n(Session Manager)] : Event Stream
+[Background Script\n(Session Manager)] --> SessionDB : Save Session
+
+SessionDB --> [Test Data Manager\n(Session Storage)] : Load Session
+[Test Data Manager\n(Session Storage)] --> [Review Panel\n(Webview UI)] : Display Events
+[Review Panel\n(Webview UI)] --> [Code Generator\n(Template Engine)] : Generate Code
+
+[Code Generator\n(Template Engine)] --> SeleniumOutput : Template Processing
+[Code Generator\n(Template Engine)] --> PlaywrightOutput : Template Processing
+[Code Generator\n(Template Engine)] --> CypressOutput : Template Processing
+[Test Data Manager\n(Session Storage)] --> TestDataOutput : Extract Data
+
+note right of Chrome
+  **Smart Event Capture**
+  - Debouncing (500ms)
+  - Deduplication
+  - Element metadata
+  - Session tracking
+  - **Assertion capture** (7 types)
+  - Context menu integration
+end note
+
+note right of [Code Generator\n(Template Engine)]
+  **Multi-Pass Processing**
+  - Conditional templates
+  - Selector priority
+  - Variable replacement
+  - **Assertion generation**
+  - Clean output
+end note
+
+note bottom of SessionDB
+  **Session Data**
+  - Events array
+  - **Assertions array**
+  - Element selectors
+  - Input values
+  - Timestamps
+  - Page context
+end note
+
+@enduml

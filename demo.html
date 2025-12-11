@@ -77,6 +77,47 @@
             gap: 10px;
             margin: 20px 0;
         }
+        
+        /* Success message popup */
+        .success-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4CAF50;
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            text-align: center;
+        }
+        
+        .success-popup.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translate(-50%, -60%); opacity: 0; }
+            to { transform: translate(-50%, -50%); opacity: 1; }
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .overlay.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -160,6 +201,14 @@
             </div>
         </div>
     </div>
+    
+    <!-- Success Popup -->
+    <div class="overlay" id="overlay"></div>
+    <div class="success-popup" id="successPopup" data-testid="success-popup">
+        <h2>✅ Success!</h2>
+        <p id="successMessage">Form submitted successfully!</p>
+        <button onclick="closeSuccessPopup()" style="margin-top: 15px; width: auto; padding: 10px 30px;">Close</button>
+    </div>
 
     <script>        // Check for TestCaptive extension
         function checkExtension() {
@@ -217,10 +266,24 @@
         }
         
         function submitForm() {
-            validateForm();
-            setTimeout(() => {
-                alert('Form submitted successfully!');
-            }, 1000);
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            
+            if (!firstName || !lastName || !email) {
+                alert('Please fill in all required fields');
+            } else {
+                // Show success popup instead of alert
+                document.getElementById('successMessage').textContent = 
+                    `Form submitted successfully for ${firstName} ${lastName}!`;
+                document.getElementById('overlay').classList.add('show');
+                document.getElementById('successPopup').classList.add('show');
+            }
+        }
+        
+        function closeSuccessPopup() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('successPopup').classList.remove('show');
         }
         
         // Interactive functions

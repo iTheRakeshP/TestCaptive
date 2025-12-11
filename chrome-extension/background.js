@@ -85,3 +85,94 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   return true; // Keep channel open for async response
 });
+
+// Context menu for assertions
+chrome.runtime.onInstalled.addListener(() => {
+  // Create parent menu
+  chrome.contextMenus.create({
+    id: 'testcaptive-assertions',
+    title: '✅ TestCaptive Assertions',
+    contexts: ['all']
+  });
+  
+  // Text-based assertions
+  chrome.contextMenus.create({
+    id: 'assert-text-equals',
+    parentId: 'testcaptive-assertions',
+    title: 'Assert Text Equals...',
+    contexts: ['all']
+  });
+  
+  chrome.contextMenus.create({
+    id: 'assert-text-contains',
+    parentId: 'testcaptive-assertions',
+    title: 'Assert Text Contains...',
+    contexts: ['all']
+  });
+  
+  // Visibility assertions
+  chrome.contextMenus.create({
+    id: 'assert-visible',
+    parentId: 'testcaptive-assertions',
+    title: 'Assert Element Visible',
+    contexts: ['all']
+  });
+  
+  chrome.contextMenus.create({
+    id: 'assert-not-visible',
+    parentId: 'testcaptive-assertions',
+    title: 'Assert Element Not Visible',
+    contexts: ['all']
+  });
+  
+  // State assertions
+  chrome.contextMenus.create({
+    id: 'assert-enabled',
+    parentId: 'testcaptive-assertions',
+    title: 'Assert Element Enabled',
+    contexts: ['all']
+  });
+  
+  chrome.contextMenus.create({
+    id: 'assert-disabled',
+    parentId: 'testcaptive-assertions',
+    title: 'Assert Element Disabled',
+    contexts: ['all']
+  });
+  
+  // URL assertions
+  chrome.contextMenus.create({
+    id: 'assert-url-contains',
+    parentId: 'testcaptive-assertions',
+    title: 'Assert URL Contains...',
+    contexts: ['all']
+  });
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (!isRecording) {
+    console.log('⚠️ Cannot add assertion: Not recording');
+    return;
+  }
+  
+  const assertionType = info.menuItemId;
+  
+  // For text-based assertions, we need a prompt
+  if (assertionType === 'assert-text-equals' || 
+      assertionType === 'assert-text-contains' || 
+      assertionType === 'assert-url-contains') {
+    
+    // Send message to content script to get element info and show prompt
+    chrome.tabs.sendMessage(tab.id, {
+      type: 'create-text-assertion',
+      assertionType: assertionType
+    });
+  } else {
+    // For simple assertions, create immediately
+    chrome.tabs.sendMessage(tab.id, {
+      type: 'create-simple-assertion',
+      assertionType: assertionType
+    });
+  }
+});

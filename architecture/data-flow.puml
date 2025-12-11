@@ -1,0 +1,188 @@
+@startuml Data Flow
+!theme plain
+
+title TestCaptive - Data Flow & Processing Pipeline
+
+box "Browser Environment" #LightBlue
+    participant "Web Page" as WebPage
+    participant "Content Script" as Content
+    participant "Background Script" as Background
+end box
+
+box "Storage Layer" #LightYellow
+    database "Session Files\n(.json)" as SessionDB
+end box
+
+box "VS Code Extension" #LightGreen
+    participant "Review Panel" as Review
+    participant "Code Generator" as CodeGen
+    participant "Template Engine" as Template
+end box
+
+box "Output" #LightPink
+    participant "Test Files" as TestFiles
+    participant "Test Data JSON" as TestData
+end box
+
+== Recording Phase ==
+
+WebPage -> Content: User performs actions
+activate Content
+
+Content -> Content: Capture DOM event
+note right
+  Event types:
+  - click
+  - input/change
+  - navigation
+  - keydown
+end note
+
+Content -> Content: Extract element metadata
+note right
+  Collected data:
+  - tag name
+  - id, name, class
+  - data-testid
+  - aria-label
+  - placeholder, text
+  - xpath
+  - position
+end note
+
+Content -> Content: Apply deduplication
+note right
+  Smart filtering:
+  - Debounce (500ms)
+  - Min interval (100ms)
+  - Duplicate check
+  - Focus/blur pairs
+end note
+
+Content -> Background: Send filtered event
+deactivate Content
+
+Background -> Background: Build session object
+activate Background
+note right
+  Session structure:
+  {
+    id: "session_xxx",
+    timestamp: "...",
+    events: [...],
+    metadata: {...}
+  }
+end note
+
+Background -> SessionDB: Save session.json
+deactivate Background
+
+== Code Generation Phase ==
+
+Review -> SessionDB: Load session
+activate Review
+SessionDB --> Review: Return session data
+
+Review -> Review: Display events in UI
+Review -> Review: User selects framework
+Review -> CodeGen: Generate code request
+deactivate Review
+
+activate CodeGen
+CodeGen -> SessionDB: Read session
+SessionDB --> CodeGen: Session data
+
+CodeGen -> CodeGen: Prepare event context
+note right
+  For each event:
+  - event type
+  - element properties
+  - input values
+  - page context
+  - navigation state
+end note
+
+CodeGen -> Template: Process template
+activate Template
+
+Template -> Template: Load framework template
+note right
+  Templates:
+  - selenium_template.py
+  - playwright_template.py
+  - cypress_template.ts
+end note
+
+Template -> Template: Multi-pass processing
+note right
+  Pass 1: Process outer conditionals
+  {{#if (eq event 'click')}}
+  
+  Pass 2: Process inner conditionals
+  {{#if element.testid}}
+  
+  Pass 3-N: Iterate until stable
+  
+  Final: Clean orphaned tags
+end note
+
+Template -> Template: Apply selector priority
+note right
+  Priority evaluation:
+  1. data-testid ⭐⭐⭐⭐⭐
+  2. aria-label ⭐⭐⭐⭐
+  3. id ⭐⭐⭐
+  4. name ⭐⭐
+  5. xpath ⭐
+  6. cssSelector (fallback)
+end note
+
+Template -> Template: Replace variables
+note right
+  Variable replacement:
+  {{event}} → 'click'
+  {{element.testid}} → 'submit-btn'
+  {{value}} → 'john@example.com'
+  {{page.url}} → 'https://...'
+end note
+
+Template --> CodeGen: Return generated code
+deactivate Template
+
+CodeGen -> CodeGen: Extract test data
+note right
+  Extract from input events:
+  {
+    "input-first-name": "John",
+    "input-email": "john@example.com",
+    ...
+  }
+end note
+
+CodeGen -> TestFiles: Write test file
+CodeGen -> TestData: Write test_data.json
+deactivate CodeGen
+
+== Execution Phase (Future) ==
+
+TestFiles -> TestFiles: Run in framework
+note right
+  Framework execution:
+  - pytest (Selenium)
+  - pytest-playwright (Playwright)
+  - cypress run (Cypress)
+end note
+
+TestFiles -> WebPage: Execute test steps
+WebPage --> TestFiles: Validation results
+
+note over TestFiles
+  **Future Enhancement:**
+  Test results feedback loop
+  - Capture failures
+  - Suggest fixes
+  - Auto-update selectors
+  - Alert on flaky tests
+end note
+
+@enduml

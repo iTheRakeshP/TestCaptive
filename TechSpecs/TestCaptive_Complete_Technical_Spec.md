@@ -25,8 +25,9 @@ TestCaptive enables developers and QA engineers to automatically generate test s
 
 - JavaScript
 - Manifest V3
-- Event Capture (Clicks, Inputs, Navigation)
-- Session Export (JSON Download)
+- Event Capture (Clicks, Inputs, Navigation, Assertions)
+- Context Menu Integration (Right-click assertion capture)
+- Session Export (JSON Download with assertions)
 
 ---
 
@@ -74,11 +75,12 @@ Since the tool is now offline/file-based, role simulation is handled during the 
 
 1.  **User** starts recording in Chrome Extension.
 2.  **Chrome Extension** captures DOM events (click, input, change).
-3.  **User** stops recording.
-4.  **Chrome Extension** compiles events into a JSON object and triggers a file download.
-5.  **User** opens VS Code Extension.
-6.  **User** drags the downloaded JSON file into the VS Code Extension.
-7.  **VS Code Extension** parses the JSON, displays events, and generates test code using templates.
+3.  **User** optionally adds assertions via right-click context menu during recording.
+4.  **User** stops recording.
+5.  **Chrome Extension** compiles events and assertions into a JSON object and triggers a file download.
+6.  **User** opens VS Code Extension.
+7.  **User** drags the downloaded JSON file into the VS Code Extension.
+8.  **VS Code Extension** parses the JSON, displays events (including assertions), and generates test code with validations using templates.
 
 ---
 
@@ -92,7 +94,9 @@ Since the tool is now offline/file-based, role simulation is handled during the 
 
 ## Future Enhancements
 
+-   **AI-Powered Assertion Suggestions**: Analyze DOM changes to suggest additional assertions automatically
 -   **Direct File System Access**: Allow Chrome Extension to save directly to a specific folder (requires native messaging host, optional).
 -   **Cloud Sync**: Upload sessions to a cloud service for team sharing.
+-   **Advanced Assertion Types**: API response validation, performance metrics, accessibility checks
 
 

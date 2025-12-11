@@ -69,9 +69,84 @@ describe('TestCaptive Generated Test', () => {
     {{/if}}
     cy.wait(500);
     
+    {{else if (eq event 'assertion')}}
+    // Assertion: {{event.assertion.description}}
+    {{#if (eq assertion.type 'text-equals')}}
+    {{#if assertion.element.testid}}
+    cy.get('[data-testid="{{event.assertion.element.testid}}"]').should('have.text', '{{event.assertion.expectedValue}}');
+    {{else if assertion.element.id}}
+    cy.get('#{{event.assertion.element.id}}').should('have.text', '{{event.assertion.expectedValue}}');
+    {{else if assertion.element.xpath}}
+    cy.xpath('{{event.assertion.element.xpath}}').should('have.text', '{{event.assertion.expectedValue}}');
+    {{else}}
+    cy.get('{{event.assertion.element.cssSelector}}').should('have.text', '{{event.assertion.expectedValue}}');
+    {{/if}}
+    
+    {{else if (eq assertion.type 'text-contains')}}
+    {{#if assertion.element.testid}}
+    cy.get('[data-testid="{{event.assertion.element.testid}}"]').should('contain.text', '{{event.assertion.expectedValue}}');
+    {{else if assertion.element.id}}
+    cy.get('#{{event.assertion.element.id}}').should('contain.text', '{{event.assertion.expectedValue}}');
+    {{else if assertion.element.xpath}}
+    cy.xpath('{{event.assertion.element.xpath}}').should('contain.text', '{{event.assertion.expectedValue}}');
+    {{else}}
+    cy.get('{{event.assertion.element.cssSelector}}').should('contain.text', '{{event.assertion.expectedValue}}');
+    {{/if}}
+    
+    {{else if (eq assertion.type 'visible')}}
+    {{#if assertion.element.testid}}
+    cy.get('[data-testid="{{event.assertion.element.testid}}"]').should('be.visible');
+    {{else if assertion.element.id}}
+    cy.get('#{{event.assertion.element.id}}').should('be.visible');
+    {{else if assertion.element.xpath}}
+    cy.xpath('{{event.assertion.element.xpath}}').should('be.visible');
+    {{else}}
+    cy.get('{{event.assertion.element.cssSelector}}').should('be.visible');
+    {{/if}}
+    
+    {{else if (eq assertion.type 'not-visible')}}
+    {{#if assertion.element.testid}}
+    cy.get('[data-testid="{{event.assertion.element.testid}}"]').should('not.be.visible');
+    {{else if assertion.element.id}}
+    cy.get('#{{event.assertion.element.id}}').should('not.be.visible');
+    {{else if assertion.element.xpath}}
+    cy.xpath('{{event.assertion.element.xpath}}').should('not.be.visible');
+    {{else}}
+    cy.get('{{event.assertion.element.cssSelector}}').should('not.be.visible');
+    {{/if}}
+    
+    {{else if (eq assertion.type 'enabled')}}
+    {{#if assertion.element.testid}}
+    cy.get('[data-testid="{{event.assertion.element.testid}}"]').should('be.enabled');
+    {{else if assertion.element.id}}
+    cy.get('#{{event.assertion.element.id}}').should('be.enabled');
+    {{else if assertion.element.xpath}}
+    cy.xpath('{{event.assertion.element.xpath}}').should('be.enabled');
+    {{else}}
+    cy.get('{{event.assertion.element.cssSelector}}').should('be.enabled');
+    {{/if}}
+    
+    {{else if (eq assertion.type 'disabled')}}
+    {{#if assertion.element.testid}}
+    cy.get('[data-testid="{{event.assertion.element.testid}}"]').should('be.disabled');
+    {{else if assertion.element.id}}
+    cy.get('#{{event.assertion.element.id}}').should('be.disabled');
+    {{else if assertion.element.xpath}}
+    cy.xpath('{{event.assertion.element.xpath}}').should('be.disabled');
+    {{else}}
+    cy.get('{{event.assertion.element.cssSelector}}').should('be.disabled');
+    {{/if}}
+    
+    {{else if (eq assertion.type 'url-contains')}}
+    cy.url().should('include', '{{event.assertion.expectedValue}}');
+    
+    {{/if}}
+    cy.wait(500);
+    
     {{/if}}
     {{/events}}
     
     cy.log('Test completed successfully!');
   });
 });
+

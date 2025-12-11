@@ -13,13 +13,12 @@ describe('TestCaptive Generated Test', () => {
   it('should execute recorded user flow', () => {
         
     // Navigate to TestCaptive Demo Page
-    {{#if isFirstNavigation}}
+    
     cy.visit('file:///G:/Projects/Advance/TestCaptive/demo.html');
-    {{else}}
-    // Verify URL change
-    cy.url().should('include', 'file:///G:/Projects/Advance/TestCaptive/demo.html');
-    {{/if}}
+    
     cy.wait(2000);
+    
+    
     
     
     
@@ -28,6 +27,8 @@ describe('TestCaptive Generated Test', () => {
     cy.get('[data-testid="input-first-name"]').click();
     
     cy.wait(1000);
+    
+    
     
     
     
@@ -43,6 +44,8 @@ describe('TestCaptive Generated Test', () => {
     
     
     
+    
+    
     // Enter text in "lastName"
     
     // Use test data from JSON file
@@ -52,6 +55,8 @@ describe('TestCaptive Generated Test', () => {
     cy.get('[data-testid="input-last-name"]').clear().type(fieldValue);
     
     cy.wait(500);
+    
+    
     
     
     
@@ -67,6 +72,8 @@ describe('TestCaptive Generated Test', () => {
     
     
     
+    
+    
     // Enter text in "phone"
     
     // Use test data from JSON file
@@ -79,6 +86,8 @@ describe('TestCaptive Generated Test', () => {
     
     
     
+    
+    
     // Click "
                     Select Country
                     United States
@@ -88,6 +97,8 @@ describe('TestCaptive Generated Test', () => {
     cy.get('[data-testid="select-country"]').click();
     
     cy.wait(1000);
+    
+    
     
     
     
@@ -103,6 +114,8 @@ describe('TestCaptive Generated Test', () => {
     
     
     
+    
+    
     // Click "
                     Select Country
                     United States
@@ -115,11 +128,15 @@ describe('TestCaptive Generated Test', () => {
     
     
     
+    
+    
     // Click element
     
     cy.get('[data-testid="textarea-comments"]').click();
     
     cy.wait(1000);
+    
+    
     
     
     
@@ -135,11 +152,15 @@ describe('TestCaptive Generated Test', () => {
     
     
     
+    
+    
     // Click element
     
     cy.get('[data-testid="checkbox-newsletter"]').click();
     
     cy.wait(1000);
+    
+    
     
     
     
@@ -155,18 +176,6 @@ describe('TestCaptive Generated Test', () => {
     
     
     
-    // Click "
-    
-    
-    TestCaptive Demo Page
-    
-        body {
-            font-family: Arial, sans-serif;"
-    
-    cy.get('{{element.cssSelector}}').click();
-    
-    cy.wait(1000);
-    
     
     
     // Click "Submit Form"
@@ -177,6 +186,19 @@ describe('TestCaptive Generated Test', () => {
     
     
     
+    
+    
+    // Click "Close"
+    
+    cy.get('button.testcaptive-recordable').click();
+    
+    cy.wait(1000);
+    
+    
+    
+    
+    
     cy.log('Test completed successfully!');
   });
 });
+

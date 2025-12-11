@@ -1,0 +1,93 @@
+@startuml User Workflow
+!theme plain
+skinparam actorStyle awesome
+
+title TestCaptive - User Workflow (Current vs Enterprise)
+
+|#LightBlue|QA Engineer|
+start
+
+:Open Web Application;
+
+|#LightGreen|Chrome Extension|
+:Click Record Button;
+:Monitor User Actions;
+
+|#LightBlue|QA Engineer|
+:Perform Test Scenario;
+note right
+  - Navigate pages
+  - Fill forms
+  - Click buttons
+  - **Right-click → Add Assertions**
+  - Verify workflows
+end note
+
+|#LightGreen|Chrome Extension|
+:Capture Events in Real-Time;
+:Capture Assertions (7 types);
+:Apply Smart Deduplication;
+:Extract Element Selectors;
+:Save Session to JSON;
+
+|#LightBlue|QA Engineer|
+:Stop Recording;
+:Open VS Code;
+
+|#Yellow|VS Code Extension|
+:Import Session File;
+:Display Captured Events;
+:Display Assertions with ✅ icon;
+
+|#LightBlue|QA Engineer|
+:Review Event List;
+:Review Assertions;
+:Select Framework\n(Selenium/Playwright/Cypress);
+
+|#Yellow|VS Code Extension|
+:Generate Test Code;
+:Apply Template Processing;
+:Generate Assertion Code;
+:Optimize Selectors;
+
+|#LightBlue|QA Engineer|
+:Review Generated Code;
+
+if (Code Quality OK?) then (yes)
+  :Export Test File;
+  :Export Test Data JSON;
+  
+  |#LightGreen|Ready for CI/CD|
+  note right
+    **✅ Assertions Included**
+    - Text validations
+    - Visibility checks
+    - State validations
+    - URL verifications
+    - **No manual work needed!**
+  end note
+  
+  :Add to test suite;
+  :Commit to version control;
+  :Configure in CI/CD;
+  
+else (no)
+  |#Yellow|VS Code Extension|
+  :Re-record specific steps;
+endif
+
+|#LightBlue|QA Engineer|
+stop
+
+floating note right
+  **Enterprise Enhancements**
+  - ✅ Smart assertion capture (DONE)
+  - AI assertion suggestions
+  - Auto-commit to Git
+  - Direct CI/CD integration
+  - Team review workflow
+  - Test suite organization
+  - Maintenance alerts
+end note
+
+@enduml

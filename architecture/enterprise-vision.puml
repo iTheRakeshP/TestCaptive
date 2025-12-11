@@ -1,0 +1,98 @@
+@startuml TestCaptive Enterprise Vision
+!theme plain
+skinparam componentStyle rectangle
+
+title TestCaptive - Enterprise Architecture Vision
+
+package "Capture Layer" {
+    component [Chrome Extension] as Chrome
+    component [Edge Extension] as Edge
+    component [Firefox Extension] as Firefox
+    component [Mobile Recorder] as Mobile
+}
+
+package "IDE Integration" {
+    component [VS Code Extension] as VSCode
+    component [IntelliJ Plugin] as IntelliJ
+    component [Web Dashboard] as WebUI
+}
+
+package "Core Services" {
+    component [Session Service] as SessionSvc
+    component [Code Generation Service] as CodeGenSvc
+    component [AI Service] as AISvc
+    component [Collaboration Service] as CollabSvc
+}
+
+package "Integration Layer" {
+    component [CI/CD Integration] as CICD
+    component [Test Management] as TestMgmt
+    component [Observability] as Observability
+}
+
+package "Storage & Data" {
+    database "PostgreSQL\n(Sessions, Users)" as PostgreSQL
+    database "MongoDB\n(Test Results)" as MongoDB
+    database "S3/Blob Storage\n(Recordings, Screenshots)" as BlobStorage
+    queue "Message Queue\n(Event Stream)" as MQ
+}
+
+package "Enterprise Features" {
+    component [Security & Compliance] as Security
+    component [Administration] as Admin
+}
+
+' Connections
+Chrome --> SessionSvc
+Edge --> SessionSvc
+Firefox --> SessionSvc
+Mobile --> SessionSvc
+
+VSCode --> SessionSvc
+IntelliJ --> SessionSvc
+WebUI --> SessionSvc
+
+SessionSvc --> CodeGenSvc
+SessionSvc --> AISvc
+CodeGenSvc --> CollabSvc
+
+SessionSvc --> PostgreSQL
+SessionSvc --> MQ
+AISvc --> MongoDB
+CollabSvc --> BlobStorage
+
+CodeGenSvc --> CICD
+SessionSvc --> TestMgmt
+AISvc --> Observability
+
+Security --> SessionSvc
+Security --> CollabSvc
+Admin --> PostgreSQL
+
+note right of AISvc
+  **AI-Powered Features**
+  - Auto-generate assertions
+  - Smart assertion suggestions
+  - Predict flaky tests
+  - Suggest better selectors
+  - Self-healing tests
+  - Assertion optimization
+end note
+
+note right of CollabSvc
+  **Team Collaboration**
+  - Share sessions
+  - Review tests
+  - Template library
+  - Best practices
+end note
+
+note right of Observability
+  **Test Intelligence**
+  - Failure patterns
+  - Maintenance alerts
+  - ROI metrics
+  - Team productivity
+end note
+
+@enduml

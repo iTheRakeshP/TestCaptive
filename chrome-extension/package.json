@@ -1,0 +1,14 @@
+{
+  "name": "testcaptive-chrome-extension",
+  "version": "1.0.0",
+  "description": "TestCaptive UI behavior recording Chrome extension",
+  "scripts": {
+    "build": "node build.js",
+    "package": "node build.js && npm run zip",
+    "zip": "node -e \"const AdmZip = require('adm-zip'); const zip = new AdmZip(); zip.addLocalFolder('dist'); zip.writeZip('testcaptive-chrome-extension.zip'); console.log('✅ Extension packaged: testcaptive-chrome-extension.zip');\"",
+    "clean": "node -e \"const fs = require('fs'); if (fs.existsSync('dist')) fs.rmSync('dist', { recursive: true }); console.log('✅ Cleaned dist folder');\""
+  },
+  "devDependencies": {
+    "adm-zip": "^0.5.10"
+  }
+}

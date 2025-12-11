@@ -52,6 +52,11 @@ class SimpleTemplateEngine implements TemplateEngine {
             navigationCount++;
             (event as any).isFirstNavigation = (navigationCount === 1);
         }
+        
+        // Copy selector to element.cssSelector if it doesn't exist
+        if (event.element && (event as any).selector && !event.element.cssSelector) {
+          (event.element as any).cssSelector = (event as any).selector;
+        }
 
         // Replace event-specific variables
         eventCode = eventCode.replace(/{{event}}/g, eventType);
@@ -65,7 +70,7 @@ class SimpleTemplateEngine implements TemplateEngine {
           eventCode = eventCode.replace(/{{page\.title}}/g, event.page.title || '');
         }
         
-        // Replace element variables
+        // Replace element variables BEFORE conditionals
         if (event.element) {
           Object.keys(event.element).forEach(key => {
             const value = (event.element as any)[key];
@@ -77,6 +82,16 @@ class SimpleTemplateEngine implements TemplateEngine {
         
         // Handle conditional statements
         eventCode = this.handleConditionals(eventCode, event);
+        
+        // Replace element variables AFTER conditionals (in case they were in selected branches)
+        if (event.element) {
+          Object.keys(event.element).forEach(key => {
+            const value = (event.element as any)[key];
+            if (value) {
+              eventCode = eventCode.replace(new RegExp(`{{element\\.${key}}}`, 'g'), value);
+            }
+          });
+        }
         
         // Only add if the code is not empty (after conditional processing)
         if (eventCode.trim()) {
@@ -99,6 +114,22 @@ class SimpleTemplateEngine implements TemplateEngine {
   }
 
   private handleConditionals(template: string, event: TestEvent): string {
+    let result = template;
+    let previousResult = '';
+    let iterations = 0;
+    const maxIterations = 10; // Prevent infinite loops
+    
+    // Keep processing until no more changes or max iterations reached
+    while (result !== previousResult && iterations < maxIterations) {
+      previousResult = result;
+      result = this.processSinglePass(result, event);
+      iterations++;
+    }
+    
+    return result;
+  }
+  
+  private processSinglePass(template: string, event: TestEvent): string {
     let result = template;
     const eventType = event.event || event.type;
     const eventValue = event.inputValue || event.value || (event.element && event.element.value) || '';
@@ -318,6 +349,98 @@ class SimpleTemplateEngine implements TemplateEngine {
       }
     }
 
+    // Handle {{#if isFirstNavigation}} - check if property exists on event
+    const simplePropertyMatches = result.matchAll(/{{#if ([^}]+)}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
+    for (const match of simplePropertyMatches) {
+      const [fullMatch, property, contentIf, contentElse] = match;
+      const propertyValue = (event as any)[property];
+      
+      if (propertyValue) {
+        result = result.replace(fullMatch, contentIf);
+      } else {
+        result = result.replace(fullMatch, contentElse);
+      }
+    }
+
+    // Handle assertion type conditionals - {{#if (eq assertion.type 'text-equals')}}
+    // Pattern: {{#if (eq assertion.type 'TYPE')}}...{{else if (eq assertion.type 'TYPE2')}}...{{/if}}
+    const assertionTypeChainMatches = result.matchAll(/{{#if \(eq assertion\.type '([^']+)'\)}}([\s\S]*?)(?:{{else if \(eq assertion\.type '([^']+)'\)}}([\s\S]*?))*{{\/if}}/g);
+    
+    for (const match of assertionTypeChainMatches) {
+      const fullMatch = match[0];
+      const assertion = (event as any).assertion;
+      
+      if (assertion && assertion.type) {
+        // Find all conditions in this chain
+        const conditionPattern = /{{(?:#if|else if) \(eq assertion\.type '([^']+)'\)}}([\s\S]*?)(?={{(?:else if|\/if)})/g;
+        const conditions = [...fullMatch.matchAll(conditionPattern)];
+        
+        let replacement = '';
+        for (const cond of conditions) {
+          if (cond[1] === assertion.type) {
+            replacement = cond[2];
+            break;
+          }
+        }
+        
+        result = result.replace(fullMatch, replacement);
+      } else {
+        result = result.replace(fullMatch, '');
+      }
+    }
+
+    // Handle assertion.element conditionals - {{#if assertion.element.testid}}
+    // These are nested inside assertion type blocks
+    const assertionElementChainMatches = result.matchAll(/{{#if assertion\.element\.testid}}([\s\S]*?)(?:{{else if assertion\.element\.id}}([\s\S]*?))?(?:{{else if assertion\.element\.xpath}}([\s\S]*?))?{{\/if}}/g);
+    
+    for (const match of assertionElementChainMatches) {
+      const [fullMatch, contentTestId, contentId, contentXpath] = match;
+      const assertion = (event as any).assertion;
+      
+      if (assertion && assertion.element) {
+        if (assertion.element.testid) {
+          result = result.replace(fullMatch, contentTestId || '');
+        } else if (assertion.element.id) {
+          result = result.replace(fullMatch, contentId || '');
+        } else if (assertion.element.xpath) {
+          result = result.replace(fullMatch, contentXpath || '');
+        } else {
+          result = result.replace(fullMatch, '');
+        }
+      } else {
+        result = result.replace(fullMatch, '');
+      }
+    }
+
+    // Handle event.assertion variable replacements
+    const assertion = (event as any).assertion;
+    if (assertion) {
+      // Replace assertion.type
+      if (assertion.type) {
+        result = result.replace(/{{event\.assertion\.type}}/g, assertion.type);
+      }
+      
+      // Replace assertion.expectedValue
+      if (assertion.expectedValue !== undefined) {
+        result = result.replace(/{{event\.assertion\.expectedValue}}/g, assertion.expectedValue);
+      }
+      
+      // Replace assertion.description
+      if (assertion.description) {
+        result = result.replace(/{{event\.assertion\.description}}/g, assertion.description);
+      }
+      
+      // Replace assertion.element properties
+      if (assertion.element) {
+        Object.keys(assertion.element).forEach(key => {
+          const value = assertion.element[key];
+          if (value) {
+            result = result.replace(new RegExp(`{{event\\.assertion\\.element\\.${key}}}`, 'g'), value);
+          }
+        });
+      }
+    }
+
     // Handle element property conditionals
     const elementIfMatches = result.matchAll(/{{#if element\.([^}]+)}}([\s\S]*?){{\/if}}/g);
     
@@ -330,6 +453,12 @@ class SimpleTemplateEngine implements TemplateEngine {
         result = result.replace(fullMatch, '');
       }
     }
+
+    // Clean up orphaned {{else if}}, {{else}}, and {{/if}} tags
+    // These occur when outer conditionals are resolved but leave behind unmatched inner tags
+    result = result.replace(/{{else\s+if\s+[^}]+}}[\s\S]*?(?={{#if|{{else|$)/g, '');
+    result = result.replace(/{{else}}[\s\S]*?(?={{#if|$)/g, '');
+    result = result.replace(/{{\/if}}/g, '');
 
     return result;
   }

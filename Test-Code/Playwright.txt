@@ -2,7 +2,8 @@
 
 import json
 import asyncio
-from playwright.async_api import async_playwright
+import re
+from playwright.async_api import async_playwright, expect
 
 class TestCaptiveTest:
     def __init__(self):
@@ -33,98 +34,37 @@ class TestCaptiveTest:
             
                         
             # Navigate to TestCaptive Demo Page
-            {{#if isFirstNavigation}}
+            
             await self.page.goto("file:///G:/Projects/Advance/TestCaptive/demo.html")
-            {{else}}
-            # Verify URL change
-            await expect(self.page).to_have_url("file:///G:/Projects/Advance/TestCaptive/demo.html")
-            {{/if}}
+            
+            
+            
             
             
             
             # Click element
             
             await self.page.get_by_test_id("input-first-name").click()
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").click()
-            
-            
             
             
             # Enter text in "firstName"
             
             await self.page.get_by_test_id("input-first-name").fill('')
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
-            
-            
-            # Use test data from JSON file
-            test_value = self.data.get("input-first-name")
-            
-            
-            await self.page.get_by_test_id("input-first-name").fill(test_value)
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
-            
-            
-            
             
             
             # Enter text in "lastName"
             
             await self.page.get_by_test_id("input-last-name").fill('')
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
-            
-            
-            # Use test data from JSON file
-            test_value = self.data.get("input-last-name")
-            
-            
-            await self.page.get_by_test_id("input-last-name").fill(test_value)
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
-            
-            
-            
             
             
             # Enter text in "email"
             
             await self.page.get_by_test_id("input-email").fill('')
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
-            
-            
-            # Use test data from JSON file
-            test_value = self.data.get("input-email")
-            
-            
-            await self.page.get_by_test_id("input-email").fill(test_value)
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
-            
-            
-            
             
             
             # Enter text in "phone"
             
             await self.page.get_by_test_id("input-phone").fill('')
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
-            
-            
-            # Use test data from JSON file
-            test_value = self.data.get("input-phone")
-            
-            
-            await self.page.get_by_test_id("input-phone").fill(test_value)
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
-            
-            
-            
             
             
             # Click "
@@ -134,29 +74,11 @@ class TestCaptiveTest:
    "
             
             await self.page.get_by_test_id("select-country").click()
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").click()
-            
-            
             
             
             # Enter text in "country"
             
             await self.page.get_by_test_id("select-country").fill('')
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
-            
-            
-            # Use test data from JSON file
-            test_value = self.data.get("select-country")
-            
-            
-            await self.page.get_by_test_id("select-country").fill(test_value)
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
-            
-            
-            
             
             
             # Click "
@@ -166,86 +88,38 @@ class TestCaptiveTest:
    "
             
             await self.page.get_by_test_id("select-country").click()
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").click()
-            
-            
             
             
             # Click element
             
             await self.page.get_by_test_id("textarea-comments").click()
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").click()
-            
-            
             
             
             # Enter text in "comments"
             
             await self.page.get_by_test_id("textarea-comments").fill('')
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
-            
-            
-            # Use test data from JSON file
-            test_value = self.data.get("textarea-comments")
-            
-            
-            await self.page.get_by_test_id("textarea-comments").fill(test_value)
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
-            
-            
-            
             
             
             # Click element
             
             await self.page.get_by_test_id("checkbox-newsletter").click()
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").click()
-            
-            
             
             
             # Enter text in "newsletter"
             
             await self.page.get_by_test_id("checkbox-newsletter").fill('')
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill('')
-            
-            
-            # Use test data from JSON file
-            test_value = self.data.get("checkbox-newsletter")
-            
-            
-            await self.page.get_by_test_id("checkbox-newsletter").fill(test_value)
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").fill(test_value)
-            
-            
-            
-            
-            
-            # Click "
-    
-    
-    TestCaptive Demo Page
-    
-        body {
-            font-family: Arial, sans-serif;"
-            
-            await self.page.click('{{element.cssSelector}}')
-            
-            
             
             
             # Click "Submit Form"
             
             await self.page.get_by_test_id("btn-submit").click()
-            {{else if element.ariaLabel}}
-            await self.page.get_by_label("{{element.ariaLabel}}").click()
+            
+            
+            # Click "Close"
+            
+            await self.page.click('button.testcaptive-recordable')
+            
+            
             
             
             
@@ -264,3 +138,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

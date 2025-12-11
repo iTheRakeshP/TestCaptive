@@ -7,8 +7,13 @@
     "build:chrome": "cd chrome-extension && npm run build",
     "build:vscode": "cd vscode-extension && npm run compile",
     "build:all": "npm run build:chrome && npm run build:vscode",
-    "install-all": "npm install && cd chrome-extension && npm install && cd ../vscode-extension && npm install",
-    "clean": "cd vscode-extension && rm -rf out"
+    "package:chrome": "cd chrome-extension && npm run package",
+    "package:vscode": "cd vscode-extension && npm run package",
+    "package:all": "npm run package:chrome && npm run package:vscode",
+    "install:all": "cd chrome-extension && npm install && cd ../vscode-extension && npm install && cd ..",
+    "clean:chrome": "cd chrome-extension && npm run clean",
+    "clean:vscode": "cd vscode-extension && npm run clean",
+    "clean:all": "npm run clean:chrome && npm run clean:vscode"
   },
   "keywords": [
     "test-automation",

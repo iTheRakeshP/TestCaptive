@@ -66,10 +66,17 @@
     let isRecording = false;
     let sessionId = null;
     let recordedEvents = [];
+    let rightClickedElement = null; // Store element for context menu assertions
     
-    // Debounce variables
+    // Enhanced debounce variables
     let inputDebounceTimer = null;
     let pendingInputEvent = null;
+    let lastCapturedEvent = null;
+    let lastEventTimestamp = 0;
+    
+    // Event deduplication settings
+    const DEBOUNCE_DELAY = 500; // ms for input events
+    const MIN_EVENT_INTERVAL = 100; // ms minimum between similar events
 
     function flushPendingInput() {
         if (pendingInputEvent) {
@@ -81,6 +88,40 @@
             }
         }
     }
+    
+    // Check if event should be captured (debounce duplicate events)
+    function shouldCaptureEvent(eventData) {
+        const now = Date.now();
+        
+        // Always capture navigation events
+        if (eventData.type === 'navigation') {
+            return true;
+        }
+        
+        // Check if we recently captured a similar event
+        if (lastCapturedEvent) {
+            const timeDiff = now - lastEventTimestamp;
+            const isSameElement = lastCapturedEvent.selector === eventData.selector;
+            const isSameType = lastCapturedEvent.type === eventData.type;
+            
+            // Skip duplicate events that happen too quickly on the same element
+            if (isSameElement && isSameType && timeDiff < MIN_EVENT_INTERVAL) {
+                console.log(`⏭️ Skipping duplicate ${eventData.type} on ${eventData.selector}`);
+                return false;
+            }
+            
+            // Skip redundant focus/blur events after a click on the same element
+            if (isSameElement && timeDiff < MIN_EVENT_INTERVAL) {
+                if ((lastCapturedEvent.type === 'click' && eventData.type === 'focus') ||
+                    (lastCapturedEvent.type === 'focus' && eventData.type === 'blur' && timeDiff < 200)) {
+                    console.log(`⏭️ Skipping redundant ${eventData.type} after ${lastCapturedEvent.type}`);
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
 
     function sendEvent(eventData) {
         // Remove internal properties before sending
@@ -88,6 +129,13 @@
         delete dataToSend._targetElement;
 
         recordedEvents.push(dataToSend);
+        
+        // Update last captured event for debouncing
+        lastCapturedEvent = {
+            type: dataToSend.type,
+            selector: dataToSend.selector
+        };
+        lastEventTimestamp = Date.now();
         
         // Send to background script
         chrome.runtime.sendMessage({
@@ -120,6 +168,33 @@
                     eventCount: recordedEvents.length 
                 });
                 break;
+            
+            case 'add-assertion':
+                if (isRecording && message.assertion) {
+                    addAssertion(message.assertion);
+                    sendResponse({ success: true });
+                } else {
+                    sendResponse({ success: false, error: 'Not recording or invalid assertion' });
+                }
+                break;
+            
+            case 'create-text-assertion':
+                if (isRecording && rightClickedElement) {
+                    createTextAssertion(message.assertionType, rightClickedElement);
+                    sendResponse({ success: true });
+                } else {
+                    sendResponse({ success: false });
+                }
+                break;
+            
+            case 'create-simple-assertion':
+                if (isRecording && rightClickedElement) {
+                    createSimpleAssertion(message.assertionType, rightClickedElement);
+                    sendResponse({ success: true });
+                } else {
+                    sendResponse({ success: false });
+                }
+                break;
                 
             default:
                 sendResponse({ success: false, error: 'Unknown message type' });
@@ -132,6 +207,16 @@
         isRecording = true;
         sessionId = newSessionId;
         recordedEvents = [];
+        
+        // Reset debounce state
+        lastCapturedEvent = null;
+        lastEventTimestamp = 0;
+        pendingInputEvent = null;
+        if (inputDebounceTimer) {
+            clearTimeout(inputDebounceTimer);
+            inputDebounceTimer = null;
+        }
+        
         attachEventListeners();
         highlightRecordableElements();
         console.log('🔴 Recording started:', sessionId);
@@ -219,7 +304,7 @@
                 pendingInputEvent = eventData;
                 
                 if (inputDebounceTimer) clearTimeout(inputDebounceTimer);
-                inputDebounceTimer = setTimeout(flushPendingInput, 500); // 500ms debounce
+                inputDebounceTimer = setTimeout(flushPendingInput, DEBOUNCE_DELAY);
                 return;
             }
 
@@ -230,6 +315,11 @@
                 if (!type || type === 'text' || type === 'password' || type === 'email' || type === 'search' || type === 'tel' || type === 'url' || type === 'textarea') {
                     return;
                 }
+            }
+
+            // Check if event should be captured (prevent duplicates)
+            if (!shouldCaptureEvent(eventData)) {
+                return;
             }
 
             sendEvent(eventData);
@@ -362,6 +452,128 @@
         
         console.log('✨ Highlights removed');
     }
+    
+    // Assertion functions
+    function captureRightClick(event) {
+        if (!isRecording) return;
+        rightClickedElement = event.target;
+    }
+    
+    function createTextAssertion(assertionType, element) {
+        const elementInfo = getElementInfo(element);
+        let expectedValue = '';
+        
+        if (assertionType === 'assert-text-equals' || assertionType === 'assert-text-contains') {
+            expectedValue = prompt(`Enter expected text for ${assertionType}:`, element.textContent?.trim() || '');
+            if (!expectedValue) return; // User cancelled
+        } else if (assertionType === 'assert-url-contains') {
+            expectedValue = prompt('Enter expected URL part:', window.location.pathname);
+            if (!expectedValue) return;
+        }
+        
+        const assertion = {
+            type: assertionType.replace('assert-', ''),
+            description: getAssertionDescription(assertionType, expectedValue, elementInfo),
+            expectedValue: expectedValue,
+            timestamp: new Date().toISOString(),
+            element: elementInfo
+        };
+        
+        addAssertion(assertion);
+    }
+    
+    function createSimpleAssertion(assertionType, element) {
+        const elementInfo = getElementInfo(element);
+        
+        const assertion = {
+            type: assertionType.replace('assert-', ''),
+            description: getAssertionDescription(assertionType, null, elementInfo),
+            timestamp: new Date().toISOString(),
+            element: elementInfo
+        };
+        
+        addAssertion(assertion);
+    }
+    
+    function getAssertionDescription(type, value, elementInfo) {
+        const elementDesc = elementInfo.id ? `#${elementInfo.id}` : 
+                           elementInfo.text ? `"${elementInfo.text.substring(0, 30)}"` : 
+                           elementInfo.tag;
+        
+        switch(type) {
+            case 'assert-text-equals':
+                return `Assert ${elementDesc} text equals "${value}"`;
+            case 'assert-text-contains':
+                return `Assert ${elementDesc} text contains "${value}"`;
+            case 'assert-visible':
+                return `Assert ${elementDesc} is visible`;
+            case 'assert-not-visible':
+                return `Assert ${elementDesc} is not visible`;
+            case 'assert-enabled':
+                return `Assert ${elementDesc} is enabled`;
+            case 'assert-disabled':
+                return `Assert ${elementDesc} is disabled`;
+            case 'assert-url-contains':
+                return `Assert URL contains "${value}"`;
+            default:
+                return `Assert ${type}`;
+        }
+    }
+    
+    function addAssertion(assertion) {
+        const assertionEvent = {
+            type: 'assertion',
+            timestamp: new Date().toISOString(),
+            sessionId: sessionId,
+            assertion: assertion,
+            page: {
+                url: window.location.href,
+                title: document.title
+            }
+        };
+        
+        sendEvent(assertionEvent);
+        console.log('✅ Assertion added:', assertion.type);
+        
+        // Visual feedback
+        showAssertionFeedback(assertion.description);
+    }
+    
+    function showAssertionFeedback(description) {
+        const feedback = document.createElement('div');
+        feedback.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            z-index: 999999;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        `;
+        feedback.textContent = `✅ ${description}`;
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => feedback.remove(), 3000);
+    }
+    
+    function addAssertion(assertion) {
+        const assertionEvent = {
+            type: 'assertion',
+            timestamp: new Date().toISOString(),
+            sessionId: sessionId,
+            assertion: assertion
+        };
+        
+        sendEvent(assertionEvent);
+        console.log('✅ Assertion added:', assertion.type);
+    }
+    
+    // Attach contextmenu listener for right-click
+    document.addEventListener('contextmenu', captureRightClick, true);
     
     console.log('TestCaptive: Content script ready');
     

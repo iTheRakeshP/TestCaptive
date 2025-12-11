@@ -2,7 +2,8 @@
 
 import json
 import asyncio
-from playwright.async_api import async_playwright
+import re
+from playwright.async_api import async_playwright, expect
 
 class TestCaptiveTest:
     def __init__(self):
@@ -122,6 +123,79 @@ class TestCaptiveTest:
             await self.page.press('{{element.cssSelector}}', '{{value}}')
             {{/if}}
             
+            {{else if (eq event 'assertion')}}
+            # Assertion: {{event.assertion.description}}
+            {{#if (eq assertion.type 'text-equals')}}
+            {{#if assertion.element.testid}}
+            await expect(self.page.get_by_test_id("{{event.assertion.element.testid}}")).to_have_text("{{event.assertion.expectedValue}}")
+            {{else if assertion.element.id}}
+            await expect(self.page.locator('#{{event.assertion.element.id}}')).to_have_text("{{event.assertion.expectedValue}}")
+            {{else if assertion.element.xpath}}
+            await expect(self.page.locator('xpath={{event.assertion.element.xpath}}')).to_have_text("{{event.assertion.expectedValue}}")
+            {{else}}
+            await expect(self.page.locator('{{event.assertion.element.cssSelector}}')).to_have_text("{{event.assertion.expectedValue}}")
+            {{/if}}
+            
+            {{else if (eq assertion.type 'text-contains')}}
+            {{#if assertion.element.testid}}
+            await expect(self.page.get_by_test_id("{{event.assertion.element.testid}}")).to_contain_text("{{event.assertion.expectedValue}}")
+            {{else if assertion.element.id}}
+            await expect(self.page.locator('#{{event.assertion.element.id}}')).to_contain_text("{{event.assertion.expectedValue}}")
+            {{else if assertion.element.xpath}}
+            await expect(self.page.locator('xpath={{event.assertion.element.xpath}}')).to_contain_text("{{event.assertion.expectedValue}}")
+            {{else}}
+            await expect(self.page.locator('{{event.assertion.element.cssSelector}}')).to_contain_text("{{event.assertion.expectedValue}}")
+            {{/if}}
+            
+            {{else if (eq assertion.type 'visible')}}
+            {{#if assertion.element.testid}}
+            await expect(self.page.get_by_test_id("{{event.assertion.element.testid}}")).to_be_visible()
+            {{else if assertion.element.id}}
+            await expect(self.page.locator('#{{event.assertion.element.id}}')).to_be_visible()
+            {{else if assertion.element.xpath}}
+            await expect(self.page.locator('xpath={{event.assertion.element.xpath}}')).to_be_visible()
+            {{else}}
+            await expect(self.page.locator('{{event.assertion.element.cssSelector}}')).to_be_visible()
+            {{/if}}
+            
+            {{else if (eq assertion.type 'not-visible')}}
+            {{#if assertion.element.testid}}
+            await expect(self.page.get_by_test_id("{{event.assertion.element.testid}}")).not_to_be_visible()
+            {{else if assertion.element.id}}
+            await expect(self.page.locator('#{{event.assertion.element.id}}')).not_to_be_visible()
+            {{else if assertion.element.xpath}}
+            await expect(self.page.locator('xpath={{event.assertion.element.xpath}}')).not_to_be_visible()
+            {{else}}
+            await expect(self.page.locator('{{event.assertion.element.cssSelector}}')).not_to_be_visible()
+            {{/if}}
+            
+            {{else if (eq assertion.type 'enabled')}}
+            {{#if assertion.element.testid}}
+            await expect(self.page.get_by_test_id("{{event.assertion.element.testid}}")).to_be_enabled()
+            {{else if assertion.element.id}}
+            await expect(self.page.locator('#{{event.assertion.element.id}}')).to_be_enabled()
+            {{else if assertion.element.xpath}}
+            await expect(self.page.locator('xpath={{event.assertion.element.xpath}}')).to_be_enabled()
+            {{else}}
+            await expect(self.page.locator('{{event.assertion.element.cssSelector}}')).to_be_enabled()
+            {{/if}}
+            
+            {{else if (eq assertion.type 'disabled')}}
+            {{#if assertion.element.testid}}
+            await expect(self.page.get_by_test_id("{{event.assertion.element.testid}}")).to_be_disabled()
+            {{else if assertion.element.id}}
+            await expect(self.page.locator('#{{event.assertion.element.id}}')).to_be_disabled()
+            {{else if assertion.element.xpath}}
+            await expect(self.page.locator('xpath={{event.assertion.element.xpath}}')).to_be_disabled()
+            {{else}}
+            await expect(self.page.locator('{{event.assertion.element.cssSelector}}')).to_be_disabled()
+            {{/if}}
+            
+            {{else if (eq assertion.type 'url-contains')}}
+            await expect(self.page).to_have_url(re.compile("{{event.assertion.expectedValue}}"))
+            
+            {{/if}}
+            
             {{/if}}
             {{/events}}
             
@@ -139,3 +213,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

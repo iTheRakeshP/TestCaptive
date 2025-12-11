@@ -207,6 +207,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             display: flex; 
             flex-direction: column; 
             background-color: var(--vscode-editor-background);
+            overflow: hidden;
         }
 
         /* Panel Sections */
@@ -248,12 +249,46 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         }
 
         .data-section {
-            height: 40%; /* Top 40% of right panel */
-            border-bottom: 1px solid var(--border-color);
+            flex: 0 0 40%; /* Default to 40%, but resizable */
+            min-height: 100px;
+            max-height: 80%;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .code-section {
-            height: 60%; /* Bottom 60% of right panel */
+            flex: 1; /* Takes remaining space */
+            min-height: 100px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .resize-handle {
+            height: 8px;
+            background-color: var(--border-color);
+            cursor: ns-resize;
+            position: relative;
+            flex-shrink: 0;
+            transition: background-color 0.2s;
+        }
+        
+        .resize-handle:hover {
+            background-color: var(--accent-color);
+        }
+        
+        .resize-handle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 3px;
+            background-color: var(--vscode-foreground);
+            opacity: 0.3;
+            border-radius: 2px;
         }
 
         /* Components */
@@ -297,8 +332,11 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             padding: 8px 12px;
             border-bottom: 1px solid var(--vscode-tree-indentGuidesStroke);
             cursor: default;
+            position: relative;
         }
-        .event-item:hover { background-color: var(--vscode-list-hoverBackground); }
+        .event-item:hover { 
+            background-color: var(--vscode-list-hoverBackground); 
+        }
         .event-icon {
             width: 24px; height: 24px;
             border-radius: 4px;
@@ -391,7 +429,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             <!-- 3. Data Section -->
             <div class="panel-header">
                 <span>Extracted Test Data</span>
-                <button class="btn btn-sm" onclick="exportTestData()">Export JSON</button>
+                <button class="btn btn-sm" id="exportTestDataBtn">Export JSON</button>
             </div>
             <div class="panel-content data-section">
                 <table class="data-table">
@@ -411,18 +449,21 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                 </table>
             </div>
 
+            <!-- Resize Handle -->
+            <div class="resize-handle" id="resizeHandle"></div>
+
             <!-- 4. Code Section -->
             <div class="panel-header">
                 <span>GENERATED TEST CODE</span>
                 <div style="display: flex; gap: 6px;">
-                    <button class="btn btn-sm" onclick="refreshCode()" title="Refresh Code">🔄 Refresh</button>
-                    <button class="btn btn-sm" onclick="copyCode()" title="Copy Code">📋 Copy</button>
+                    <button class="btn btn-sm" id="refreshCodeBtn" title="Refresh Code">🔄 Refresh</button>
+                    <button class="btn btn-sm" id="copyCodeBtn" title="Copy Code">📋 Copy</button>
                 </div>
             </div>
             <div class="code-toolbar">
-                <button class="tab-btn active" onclick="selectFramework('selenium')">Selenium</button>
-                <button class="tab-btn" onclick="selectFramework('playwright')">Playwright</button>
-                <button class="tab-btn" onclick="selectFramework('cypress')">Cypress</button>
+                <button class="tab-btn active" data-framework="selenium">Selenium</button>
+                <button class="tab-btn" data-framework="playwright">Playwright</button>
+                <button class="tab-btn" data-framework="cypress">Cypress</button>
             </div>
             <div class="panel-content code-section">
                 <textarea id="codeEditor" class="code-content" readonly placeholder="// Generated test code will appear here..."></textarea>
@@ -435,6 +476,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         let currentFramework = 'selenium';
         let currentEvents = [];
         let currentTestData = {};
+        let currentSessionId = null;
 
         // --- File Handling ---
         function handleFileUpload(input) {
@@ -534,6 +576,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             currentEvents.forEach((event, index) => {
                 const div = document.createElement('div');
                 div.className = 'event-item';
+                div.setAttribute('data-event-index', index.toString());
                 
                 let icon = '🔹';
                 let color = '#007acc';
@@ -542,6 +585,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                 if (eventType === 'click') { icon = '🖱️'; color = '#007acc'; }
                 if (eventType === 'input' || eventType === 'change') { icon = '⌨️'; color = '#28a745'; }
                 if (eventType === 'navigation') { icon = '🧭'; color = '#ffc107'; }
+                if (eventType === 'assertion') { icon = '✅'; color = '#9333ea'; }
                 
                 // Smart Target Display
                 let target = 'Window';
@@ -570,6 +614,14 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                     details = event.page.url;
                 }
                 
+                // Assertion Display
+                if (eventType === 'assertion' && event.assertion) {
+                    target = event.assertion.description || event.assertion.type;
+                    if (event.assertion.expectedValue) {
+                        details = 'Expected: "' + event.assertion.expectedValue + '"';
+                    }
+                }
+                
                 // Value Display
                 const val = event.inputValue || event.value || (event.element && event.element.value);
                 if ((eventType === 'input' || eventType === 'change') && val) {
@@ -585,8 +637,11 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                         <div class="event-subtitle" style="font-weight: 500; color: var(--vscode-foreground);">\${target}</div>
                         \${details ? \`<div class="event-subtitle" style="margin-top: 2px; color: var(--vscode-textLink-foreground);">\${details}</div>\` : ''}
                     </div>
-                    <div style="font-size: 10px; color: var(--vscode-descriptionForeground);">#\${index + 1}</div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                        <div style="font-size: 10px; color: var(--vscode-descriptionForeground);">#\${index + 1}</div>
+                    </div>
                 \`;
+                
                 list.appendChild(div);
             });
         }
@@ -651,17 +706,66 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             vscode.postMessage({ type: 'exportTestData', data: currentTestData });
         }
 
+        // --- Resize Functionality ---
+        (function initResize() {
+            const resizeHandle = document.getElementById('resizeHandle');
+            const dataSection = document.querySelector('.data-section');
+            const codeSection = document.querySelector('.code-section');
+            const rightPanel = document.querySelector('.right-panel');
+            
+            let isResizing = false;
+            let startY = 0;
+            let startDataHeight = 0;
+            
+            resizeHandle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startY = e.clientY;
+                startDataHeight = dataSection.offsetHeight;
+                
+                // Prevent text selection during drag
+                e.preventDefault();
+                document.body.style.userSelect = 'none';
+                document.body.style.cursor = 'ns-resize';
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                
+                const deltaY = e.clientY - startY;
+                const newDataHeight = startDataHeight + deltaY;
+                const totalHeight = rightPanel.offsetHeight - resizeHandle.offsetHeight;
+                const minHeight = 100;
+                const maxHeight = totalHeight - 100; // Leave at least 100px for code section
+                
+                // Clamp the height
+                const clampedHeight = Math.max(minHeight, Math.min(newDataHeight, maxHeight));
+                const percentage = (clampedHeight / totalHeight) * 100;
+                
+                dataSection.style.flex = \`0 0 \${percentage}%\`;
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.userSelect = '';
+                    document.body.style.cursor = '';
+                }
+            });
+        })();
+
         // --- Message Handling ---
         window.addEventListener('message', (event) => {
             const message = event.data;
             switch (message.type) {
                 case 'sessionLoaded':
                     // Server confirmed load
+                    currentSessionId = message.sessionId;
                     currentEvents = message.events || [];
                     // Merge server data if available, otherwise keep client extracted
                     if (message.testData && Object.keys(message.testData).length > 0) {
                         currentTestData = message.testData;
                     }
+                    console.log('Session loaded:', currentSessionId, 'with', currentEvents.length, 'events');
                     updateEventsList();
                     updateTestDataTable();
                     generateCode(); // Auto-generate code on load
@@ -670,6 +774,19 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                     document.getElementById('codeEditor').value = message.code;
                     break;
             }
+        });
+
+        // --- Button Event Listeners ---
+        document.getElementById('exportTestDataBtn').addEventListener('click', exportTestData);
+        document.getElementById('refreshCodeBtn').addEventListener('click', refreshCode);
+        document.getElementById('copyCodeBtn').addEventListener('click', copyCode);
+        
+        // Framework tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const framework = btn.getAttribute('data-framework');
+                selectFramework(framework);
+            });
         });
     </script>
 </body>

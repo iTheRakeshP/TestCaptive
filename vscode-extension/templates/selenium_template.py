@@ -120,6 +120,92 @@ class TestCaptiveTest:
             {{/if}}
             time.sleep(0.5)
             
+            {{else if (eq event 'assertion')}}
+            # Assertion: {{event.assertion.description}}
+            {{#if (eq assertion.type 'text-equals')}}
+            {{#if assertion.element.testid}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="{{event.assertion.element.testid}}"]'))
+            )
+            {{else if assertion.element.id}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, "{{event.assertion.element.id}}"))
+            )
+            {{else if assertion.element.xpath}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "{{event.assertion.element.xpath}}"))
+            )
+            {{/if}}
+            assert element.text == "{{event.assertion.expectedValue}}", f"Expected '{{event.assertion.expectedValue}}', got '{element.text}'"
+            
+            {{else if (eq assertion.type 'text-contains')}}
+            {{#if assertion.element.testid}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="{{event.assertion.element.testid}}"]'))
+            )
+            {{else if assertion.element.id}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, "{{event.assertion.element.id}}"))
+            )
+            {{else if assertion.element.xpath}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "{{event.assertion.element.xpath}}"))
+            )
+            {{/if}}
+            assert "{{event.assertion.expectedValue}}" in element.text, f"Expected text to contain '{{event.assertion.expectedValue}}', got '{element.text}'"
+            
+            {{else if (eq assertion.type 'visible')}}
+            {{#if assertion.element.testid}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, '[data-testid="{{event.assertion.element.testid}}"]'))
+            )
+            {{else if assertion.element.id}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.visibility_of_element_located((By.ID, "{{event.assertion.element.id}}"))
+            )
+            {{else if assertion.element.xpath}}
+            element = WebDriverWait(self.driver, 10).until(
+                EC.visibility_of_element_located((By.XPATH, "{{event.assertion.element.xpath}}"))
+            )
+            {{/if}}
+            assert element.is_displayed(), "Element should be visible"
+            
+            {{else if (eq assertion.type 'not-visible')}}
+            {{#if assertion.element.testid}}
+            elements = self.driver.find_elements(By.CSS_SELECTOR, '[data-testid="{{event.assertion.element.testid}}"]')
+            {{else if assertion.element.id}}
+            elements = self.driver.find_elements(By.ID, "{{event.assertion.element.id}}")
+            {{else if assertion.element.xpath}}
+            elements = self.driver.find_elements(By.XPATH, "{{event.assertion.element.xpath}}")
+            {{/if}}
+            assert len(elements) == 0 or not elements[0].is_displayed(), "Element should not be visible"
+            
+            {{else if (eq assertion.type 'enabled')}}
+            {{#if assertion.element.testid}}
+            element = self.driver.find_element(By.CSS_SELECTOR, '[data-testid="{{event.assertion.element.testid}}"]')
+            {{else if assertion.element.id}}
+            element = self.driver.find_element(By.ID, "{{event.assertion.element.id}}")
+            {{else if assertion.element.xpath}}
+            element = self.driver.find_element(By.XPATH, "{{event.assertion.element.xpath}}")
+            {{/if}}
+            assert element.is_enabled(), "Element should be enabled"
+            
+            {{else if (eq assertion.type 'disabled')}}
+            {{#if assertion.element.testid}}
+            element = self.driver.find_element(By.CSS_SELECTOR, '[data-testid="{{event.assertion.element.testid}}"]')
+            {{else if assertion.element.id}}
+            element = self.driver.find_element(By.ID, "{{event.assertion.element.id}}")
+            {{else if assertion.element.xpath}}
+            element = self.driver.find_element(By.XPATH, "{{event.assertion.element.xpath}}")
+            {{/if}}
+            assert not element.is_enabled(), "Element should be disabled"
+            
+            {{else if (eq assertion.type 'url-contains')}}
+            assert "{{event.assertion.expectedValue}}" in self.driver.current_url, f"Expected URL to contain '{{event.assertion.expectedValue}}', got '{self.driver.current_url}'"
+            
+            {{/if}}
+            time.sleep(0.5)
+            
             {{/if}}
             {{/events}}
             
@@ -134,3 +220,4 @@ class TestCaptiveTest:
 if __name__ == "__main__":
     test = TestCaptiveTest()
     test.test_recorded_flow()
+

@@ -1,0 +1,134 @@
+@startuml Selector Priority Algorithm
+!theme plain
+
+title TestCaptive - Smart Selector Priority Algorithm
+
+start
+
+:Element Detected;
+
+if (Has data-testid?) then (yes)
+  :Use Test ID Selector;
+  note right
+    **Priority: 1 (Highest)**
+    Stability: ⭐⭐⭐⭐⭐
+    Example: [data-testid="submit-btn"]
+    
+    **Why Best:**
+    - Explicitly for testing
+    - Never changes
+    - Unique by design
+  end note
+  stop
+else (no)
+endif
+
+if (Has aria-label?) then (yes)
+  :Use ARIA Label Selector;
+  note right
+    **Priority: 2**
+    Stability: ⭐⭐⭐⭐
+    Example: [aria-label="Submit Form"]
+    
+    **Why Good:**
+    - Accessibility standard
+    - Semantic meaning
+    - Rarely changes
+    
+    **Frameworks:** Playwright, Cypress
+    (Selenium uses ID instead)
+  end note
+  stop
+else (no)
+endif
+
+if (Has id attribute?) then (yes)
+  :Use ID Selector;
+  note right
+    **Priority: 3**
+    Stability: ⭐⭐⭐
+    Example: #submit-button
+    
+    **Why OK:**
+    - Should be unique
+    - Fast lookup
+    
+    **Risk:**
+    - May be auto-generated
+    - Can change in refactoring
+  end note
+  stop
+else (no)
+endif
+
+if (Has name attribute?) then (yes)
+  :Use Name Selector;
+  note right
+    **Priority: 4**
+    Stability: ⭐⭐
+    Example: [name="username"]
+    
+    **Why Acceptable:**
+    - Common for forms
+    
+    **Risk:**
+    - Not always unique
+    - Backend-driven
+  end note
+  stop
+else (no)
+endif
+
+if (Has xpath?) then (yes)
+  :Use XPath Selector;
+  note right
+    **Priority: 5**
+    Stability: ⭐
+    Example: //form[@id="login"]//button
+    
+    **Why Risky:**
+    - Breaks with DOM changes
+    - Fragile
+    
+    **Only When:**
+    No better option available
+  end note
+  stop
+else (no)
+endif
+
+:Use CSS Selector (Fallback);
+note right
+  **Priority: 6 (Last Resort)**
+  Stability: ⚠️
+  Example: .btn.btn-primary.submit
+  
+  **Why Worst:**
+  - CSS classes for styling
+  - Changes frequently
+  - Rarely unique
+  
+  **Enterprise Enhancement:**
+  Should generate relative selector
+  using parent context
+end note
+
+stop
+
+floating note left
+  **Algorithm Benefits:**
+  
+  ✅ Deterministic
+  ✅ Prioritizes stability
+  ✅ Framework-aware
+  ✅ Graceful fallback
+  
+  **Enterprise TODO:**
+  
+  🔄 Validate uniqueness
+  🔄 Score selectors
+  🔄 Use parent context
+  🔄 AI optimization
+end note
+
+@enduml

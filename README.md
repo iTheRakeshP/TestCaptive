@@ -8,6 +8,7 @@
 
 ### **Core Functionality**
 - ✅ **Real-time Event Capture** - Records clicks, inputs, form submissions, and navigation
+- ✅ **Smart Assertion Capture** - Right-click context menu to add 7 types of assertions during recording
 - ✅ **Multi-Framework Support** - Generates code for Selenium (Python), Playwright (Python), and Cypress (TypeScript)
 - ✅ **Professional VS Code Integration** - Clean, modern extension UI with split-pane layout
 - ✅ **Automatic Test Data Extraction** - Captures form data and variables for parameterized tests
@@ -20,8 +21,16 @@
 ### **Professional UI**
 - 🎯 **Left Panel**: Setup & Recording Controls
 - 📊 **Right Panel**: Three organized sections:
-  1. **Captured Events** - Real-time event display with color-coded icons
+  1. **Captured Events** - Real-time event display with color-coded icons (includes assertions with ✅)
   2. **Extracted Test Data** - Key-value pairs with export functionality
+
+### **Smart Assertions** ✅
+Right-click on any element during recording to add validations:
+- **Text Validation**: Assert text equals/contains expected value
+- **Visibility Checks**: Assert element visible/not visible
+- **State Validation**: Assert element enabled/disabled
+- **Navigation**: Assert URL contains expected path
+- **All 7 assertion types** generate proper framework-specific code
 
 ## 📁 **Project Structure**
 
@@ -176,6 +185,9 @@ code --install-extension testcaptive-1.0.0.vsix
 2. **Interact with Web Application**
    - Navigate to your target web application
    - Perform user actions: fill forms, click buttons, navigate pages
+   - **Add Assertions**: Right-click any element → Select "✅ TestCaptive Assertions"
+     - Choose assertion type (text equals, visible, enabled, etc.)
+     - Enter expected values when prompted
    - Watch the event count increase in the popup
 
 3. **Stop & Save**
@@ -218,6 +230,15 @@ def test_form_submission():
     
     # Submit form
     driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+    
+    # Assertion: Assert success message is visible
+    element = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.ID, "success-msg"))
+    )
+    assert element.is_displayed(), "Element should be visible"
+    
+    # Assertion: Assert success message contains "Success"
+    assert "Success" in element.text, f"Expected text to contain 'Success', got '{element.text}'"
     
     driver.quit()
 
