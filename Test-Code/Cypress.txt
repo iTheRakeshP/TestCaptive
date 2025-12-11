@@ -14,7 +14,7 @@ describe('TestCaptive Generated Test', () => {
         
     // Navigate to TestCaptive Demo Page
     
-    cy.visit('file:///G:/Projects/Advance/TestCaptive/demo.html');
+    cy.visit('file:///D:/Projects/Advance/TestCaptive/demo.html');
     
     cy.wait(2000);
     
@@ -35,7 +35,7 @@ describe('TestCaptive Generated Test', () => {
     // Enter text in "firstName"
     
     // Use test data from JSON file
-    let fieldValue = testData['input-first-name'];
+    const fieldValue = testData['input-first-name'];
     
     
     cy.get('[data-testid="input-first-name"]').clear().type(fieldValue);
@@ -49,7 +49,7 @@ describe('TestCaptive Generated Test', () => {
     // Enter text in "lastName"
     
     // Use test data from JSON file
-    let fieldValue = testData['input-last-name'];
+    const fieldValue = testData['input-last-name'];
     
     
     cy.get('[data-testid="input-last-name"]').clear().type(fieldValue);
@@ -63,7 +63,7 @@ describe('TestCaptive Generated Test', () => {
     // Enter text in "email"
     
     // Use test data from JSON file
-    let fieldValue = testData['input-email'];
+    const fieldValue = testData['input-email'];
     
     
     cy.get('[data-testid="input-email"]').clear().type(fieldValue);
@@ -77,7 +77,7 @@ describe('TestCaptive Generated Test', () => {
     // Enter text in "phone"
     
     // Use test data from JSON file
-    let fieldValue = testData['input-phone'];
+    const fieldValue = testData['input-phone'];
     
     
     cy.get('[data-testid="input-phone"]').clear().type(fieldValue);
@@ -105,7 +105,7 @@ describe('TestCaptive Generated Test', () => {
     // Enter text in "country"
     
     // Use test data from JSON file
-    let fieldValue = testData['select-country'];
+    const fieldValue = testData['select-country'];
     
     
     cy.get('[data-testid="select-country"]').clear().type(fieldValue);
@@ -143,7 +143,7 @@ describe('TestCaptive Generated Test', () => {
     // Enter text in "comments"
     
     // Use test data from JSON file
-    let fieldValue = testData['textarea-comments'];
+    const fieldValue = testData['textarea-comments'];
     
     
     cy.get('[data-testid="textarea-comments"]').clear().type(fieldValue);
@@ -167,7 +167,7 @@ describe('TestCaptive Generated Test', () => {
     // Enter text in "newsletter"
     
     // Use test data from JSON file
-    let fieldValue = testData['checkbox-newsletter'];
+    const fieldValue = testData['checkbox-newsletter'];
     
     
     cy.get('[data-testid="checkbox-newsletter"]').clear().type(fieldValue);
@@ -188,9 +188,13 @@ describe('TestCaptive Generated Test', () => {
     
     
     
-    // Click "Close"
+    // Click "
+        ✅ Success!
+        Form submitted successfully for Rakeh Parmar!
+        Close
+    "
     
-    cy.get('button.testcaptive-recordable').click();
+    cy.get('[data-testid="success-popup"]').click();
     
     cy.wait(1000);
     

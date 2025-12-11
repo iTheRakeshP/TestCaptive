@@ -7,15 +7,21 @@ This document outlines the final project structure after architectural consolida
 TestCaptive/
 ├── chrome-extension/          # Production Chrome extension
 ├── vscode-extension/          # VS Code extension
+├── test-suite-project/        # Ready-to-use test execution environment
+│   ├── cypress-suite/         # Cypress tests (TypeScript)
+│   ├── playwright-suite/      # Playwright tests (Python)
+│   ├── selenium-suite/        # Selenium tests (Python)
+│   └── shared/                # Shared utilities
 ├── architecture/              # PlantUML diagrams and architecture docs
 ├── TechSpecs/                 # Technical documentation
-├── test-data/                 # Sample test data
-├── generated-code/            # Output folder for generated tests
-├── Test-Session/              # Saved recording sessions
+├── Test-Session/              # Saved recording sessions (.json)
+├── Test-Code/                 # Generated test code (.txt)
 ├── demo.html                  # Demo web page
 ├── diagnostic.html            # Diagnostic tool
+├── build-extensions.bat       # Build both extensions
 ├── ASSERTIONS_GUIDE.md        # Assertion feature documentation
 ├── ENTERPRISE_PITCH.md        # Business case and pitch materials
+├── TEMPLATE_FIXES.md          # Template generator fixes documentation
 ├── package.json               # Root project configuration
 └── README.md                  # Project documentation
 ```

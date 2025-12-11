@@ -1,0 +1,16 @@
+{
+  "name": "testcaptive-cypress-suite",
+  "version": "1.0.0",
+  "description": "Cypress test suite for TestCaptive generated tests",
+  "scripts": {
+    "test": "cypress run",
+    "test:headed": "cypress run --headed",
+    "test:open": "cypress open",
+    "import:tests": "node scripts/import-tests.js"
+  },
+  "devDependencies": {
+    "cypress": "^13.6.2",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.6"
+  }
+}

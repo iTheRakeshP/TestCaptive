@@ -56,14 +56,26 @@ TestCaptive/
 │   ├── package.json
 │   └── testcaptive-1.0.0.vsix  # Installable extension package
 │
+├── 📁 test-suite-project/        # Ready-to-use test execution environment
+│   ├── cypress-suite/           # Cypress test runner (TypeScript)
+│   ├── playwright-suite/        # Playwright test runner (Python)
+│   ├── selenium-suite/          # Selenium test runner (Python)
+│   └── shared/                  # Shared utilities and helpers
+│
 ├── 📁 TechSpecs/                # Technical documentation
 │   └── TestCaptive_Complete_Technical_Spec.md
 │
-├── 📁 test-data/                # Sample test data
-│   └── sample_test_data.json
+├── 📁 Test-Session/             # Recorded test sessions
+│   └── *.json                   # Session files from Chrome extension
+│
+├── 📁 Test-Code/                # Generated test code
+│   ├── Cypress.txt              # Generated Cypress tests
+│   ├── Playwright.txt           # Generated Playwright tests
+│   └── Selenium.txt             # Generated Selenium tests
 │
 ├── 📄 demo.html                 # Demo web page for testing
 ├── 📄 diagnostic.html           # Diagnostic tool for troubleshooting
+├── 📄 build-extensions.bat      # Build both extensions
 ├── 📄 package.json             # Root project configuration
 └── 📄 README.md                # This file
 ```
@@ -87,10 +99,20 @@ TestCaptive/
 - **Package**: testcaptive-1.0.0.vsix (ready for installation)
 
 ### 📋 **Code Generation Templates**
-- **Selenium (Python)**: WebDriver-based test scripts with explicit waits
-- **Playwright (Python)**: Modern browser automation with async/await support  
+- **Selenium (Python)**: WebDriver-based test scripts with pytest fixtures
+- **Playwright (Python)**: Modern async browser automation with pytest support
 - **Cypress (TypeScript)**: End-to-end testing with built-in assertions
-- **Customizable**: Handlebars-style templates support variable substitution
+- **Clean Output**: Ready-to-use code - no import scripts needed
+
+### 🧪 **Test Suite Project** (`test-suite-project/`)
+- **Purpose**: Complete test execution environment for all three frameworks
+- **Features**:
+  - Pre-configured Cypress, Playwright, and Selenium test suites
+  - Test data management with JSON files
+  - Import scripts for automated test file conversion (optional)
+  - Comprehensive documentation and quick-start guides
+  - Production-ready configuration files
+- **Usage**: Simply copy generated test code directly into the appropriate suite folder and run tests
 
 ## Prerequisites
 
@@ -101,7 +123,21 @@ TestCaptive/
 
 ## Installation & Setup
 
-### 1. Clone and Setup Project
+### Quick Build (Recommended)
+```bash
+# Build both Chrome and VS Code extensions
+build-extensions.bat
+```
+
+This will:
+- Build Chrome extension → `chrome-extension/dist/`
+- Install VS Code extension dependencies
+- Compile TypeScript files
+- Package VS Code extension → `vscode-extension/testcaptive-1.0.0.vsix`
+
+### Manual Setup
+
+#### 1. Clone and Setup Project
 ```powershell
 git clone <repository-url>
 cd TestCaptive
@@ -142,12 +178,63 @@ npm run compile
 5. The extension will automatically download a `.json` session file (e.g., `testcaptive-session_12345.json`).
 
 ### Step 2: Generate Code (VS Code)
-1. Open VS Code and launch the **TestCaptive** extension.
+1. Open VS Code and launch the **TestCaptive** extension (click the record icon in Activity Bar).
 2. Drag and drop the downloaded `.json` file into the **Import Recording** zone in the left panel.
-3. The events will be loaded into the view.
+3. The events will be loaded and displayed with color-coded icons.
 4. Select your desired framework (Selenium, Playwright, Cypress).
-5. The test code will be automatically generated in the right panel.
+5. The test code will be automatically generated - clean and ready to use.
 6. Click **Copy** or **Export** to save the code.
+
+### Step 3: Run Tests (Test Suite Project)
+
+The generated code is ready to use immediately. Simply copy it to the test suite:
+
+**For Cypress:**
+```bash
+# Copy generated code
+copy Test-Code\Cypress.txt test-suite-project\cypress-suite\cypress\e2e\testcaptive.cy.ts
+
+# Run tests
+cd test-suite-project\cypress-suite
+npm test
+```
+
+**For Playwright:**
+```bash
+# Copy generated code
+copy Test-Code\Playwright.txt test-suite-project\playwright-suite\test_testcaptive.py
+
+# Run tests
+cd test-suite-project\playwright-suite
+pytest
+```
+
+**For Selenium:**
+```bash
+# Copy generated code
+copy Test-Code\Selenium.txt test-suite-project\selenium-suite\test_testcaptive.py
+
+# Run tests
+cd test-suite-project\selenium-suite
+pytest
+```
+
+**Setup Test Suites (First Time Only):**
+```bash
+# Cypress
+cd test-suite-project\cypress-suite
+npm install
+
+# Playwright
+cd test-suite-project\playwright-suite
+pip install -r requirements.txt
+
+# Selenium
+cd test-suite-project\selenium-suite
+pip install -r requirements.txt
+```
+
+See [test-suite-project/README.md](test-suite-project/README.md) for complete documentation.
 
 ## 🚀 **Quick Start Guide**
 

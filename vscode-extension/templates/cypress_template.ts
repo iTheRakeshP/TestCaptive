@@ -41,9 +41,9 @@ describe('TestCaptive Generated Test', () => {
     // Enter text in {{#if element.name}}"{{element.name}}"{{else if element.id}}"{{element.id}}"{{else}}input field{{/if}}
     {{#if value}}
     // Use test data from JSON file
-    let fieldValue = testData['{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}field_value{{/if}}'];
+    const fieldValue = testData['{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}field_value{{/if}}'];
     {{else}}
-    let fieldValue = testData['{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}field_value{{/if}}'] || '';
+    const fieldValue = testData['{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}field_value{{/if}}'] || '';
     {{/if}}
     {{#if element.testid}}
     cy.get('[data-testid="{{element.testid}}"]').clear().type(fieldValue);

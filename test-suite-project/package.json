@@ -1,0 +1,30 @@
+{
+  "name": "testcaptive-test-suite-project",
+  "version": "1.0.0",
+  "description": "Comprehensive test suite project for TestCaptive - supports Cypress, Playwright, and Selenium",
+  "scripts": {
+    "import:all": "python shared/import-all-tests.py",
+    "setup:cypress": "cd cypress-suite && npm install",
+    "setup:playwright": "cd playwright-suite && pip install -r requirements.txt && playwright install",
+    "setup:selenium": "cd selenium-suite && pip install -r requirements.txt",
+    "test:cypress": "cd cypress-suite && npm test",
+    "test:playwright": "cd playwright-suite && pytest tests/ -v",
+    "test:selenium": "cd selenium-suite && pytest tests/ -v"
+  },
+  "keywords": [
+    "testing",
+    "automation",
+    "cypress",
+    "playwright",
+    "selenium",
+    "testcaptive",
+    "e2e",
+    "test-suite"
+  ],
+  "author": "TestCaptive",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iTheRakeshP/TestCaptive"
+  }
+}

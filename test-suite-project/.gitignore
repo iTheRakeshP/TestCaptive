@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.venv/
+venv/
+ENV/
+env/
+
+# Test outputs
+cypress-suite/cypress/screenshots/
+cypress-suite/cypress/videos/
+cypress-suite/cypress/downloads/
+playwright-suite/.pytest_cache/
+selenium-suite/.pytest_cache/
+*.log
+test-results/
+allure-results/
+allure-report/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Coverage
+.coverage
+htmlcov/
+coverage/
+*.cover
+.hypothesis/
+
+# Pytest
+.pytest_cache/
+.cache/
+
+# Reports
+report.html
+assets/
+results.xml

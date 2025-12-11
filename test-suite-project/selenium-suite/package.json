@@ -1,0 +1,11 @@
+{
+  "name": "testcaptive-selenium-suite",
+  "version": "1.0.0",
+  "description": "Selenium test suite for TestCaptive generated tests",
+  "scripts": {
+    "test": "pytest tests/ -v",
+    "test:debug": "pytest tests/ -v -s",
+    "import:tests": "python scripts/import_tests.py",
+    "install": "pip install -r requirements.txt"
+  }
+}
