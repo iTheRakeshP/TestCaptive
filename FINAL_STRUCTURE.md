@@ -6,14 +6,13 @@ This document outlines the final project structure after architectural consolida
 ```
 TestCaptive/
 ├── chrome-extension/          # Production Chrome extension
-├── vscode-extension/          # VS Code extension (Host for Bridge Server)
+├── vscode-extension/          # VS Code extension
 ├── TechSpecs/                 # Technical documentation
 ├── test-data/                 # Sample test data
 ├── generated-code/            # Output folder for generated tests
 ├── Test-Session/              # Saved recording sessions
 ├── demo.html                  # Demo web page
 ├── diagnostic.html            # Diagnostic tool
-├── test-server.js             # Local web server for testing
 ├── package.json               # Root project configuration
 └── README.md                  # Project documentation
 ```
@@ -29,8 +28,7 @@ vscode-extension/
 │   ├── test-data-manager.ts   # Session and data management
 │   ├── code-generator.ts      # Test code generation engine
 │   └── webview-ui/            # Webview UI components
-│       ├── review-panel.ts
-│       ├── setup-panel.ts
+│       ├── review-panel.ts    # Main UI panel
 │       └── ...
 ├── templates/                 # Code generation templates
 │   ├── selenium_template.py

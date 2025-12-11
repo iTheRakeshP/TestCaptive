@@ -94,8 +94,6 @@ function downloadSession(events, sessionId) {
         saveAs: true
     });
 }
-<<<<<<< HEAD
-=======
 
 function logMessage(message, type = 'info') {
     const timestamp = new Date().toLocaleTimeString();
@@ -120,4 +118,3 @@ function logMessage(message, type = 'info') {
 }
 
 console.log('TestCaptive: Popup ready');
->>>>>>> b88ef7ee0f23a8ca3beb23b4963704be4293f3aa

@@ -54,7 +54,6 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         });
     }
 
-<<<<<<< HEAD
     private importSession(jsonContent: string): void {
         try {
             const sessionData = JSON.parse(jsonContent);
@@ -63,68 +62,6 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             vscode.window.showInformationMessage(`Successfully imported session: ${sessionId}`);
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to import session: ${error}`);
-=======
-        // Initial connection check
-        this.checkConnection();    }    private async startRecording(applicationUrl: string): Promise<void> {
-        try {
-            console.log('TestCaptive: Starting recording session with URL:', applicationUrl);
-            
-            const sessionId = `session_${Date.now()}`;
-            console.log('TestCaptive: Generated session ID:', sessionId);
-            
-            this.testDataManager.startSession(sessionId);
-            this.currentSessionId = sessionId;
-            console.log('TestCaptive: Calling wsClient.startSession with:', sessionId, applicationUrl);
-            
-            // First, open the URL in the default browser to ensure browser is running
-            console.log('TestCaptive: Opening URL in default browser to ensure browser is running...');
-            try {
-                // Use VSCode's openExternal to open the URL in default browser
-                await vscode.env.openExternal(vscode.Uri.parse(applicationUrl));
-                
-                // Wait a moment for browser to start, then send auto-launch command
-                setTimeout(() => {
-                    console.log('TestCaptive: Sending auto-launch command to extension...');
-                    this.wsClient.startSession(sessionId, applicationUrl);
-                }, 2000); // 2 second delay to let browser start and extension connect
-                
-            } catch (error) {
-                console.warn('TestCaptive: Browser auto-start failed, sending auto-launch anyway:', error);
-                this.wsClient.startSession(sessionId, applicationUrl);
-            }
-            
-            if (this._view) {
-                this._view.webview.postMessage({
-                    type: 'sessionStarted',
-                    sessionId: sessionId
-                });
-            }        } catch (error) {
-            console.error('TestCaptive: Error in startRecording:', error);
-            vscode.window.showErrorMessage(`Error starting recording: ${error}`);
-        }
-    }
-
-    private async stopRecording(): Promise<void> {
-        if (this.currentSessionId) {
-            this.testDataManager.endSession(this.currentSessionId);
-            
-            if (this._view) {
-                this._view.webview.postMessage({
-                    type: 'sessionEnded'
-                });
-            }
-        }
-    }
-
-    private async checkConnection(): Promise<void> {
-        const connected = await this.wsClient.isConnected();
-        
-        if (this._view) {
-            this._view.webview.postMessage({
-                type: 'connectionStatus',
-                connected: connected
-            });
->>>>>>> b88ef7ee0f23a8ca3beb23b4963704be4293f3aa
         }
     }
 
@@ -283,210 +220,6 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             padding: 10px 16px;
             background-color: var(--vscode-titleBar-activeBackground);
             color: var(--vscode-titleBar-activeForeground);
-<<<<<<< HEAD
-=======
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .left-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        /* Setup Section */
-        .setup-section {
-            background-color: var(--vscode-input-background);
-            border: 1px solid var(--vscode-widget-border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .setup-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--vscode-foreground);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .connection-status {
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-        }
-
-        .connection-status.connected {
-            background-color: rgba(40, 167, 69, 0.1);
-            color: #28a745;
-            border: 1px solid rgba(40, 167, 69, 0.3);
-        }
-
-        .connection-status.disconnected {
-            background-color: rgba(220, 53, 69, 0.1);
-            color: #dc3545;
-            border: 1px solid rgba(220, 53, 69, 0.3);
-        }        .url-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--vscode-input-border);
-            border-radius: 4px;
-            background-color: var(--vscode-input-background);
-            color: var(--vscode-input-foreground);
-            font-size: 13px;
-            margin-bottom: 12px;
-        }
-
-        .auto-launch-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background-color: rgba(0, 122, 204, 0.1);
-            border: 1px solid rgba(0, 122, 204, 0.3);
-            border-radius: 4px;
-            margin-bottom: 16px;
-        }
-
-        .info-icon {
-            font-size: 14px;
-        }
-
-        .info-text {
-            font-size: 12px;
-            color: var(--vscode-foreground);
-            opacity: 0.9;
-        }
-
-        /* Session Controls */
-        .session-controls {
-            background-color: var(--vscode-input-background);
-            border: 1px solid var(--vscode-widget-border);
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .controls-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--vscode-foreground);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .control-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .control-btn {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--vscode-button-border);
-            border-radius: 6px;
-            background-color: var(--vscode-button-background);
-            color: var(--vscode-button-foreground);
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            text-align: center;
-            transition: all 0.2s ease;
-        }
-
-        .control-btn:hover {
-            background-color: var(--vscode-button-hoverBackground);
-        }
-
-        .control-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .control-btn.primary {
-            background-color: #007acc;
-            color: white;
-            border-color: #007acc;
-        }
-
-        .control-btn.primary:hover {
-            background-color: #005a9e;
-        }
-
-        .control-btn.danger {
-            background-color: #dc3545;
-            color: white;
-            border-color: #dc3545;
-        }
-
-        .control-btn.danger:hover {
-            background-color: #c82333;
-        }
-
-        .session-info {
-            margin-top: 16px;
-            padding: 12px;
-            background-color: var(--vscode-editor-background);
-            border-radius: 4px;
-            font-size: 12px;
-            color: var(--vscode-descriptionForeground);
-        }
-
-        /* RIGHT PANEL - Data & Code */
-        .right-panel {
-            width: 65%;
-            background-color: var(--vscode-editor-background);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .right-header {
-            padding: 16px;
-            background-color: var(--vscode-titleBar-activeBackground);
-            border-bottom: 1px solid var(--vscode-widget-border);
-            font-weight: 600;
-            font-size: 16px;
-            color: var(--vscode-titleBar-activeForeground);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .right-content {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Three Sub-sections in Right Panel */
-        .right-section {
-            border-bottom: 1px solid var(--vscode-widget-border);
-            background-color: var(--vscode-editor-background);
-        }
-
-        .right-section:last-child {
-            border-bottom: none;
-            flex: 1;
-        }
-
-        .section-header {
-            padding: 12px 16px;
-            background-color: var(--vscode-input-background);
-            border-bottom: 1px solid var(--vscode-widget-border);
->>>>>>> b88ef7ee0f23a8ca3beb23b4963704be4293f3aa
             font-weight: 600;
             font-size: 13px;
             text-transform: uppercase;
@@ -627,44 +360,18 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             <div class="panel-header">
                 <span>Import Recording</span>
             </div>
-<<<<<<< HEAD
             <div class="import-section">
                 <div class="file-drop-zone">
                     <div style="font-size: 24px; margin-bottom: 8px;">📂</div>
                     <div style="font-weight: 600; margin-bottom: 4px;">Click to Select File</div>
                     <div style="font-size: 11px; color: var(--vscode-descriptionForeground);">Supports .json session files</div>
                     <input type="file" id="fileInput" accept=".json" onchange="handleFileUpload(this)">
-=======
-            <div class="left-content">                <!-- Setup Section -->
-                <div class="setup-section">
-                    <div class="setup-title">
-                        🔧 Configuration
-                    </div>
-                    
-                    <div id="connectionStatus" class="connection-status disconnected">
-                        <span class="status-indicator disconnected"></span>
-                        Checking connection...
-                    </div>
-                    
-                    <input type="text" class="url-input" id="applicationUrl" 
-                           placeholder="Enter application URL (e.g., http://localhost:8080)" 
-                           value="http://localhost:8080">
-                      <div class="auto-launch-info">
-                        <span class="info-icon">🚀</span>
-                        <span class="info-text">Auto-Launch: TestCaptive will open Edge browser and navigate to your URL automatically</span>
-                    </div>
-                    
-                    <button class="control-btn" onclick="checkConnection()">
-                        🔄 Refresh Connection
-                    </button>
->>>>>>> b88ef7ee0f23a8ca3beb23b4963704be4293f3aa
                 </div>
                 <div id="sessionInfo" style="margin-top: 10px; font-size: 11px; color: var(--vscode-descriptionForeground); text-align: center;">
                     No session loaded
                 </div>
             </div>
 
-<<<<<<< HEAD
             <!-- 2. Events Section -->
             <div class="panel-header">
                 <span>Captured Events</span>
@@ -674,24 +381,6 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                 <div id="eventsList">
                     <div style="padding: 20px; text-align: center; color: var(--vscode-descriptionForeground); font-size: 12px;">
                         Events will appear here after import.
-=======
-                <!-- Session Controls -->
-                <div class="session-controls">
-                    <div class="controls-title">
-                        ⏺️ Recording Session
-                    </div>
-                      <div class="control-buttons">
-                        <button id="startBtn" class="control-btn primary" onclick="startRecording()">
-                            🚀 Start Recording & Launch Browser
-                        </button>
-                        <button id="stopBtn" class="control-btn danger" onclick="stopRecording()" disabled>
-                            ⏹️ Stop Recording
-                        </button>
-                    </div>
-                    
-                    <div id="sessionInfo" class="session-info">
-                        Status: Ready to record
->>>>>>> b88ef7ee0f23a8ca3beb23b4963704be4293f3aa
                     </div>
                 </div>
             </div>
@@ -747,7 +436,6 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         let currentEvents = [];
         let currentTestData = {};
 
-<<<<<<< HEAD
         // --- File Handling ---
         function handleFileUpload(input) {
             const file = input.files[0];
@@ -758,213 +446,6 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                 try {
                     const content = e.target.result;
                     const json = JSON.parse(content);
-=======
-        // Initialize connection status
-        function checkConnection() {
-            vscode.postMessage({
-                type: 'checkConnection'
-            });
-        }        // Recording controls        function startRecording() {
-            console.log('Starting recording with auto-launch...');
-            isRecording = true;
-            
-            const url = document.getElementById('applicationUrl').value;
-            
-            // Update UI
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
-            document.getElementById('sessionInfo').innerHTML = 
-                '<span class="status-indicator recording"></span>🚀 Opening Edge browser and starting recording...';
-            
-            // Send message to extension
-            vscode.postMessage({
-                type: 'startRecording',
-                applicationUrl: url
-            });
-        }
-
-        function stopRecording() {
-            console.log('Stopping recording...');
-            isRecording = false;
-            
-            // Update UI
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-            document.getElementById('sessionInfo').innerHTML = 
-                '<span class="status-indicator connected"></span>Recording stopped. Ready to generate code.';
-            
-            // Send message to extension
-            vscode.postMessage({
-                type: 'stopRecording'
-            });
-        }
-
-        // Framework selection
-        function selectFramework(framework) {
-            currentFramework = framework;
-            
-            // Update tab styling
-            document.querySelectorAll('.framework-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelector('[data-framework="' + framework + '"]').classList.add('active');
-            
-            // Update status
-            document.getElementById('codeStatus').textContent = framework + ' framework selected';
-            
-            console.log('Framework selected:', framework);
-        }
-
-        // Code generation
-        function generateCode() {
-            if (currentEvents.length === 0) {
-                document.getElementById('codeStatus').textContent = 'No events to generate code from';
-                return;
-            }
-
-            console.log('Generating code for framework:', currentFramework);
-            document.getElementById('codeStatus').textContent = 'Generating code...';
-            
-            vscode.postMessage({
-                type: 'generateCode',
-                framework: currentFramework
-            });
-        }
-
-        // Copy code to clipboard
-        function copyCode() {
-            const codeEditor = document.getElementById('codeEditor');
-            if (codeEditor.value) {
-                navigator.clipboard.writeText(codeEditor.value).then(() => {
-                    document.getElementById('codeStatus').textContent = 'Code copied to clipboard!';
-                    setTimeout(() => {
-                        document.getElementById('codeStatus').textContent = currentFramework + ' code ready';
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Failed to copy code:', err);
-                    document.getElementById('codeStatus').textContent = 'Failed to copy code';
-                });
-            } else {
-                document.getElementById('codeStatus').textContent = 'No code to copy';
-            }
-        }
-
-        // Export functions
-        function exportTestData() {
-            if (Object.keys(currentTestData).length === 0) {
-                alert('No test data to export');
-                return;
-            }
-            
-            console.log('Exporting test data...');
-            vscode.postMessage({
-                type: 'exportTestData',
-                data: currentTestData
-            });
-        }
-
-        // Update events list
-        function updateEventsList() {
-            const eventsList = document.getElementById('eventsList');
-            const eventsCount = document.getElementById('eventsCount');
-            
-            eventsCount.textContent = currentEvents.length + ' events';
-            
-            if (currentEvents.length === 0) {
-                eventsList.innerHTML = '<div class="empty-state">No events captured yet. Start recording to see events here.</div>';
-                return;
-            }
-
-            eventsList.innerHTML = '';
-            currentEvents.forEach((event, index) => {
-                const eventItem = document.createElement('div');
-                eventItem.className = 'event-item';
-                
-                const eventType = event.event || event.type || 'unknown';
-                const iconClass = getEventIconClass(eventType);
-                const targetText = getEventTargetText(event);
-                const valueText = getEventValueText(event);
-                
-                eventItem.innerHTML = 
-                    '<div class="event-icon ' + iconClass + '">' + eventType.charAt(0).toUpperCase() + '</div>' +
-                    '<div class="event-details">' +
-                        '<div class="event-type">' + eventType.toUpperCase() + '</div>' +
-                        '<div class="event-target">' + targetText + '</div>' +
-                        (valueText ? '<div class="event-value">Value: ' + valueText + '</div>' : '') +
-                    '</div>';
-                
-                eventsList.appendChild(eventItem);
-            });
-        }
-
-        function getEventIconClass(eventType) {
-            switch(eventType.toLowerCase()) {
-                case 'click': return 'click';
-                case 'input': return 'input';
-                case 'change': return 'change';
-                case 'submit': return 'submit';
-                default: return 'click';
-            }
-        }
-
-        function getEventTargetText(event) {
-            if (event.element) {
-                const tag = event.element.tag || '';
-                const id = event.element.id || '';
-                const className = event.element.class || event.element.className || '';
-                
-                if (id) return '#' + id;
-                if (className) return '.' + className.split(' ')[0];
-                if (tag) return '<' + tag + '>';
-            }
-            return 'element';
-        }
-
-        function getEventValueText(event) {
-            return event.value || event.inputValue || '';
-        }
-
-        // Update test data table
-        function updateTestDataTable() {
-            const dataTable = document.getElementById('dataTable');
-            
-            if (Object.keys(currentTestData).length === 0) {
-                dataTable.innerHTML = '<div class="empty-state">Test data will appear here after capturing form inputs.</div>';
-                return;
-            }
-            
-            dataTable.innerHTML = '';
-            Object.entries(currentTestData).forEach(([key, value]) => {
-                const dataRow = document.createElement('div');
-                dataRow.className = 'data-row';
-                dataRow.innerHTML = 
-                    '<div class="data-cell data-key">' + key + '</div>' +
-                    '<div class="data-cell data-value">' + value + '</div>';
-                dataTable.appendChild(dataRow);
-            });
-        }
-
-        // Extract test data from events
-        function extractTestData() {
-            currentTestData = {};
-            currentEvents.forEach((event, index) => {
-                const value = event.value || event.inputValue;
-                if (value && value.trim()) {
-                    let key = '';
-                    if (event.element) {
-                        if (event.element.id) {
-                            key = event.element.id;
-                        } else if (event.element.name) {
-                            key = event.element.name;
-                        } else if (event.element.tag) {
-                            key = event.element.tag + '_' + index;
-                        } else {
-                            key = 'field_' + index;
-                        }
-                    } else {
-                        key = 'field_' + index;
-                    }
->>>>>>> b88ef7ee0f23a8ca3beb23b4963704be4293f3aa
                     
                     // Immediate Client-Side Preview
                     document.getElementById('sessionInfo').textContent = 'Loaded: ' + file.name;
@@ -1015,7 +496,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                                   event.element['data-testid'] || 
                                   event.element.id || 
                                   event.element.name || 
-                                  (event.element.placeholder ? event.element.placeholder.toLowerCase().replace(/\s+/g, '_') : null) ||
+                                  (event.element.placeholder ? event.element.placeholder.toLowerCase().replace(/\\s+/g, '_') : null) ||
                                   event.element.tag || 
                                   'input';
                         }

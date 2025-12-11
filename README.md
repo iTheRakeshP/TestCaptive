@@ -15,12 +15,15 @@
 - ✅ **Session Management** - Save, load, and replay recording sessions
 - ✅ **Code Export & Copy** - Export generated code or copy to clipboard
 - ✅ **Data Export** - Export captured test data as JSON
+- ✅ **Offline Mode** - Fully independent Chrome and VS Code extensions (No WebSocket bridge required)
 
 ### **Professional UI**
 - 🎯 **Left Panel**: Setup & Recording Controls
 - 📊 **Right Panel**: Three organized sections:
   1. **Captured Events** - Real-time event display with color-coded icons
-  2. **Extracted Test Data** - Key-value pairs with export functionality## 📁 **Project Structure**
+  2. **Extracted Test Data** - Key-value pairs with export functionality
+
+## 📁 **Project Structure**
 
 ```
 TestCaptive/
@@ -33,7 +36,6 @@ TestCaptive/
 ├── 📁 vscode-extension/          # VS Code extension (ACTIVE)
 │   ├── src/
 │   │   ├── extension.ts         # Main extension entry point
-│   │   ├── websocket-server.ts  # Embedded Bridge server
 │   │   ├── test-data-manager.ts # Session and data management
 │   │   ├── code-generator.ts    # Test code generation engine
 │   │   └── webview-ui/
@@ -53,7 +55,6 @@ TestCaptive/
 │
 ├── 📄 demo.html                 # Demo web page for testing
 ├── 📄 diagnostic.html           # Diagnostic tool for troubleshooting
-├── 📄 test-server.js           # Local web server for testing
 ├── 📄 package.json             # Root project configuration
 └── 📄 README.md                # This file
 ```
@@ -62,7 +63,7 @@ TestCaptive/
 
 ### 🌐 **Chrome Extension** (`chrome-extension/`)
 - **Purpose**: Records user interactions in real-time
-- **Features**: DOM event capture, CSS selector generation, WebSocket communication
+- **Features**: DOM event capture, CSS selector generation, Session Export
 - **Files**: manifest.json, background.js, content.js, popup.html/js
 - **Browser Support**: Chrome, Edge, Chromium-based browsers
 
@@ -114,7 +115,7 @@ npm run compile
 ### 4. Load Chrome Extension
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable "Developer mode"
-3. Click "Load unpacked" and select the `chrome-extension/dist` folder
+3. Click "Load unpacked" and select the `chrome-extension` folder
 
 ### 5. Install VS Code Extension
 1. Open VS Code
@@ -124,28 +125,20 @@ npm run compile
 
 ## Usage
 
-### Step 1: Open VS Code Extension
-1. Open VS Code
-2. Open the TestCaptive panel from the Activity Bar
-3. Use the Setup panel to configure your recording session
+### Step 1: Record Session (Chrome)
+1. Open the TestCaptive Chrome Extension popup.
+2. Click **Start Recording**.
+3. Navigate to your application and perform the actions you want to record.
+4. Click **Stop Recording**.
+5. The extension will automatically download a `.json` session file (e.g., `testcaptive-session_12345.json`).
 
-### Step 2: Start Recording
-1. In VS Code Setup panel:
-   - Enter the application URL you want to test
-   - Select the test framework (Selenium/Playwright/Cypress)
-   - Set user role (optional)
-   - Click "Start Recording"
-
-2. The Chrome extension popup will show connection status
-3. Navigate to your application and perform the actions you want to record
-
-### Step 3: Review and Generate Tests
-1. Stop recording when finished
-2. **Export Session**: In the Chrome Extension, click "Export JSON" to save your session.
-3. **Import Session**: In VS Code, use the "Import Session" button to load the JSON file.
-4. Review captured events and modify test data as needed
-5. Generate test code for your chosen framework
-6. Export the generated test file
+### Step 2: Generate Code (VS Code)
+1. Open VS Code and launch the **TestCaptive** extension.
+2. Drag and drop the downloaded `.json` file into the **Import Recording** zone in the left panel.
+3. The events will be loaded into the view.
+4. Select your desired framework (Selenium, Playwright, Cypress).
+5. The test code will be automatically generated in the right panel.
+6. Click **Copy** or **Export** to save the code.
 
 ## 🚀 **Quick Start Guide**
 
@@ -173,49 +166,29 @@ code --install-extension testcaptive-1.0.0.vsix
 5. Select the `chrome-extension` folder
 6. Extension should appear with TestCaptive icon
 
-#### **Step 3: Start Demo Server** (Optional)
-```bash
-# From project root - for testing with demo page
-node test-server.js
-```
-*Demo page available at: http://localhost:8080*
-
 ### **Usage Workflow**
 
 #### **🎬 Recording a Session**
-1. **Open VS Code**
-   - Press `Ctrl+Shift+P` → Type `TestCaptive: Start` → Enter
-   - VS Code extension panel opens with split-pane interface
-   - **Note:** The extension automatically starts the Bridge Server on port 3000.
+1. **Start Recording**
+   - Click the TestCaptive icon in Chrome toolbar
+   - Click **🔴 Start Recording**
 
-2. **Verify Connection**
-   - Left panel should show: ✅ "Connected to Bridge Server"
-   - If not connected, ensure port 3000 is free and refresh
-
-3. **Configure Recording**
-   - Enter target URL in "Application URL" field
-   - Click **🔄 Refresh Connection** if needed
-   - Click **▶️ Start Recording**
-
-4. **Interact with Web Application**
+2. **Interact with Web Application**
    - Navigate to your target web application
    - Perform user actions: fill forms, click buttons, navigate pages
-   - Watch events appear in real-time in "Captured Events" section
+   - Watch the event count increase in the popup
 
-5. **Stop & Review**
+3. **Stop & Save**
    - Click **⏹️ Stop Recording** when complete
-   - Review captured events in the right panel
-   - Check extracted test data from form inputs
+   - A JSON file containing your session will be downloaded automatically
 
 #### **⚡ Code Generation**
-1. **Select Framework**
-   - Choose from: Selenium, Playwright, or Cypress tabs
-   - Framework selection saves with session
+1. **Import Session**
+   - Open TestCaptive in VS Code
+   - Drag & Drop the JSON file into the import area
 
-2. **Generate Test Code**
-   - Click **Generate Code** button
-   - Code appears in the code editor panel
-   - Status shows generation success
+2. **Select Framework**
+   - Choose from: Selenium, Playwright, or Cypress tabs
 
 3. **Export Results**
    - **Copy Code**: Copies generated code to clipboard
@@ -262,69 +235,7 @@ if __name__ == "__main__":
 }
 ```
 
-## Generated Test Structure
-
-### Selenium Example
-```python
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
-class TestCapture:
-    def setup_method(self):
-        self.driver = webdriver.Chrome()
-        self.wait = WebDriverWait(self.driver, 10)
-    
-    def test_user_workflow(self):
-        # Navigate to application
-        self.driver.get("https://example.com/login")
-        
-        # Login flow
-        username_field = self.wait.until(EC.presence_of_element_located((By.ID, "username")))
-        username_field.click()
-        username_field.send_keys("testuser@example.com")
-        
-        # ... more generated code
-```
-
-### Playwright Example
-```python
-import asyncio
-from playwright.async_api import async_playwright
-
-async def test_user_workflow():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch()
-        page = await browser.new_page()
-        
-        # Navigate and interact
-        await page.goto("https://example.com/login")
-        await page.click("#username")
-        await page.fill("#username", "testuser@example.com")
-        
-        # ... more generated code
-```
-
-### Cypress Example
-```typescript
-describe('User Workflow Test', () => {
-  it('should complete user login flow', () => {
-    cy.visit('https://example.com/login');
-    
-    cy.get('#username').click();
-    cy.get('#username').type('testuser@example.com');
-    
-    // ... more generated code
-  });
-});
-```
-
 ## Configuration
-
-### Bridge Server Configuration
-The bridge server is now embedded within the VS Code extension.
-- Port: Default 3000 (Configurable via VS Code Settings)
 
 ### Template Customization
 Templates are located in the `templates/` folder and use Handlebars-style syntax:
@@ -335,19 +246,12 @@ Templates are located in the `templates/` folder and use Handlebars-style syntax
 
 ### VS Code Extension Settings
 Configure in VS Code settings:
-- `testcaptive.bridgeServerPort` - Bridge server port (default: 3000)
 - `testcaptive.defaultFramework` - Default testing framework
 
 ## Troubleshooting
 
-### Bridge Server Connection Issues
-- Ensure port 3000 is not in use by another application
-- Check VS Code Output panel for "TestCaptive" logs
-- Verify WebSocket URL in browser console
-
 ### Chrome Extension Not Recording
 - Check if extension is loaded and enabled
-- Verify VS Code extension is running (Bridge Server)
 - Check browser console for errors
 
 ### VS Code Extension Issues
@@ -411,7 +315,6 @@ TestCaptive/
 ├── vscode-extension/          # VS Code extension
 │   ├── src/
 │   │   ├── extension.ts       # Main extension entry point
-│   │   ├── websocket-server.ts # Embedded Bridge Server
 │   │   ├── webview-ui/        # Webview panels
 │   │   └── ...
 │   └── out/                   # Compiled extension files
