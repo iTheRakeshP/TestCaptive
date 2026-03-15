@@ -22,9 +22,7 @@ Visual representation of the TestCaptive Test Suite Project architecture and dat
 │                              ┌─────────────────────┐            │
 │                              │   Test-Code/        │            │
 │                              ├─────────────────────┤            │
-│                              │  Cypress.txt        │            │
 │                              │  Playwright.txt     │            │
-│                              │  Selenium.txt       │            │
 │                              └──────────┬──────────┘            │
 │                                          │                       │
 │                                          ▼                       │
@@ -33,18 +31,16 @@ Visual representation of the TestCaptive Test Suite Project architecture and dat
 │                          │   (This Project)          │          │
 │                          └───────────┬───────────────┘          │
 │                                      │                           │
-│                    ┌─────────────────┼─────────────────┐        │
-│                    │                 │                 │        │
-│                    ▼                 ▼                 ▼        │
-│          ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│          │   Cypress    │  │  Playwright  │  │   Selenium   │ │
-│          │    Suite     │  │    Suite     │  │    Suite     │ │
-│          └──────┬───────┘  └──────┬───────┘  └──────┬───────┘ │
-│                 │                 │                 │          │
-│                 ▼                 ▼                 ▼          │
-│          ┌──────────────────────────────────────────────────┐ │
-│          │           TEST EXECUTION RESULTS                 │ │
-│          └──────────────────────────────────────────────────┘ │
+│                                      ▼                           │
+│                            ┌──────────────┐                     │
+│                            │  Playwright  │                     │
+│                            │    Suite     │                     │
+│                            └──────┬───────┘                     │
+│                                   │                              │
+│                                   ▼                              │
+│                    ┌──────────────────────────────┐             │
+│                    │   TEST EXECUTION RESULTS     │             │
+│                    └──────────────────────────────┘             │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -67,7 +63,7 @@ USER INTERACTION
          │
          ▼
 ┌────────────────┐
-│ VS Code Ext    │ ─> Generates test code (3 formats)
+│ VS Code Ext    │ ─> Generates Playwright test code
 └────────┬───────┘
          │
          ├─> Saves to Test-Code/
@@ -75,29 +71,23 @@ USER INTERACTION
          ▼
 ┌─────────────────────────┐
 │  Test-Code/             │
-│  ├── Cypress.txt        │
-│  ├── Playwright.txt     │
-│  └── Selenium.txt       │
+│  └── Playwright.txt     │
 └──────────┬──────────────┘
            │
            ├─> User runs import script
            │
            ▼
 ┌─────────────────────────────────────┐
-│ Import Scripts                      │
-│ ├─> import-tests.js  (Cypress)     │
-│ ├─> import_tests.py (Playwright)   │
-│ └─> import_tests.py (Selenium)     │
+│ Import Script                       │
+│ └─> import_tests.py (Playwright)   │
 └──────────┬──────────────────────────┘
            │
            ├─> Converts & cleans code
            │
            ▼
 ┌─────────────────────────────────────┐
-│ Test Suites                         │
-│ ├─> cypress/e2e/*.cy.ts            │
-│ ├─> playwright/tests/*.py          │
-│ └─> selenium/tests/*.py            │
+│ Test Suite                          │
+│ └─> playwright/tests/*.py          │
 └──────────┬──────────────────────────┘
            │
            ├─> User runs tests
@@ -105,9 +95,7 @@ USER INTERACTION
            ▼
 ┌─────────────────────────────────────┐
 │ Test Execution                      │
-│ ├─> Cypress Test Runner            │
-│ ├─> Pytest (Playwright)            │
-│ └─> Pytest (Selenium)              │
+│ └─> Pytest (Playwright)            │
 └──────────┬──────────────────────────┘
            │
            ├─> Generates artifacts
@@ -116,7 +104,6 @@ USER INTERACTION
 ┌─────────────────────────────────────┐
 │ Results & Reports                   │
 │ ├─> Screenshots                     │
-│ ├─> Videos (Cypress)                │
 │ ├─> Terminal output                 │
 │ └─> Test reports                    │
 └─────────────────────────────────────┘
@@ -144,24 +131,11 @@ test-suite-project/
 │    ├── import-tests.bat      ─────> Windows bulk import
 │    ├── import-tests.sh       ─────> Unix bulk import
 │    └── shared/
-│         └── import-all-tests.py ──> Universal importer
+│         └── import-all-tests.py ──> Test importer
 │
 └─── 🧪 TEST SUITE LAYER
      │
-     ├─── 🌲 Cypress Suite
-     │    ├── Config     ─────> cypress.config.ts, tsconfig.json
-     │    ├── Tests      ─────> cypress/e2e/*.cy.ts
-     │    ├── Fixtures   ─────> cypress/fixtures/test_data.json
-     │    ├── Support    ─────> cypress/support/*.ts
-     │    └── Scripts    ─────> scripts/import-tests.js
-     │
-     ├─── 🎭 Playwright Suite
-     │    ├── Config     ─────> pytest.ini, conftest.py
-     │    ├── Tests      ─────> tests/*.py
-     │    ├── Data       ─────> test_data.json
-     │    └── Scripts    ─────> scripts/import_tests.py
-     │
-     └─── 🔧 Selenium Suite
+     └─── 🎭 Playwright Suite
           ├── Config     ─────> pytest.ini, conftest.py
           ├── Tests      ─────> tests/*.py
           ├── Data       ─────> test_data.json
@@ -179,7 +153,7 @@ test-suite-project/
 
 1. READ SOURCE
    │
-   ├─> Locate Test-Code/*.txt
+   ├─> Locate Test-Code/Playwright.txt
    ├─> Read file content
    └─> Validate file exists
    │
@@ -219,27 +193,7 @@ test-suite-project/
 
 ## 🎯 Test Execution Flow
 
-### Cypress
-```
-npm test
-   │
-   ├─> Load cypress.config.ts
-   │
-   ├─> Initialize Cypress
-   │
-   ├─> Load fixtures (test_data.json)
-   │
-   ├─> Execute tests in cypress/e2e/
-   │   │
-   │   ├─> Start browser
-   │   ├─> Run test steps
-   │   ├─> Capture video
-   │   └─> Screenshot on fail
-   │
-   └─> Generate report
-```
-
-### Playwright/Selenium
+### Playwright
 ```
 pytest tests/ -v
    │
@@ -247,7 +201,7 @@ pytest tests/ -v
    │
    ├─> Execute conftest.py (fixtures)
    │   │
-   │   ├─> Create browser/driver
+   │   ├─> Create browser/page
    │   └─> Load test_data.json
    │
    ├─> Discover test files
@@ -264,59 +218,20 @@ pytest tests/ -v
 
 ---
 
-## 🌐 Multi-Framework Architecture
-
-```
-                    ┌──────────────────┐
-                    │  Test-Code/      │
-                    │  Source Files    │
-                    └────────┬─────────┘
-                             │
-            ┌────────────────┼────────────────┐
-            │                │                │
-            ▼                ▼                ▼
-    ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-    │   Import     │ │   Import     │ │   Import     │
-    │   Script     │ │   Script     │ │   Script     │
-    │  (Cypress)   │ │ (Playwright) │ │  (Selenium)  │
-    └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
-           │                │                │
-           ▼                ▼                ▼
-    ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-    │ TypeScript   │ │   Python     │ │   Python     │
-    │   Tests      │ │   Tests      │ │   Tests      │
-    └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
-           │                │                │
-           ▼                ▼                ▼
-    ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-    │   Cypress    │ │  Playwright  │ │   Selenium   │
-    │   Runner     │ │  + Pytest    │ │  + Pytest    │
-    └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
-           │                │                │
-           └────────────────┼────────────────┘
-                            ▼
-                    ┌──────────────────┐
-                    │   Test Results   │
-                    │   & Reports      │
-                    └──────────────────┘
-```
-
----
-
 ## 🔐 Key Design Principles
 
 ### 1. **Separation of Concerns**
 ```
-├── Each framework in separate folder
+├── Test suite in separate folder
 ├── Shared utilities in common folder
-└── Independent configurations
+└── Independent configuration
 ```
 
 ### 2. **DRY (Don't Repeat Yourself)**
 ```
 ├── Centralized test data
 ├── Reusable import scripts
-└── Common patterns across suites
+└── Common patterns
 ```
 
 ### 3. **Convention over Configuration**
@@ -328,8 +243,7 @@ pytest tests/ -v
 
 ### 4. **Extensibility**
 ```
-├── Easy to add new frameworks
-├── Simple to customize
+├── Easy to customize
 └── Plugin-ready architecture
 ```
 
@@ -338,23 +252,11 @@ pytest tests/ -v
 ## 📦 Dependency Graph
 
 ```
-Cypress Suite Dependencies:
-    cypress@13.6.2
-    └── @cypress/webpack-preprocessor
-    typescript@5.3.3
-    @types/node@20.10.6
-
 Playwright Suite Dependencies:
     pytest@7.4.3
     ├── pytest-asyncio@0.21.1
     └── playwright@1.40.0
         └── Browser binaries (auto-downloaded)
-
-Selenium Suite Dependencies:
-    pytest@7.4.3
-    selenium@4.16.0
-    └── webdriver-manager@4.0.1
-        └── ChromeDriver (auto-downloaded)
 ```
 
 ---
@@ -373,9 +275,7 @@ Selenium Suite Dependencies:
 │     │                                         │
 │     ▼                                         │
 │  3. Install Dependencies                      │
-│     ├─> npm install (Cypress)                │
-│     ├─> pip install (Playwright)             │
-│     └─> pip install (Selenium)               │
+│     └─> pip install (Playwright)             │
 │     │                                         │
 │     ▼                                         │
 │  4. Import Tests                              │
@@ -383,14 +283,11 @@ Selenium Suite Dependencies:
 │     │                                         │
 │     ▼                                         │
 │  5. Execute Tests                             │
-│     ├─> Cypress (headless)                   │
-│     ├─> Playwright (headless)                │
-│     └─> Selenium (headless)                  │
+│     └─> Playwright (headless)                │
 │     │                                         │
 │     ▼                                         │
 │  6. Collect Artifacts                         │
 │     ├─> Screenshots                           │
-│     ├─> Videos                                │
 │     └─> Test reports                          │
 │     │                                         │
 │     ▼                                         │
@@ -417,18 +314,15 @@ User Actions ──────────> Chrome Extension
                                ▼
                         VS Code Extension
                                │
-                               ├─> Generate Code
-                               │   ├─> Cypress
-                               │   ├─> Playwright
-                               │   └─> Selenium
+                               ├─> Generate Playwright Code
                                │
                                ▼
                           Test-Code/
                                │
-                               ├─> Import Scripts Read
+                               ├─> Import Script Reads
                                │
                                ▼
-                        Test Suites
+                        Playwright Suite
                                │
                                ├─> Execute
                                │

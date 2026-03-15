@@ -4,27 +4,18 @@ const path = require('path');
 
 console.log('🔨 Building TestCaptive Chrome Extension...\n');
 
-// Create dist directory
 const distDir = path.join(__dirname, 'dist');
-if (fs.existsSync(distDir)) {
-    fs.rmSync(distDir, { recursive: true });
+
+// Create dist directory if it doesn't exist
+if (!fs.existsSync(distDir)) {
+    fs.mkdirSync(distDir);
 }
-fs.mkdirSync(distDir);
 
-// Files to copy
-const filesToCopy = [
-    'manifest.json',
-    'background.js',
-    'content.js',
-    'popup.html',
-    'popup.js'
-];
-
-// Copy files
-filesToCopy.forEach(file => {
+// Copy non-JS config/HTML files into dist
+const configFiles = ['manifest.json', 'popup.html'];
+configFiles.forEach(file => {
     const src = path.join(__dirname, file);
     const dest = path.join(distDir, file);
-    
     if (fs.existsSync(src)) {
         fs.copyFileSync(src, dest);
         console.log(`✅ Copied: ${file}`);
@@ -33,18 +24,22 @@ filesToCopy.forEach(file => {
     }
 });
 
-// Copy src directory if it exists (for TypeScript compiled outputs if any)
-const srcDir = path.join(__dirname, 'src');
-if (fs.existsSync(srcDir)) {
-    const srcFiles = fs.readdirSync(srcDir);
-    srcFiles.forEach(file => {
-        if (file.endsWith('.js')) {
-            const src = path.join(srcDir, file);
-            const dest = path.join(distDir, file);
-            fs.copyFileSync(src, dest);
-            console.log(`✅ Copied from src: ${file}`);
-        }
-    });
+// Verify required JS files exist in dist
+const requiredJS = ['content.js', 'background.js', 'popup.js'];
+let allPresent = true;
+requiredJS.forEach(file => {
+    const filePath = path.join(distDir, file);
+    if (fs.existsSync(filePath)) {
+        console.log(`✅ Present: dist/${file}`);
+    } else {
+        console.error(`❌ Missing: dist/${file}`);
+        allPresent = false;
+    }
+});
+
+if (!allPresent) {
+    console.error('\n❌ Build incomplete — some JS files are missing from dist/');
+    process.exit(1);
 }
 
 console.log('\n✨ Build complete! Extension is ready in ./dist folder');

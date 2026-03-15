@@ -5,10 +5,8 @@
 
 ## 🚀 **PROJECT CREATED SUCCESSFULLY!**
 
-Your comprehensive test suite project is ready with support for:
-- ✅ Cypress (TypeScript)
-- ✅ Playwright (Python)  
-- ✅ Selenium (Python)
+Your test suite project is ready with support for:
+- ✅ Playwright (Python)
 
 ---
 
@@ -28,28 +26,12 @@ Your comprehensive test suite project is ready with support for:
 
 ## ⚡ 60-Second Start
 
-### For Cypress Users:
-```bash
-cd test-suite-project/cypress-suite
-npm install
-npm run import:tests
-npm run test:open
-```
-
 ### For Playwright Users:
 ```bash
 cd test-suite-project/playwright-suite
 pip install -r requirements.txt && playwright install
 python scripts/import_tests.py
 pytest tests/ -v --headed
-```
-
-### For Selenium Users:
-```bash
-cd test-suite-project/selenium-suite
-pip install -r requirements.txt
-python scripts/import_tests.py
-pytest tests/ -v
 ```
 
 ---
@@ -62,11 +44,8 @@ No configuration needed. Install, import, run.
 ### 🔄 Auto-Import
 Scripts convert your generated `.txt` files to proper test code automatically.
 
-### 📊 Multi-Framework
-One project, three frameworks. Choose what fits your team.
-
 ### 📚 Well-Documented
-5 comprehensive guides totaling 1000+ lines of documentation.
+Comprehensive guides to get you started quickly.
 
 ### 🛠️ Production-Ready
 Best practices, proper structure, CI/CD examples included.
@@ -78,7 +57,7 @@ Best practices, proper structure, CI/CD examples included.
 ```
 test-suite-project/
 │
-├── 📖 Documentation (5 files)
+├── 📖 Documentation
 │   ├── README.md              - Main docs
 │   ├── QUICK_START.md         - 5-min guide
 │   ├── IMPORT_METHODS.md      - Manual vs Auto comparison
@@ -88,14 +67,8 @@ test-suite-project/
 │   ├── ARCHITECTURE.md        - Technical details
 │   └── INDEX.md              - This file
 │
-├── 🌲 Cypress Suite (Complete setup)
-│   └── TypeScript + Cypress + Test Runner
-│
 ├── 🎭 Playwright Suite (Complete setup)
 │   └── Python + Pytest + Playwright
-│
-├── 🔧 Selenium Suite (Complete setup)
-│   └── Python + Pytest + Selenium
 │
 ├── 🔄 Import Scripts
 │   ├── import-tests.bat       - Windows
@@ -113,15 +86,13 @@ test-suite-project/
 
 ### Beginner
 1. Read [QUICK_START.md](QUICK_START.md)
-2. Pick one framework
-3. Follow the 3-step setup
-4. Run your first test
+2. Follow the 3-step setup
+3. Run your first test
 
 ### Intermediate
-1. Read framework-specific README
-2. Customize test data
-3. Add custom tests
-4. Explore configurations
+1. Customize test data
+2. Add custom tests
+3. Explore configurations
 
 ### Advanced
 1. Set up CI/CD pipelines
@@ -149,7 +120,7 @@ test-suite-project/
            └─> Cleans & converts
 
 4. Run Tests
-   └─> Execute via framework
+   └─> Execute via Playwright/Pytest
        └─> Get results
 
 5. Iterate
@@ -162,42 +133,22 @@ test-suite-project/
 
 ## 📊 Feature Matrix
 
-| Feature | Cypress | Playwright | Selenium |
-|---------|:-------:|:----------:|:--------:|
-| Auto-Import | ✅ | ✅ | ✅ |
-| Test Data | ✅ | ✅ | ✅ |
-| Documentation | ✅ | ✅ | ✅ |
-| Headless Mode | ✅ | ✅ | ✅ |
-| Debug Mode | ✅ | ✅ | ✅ |
-| CI/CD Ready | ✅ | ✅ | ✅ |
-| Video Recording | ✅ | 🔧 | 🔧 |
-| Screenshots | ✅ | ✅ | ✅ |
-| Multi-Browser | 🔧 | ✅ | ✅ |
-| Mobile | 🔧 | ✅ | 🔧 |
-
-✅ = Included | 🔧 = Configurable
-
----
-
-## 🎁 What's Included
-
-### 📦 Files Created: **30+**
-
-### 📝 Lines of Code: **2,500+**
-
-### 📚 Documentation: **1,000+ lines**
-
-### ⚙️ Configurations: **12 files**
-
-### 🔧 Import Scripts: **6 scripts**
-
-### 🧪 Test Suites: **3 frameworks**
+| Feature | Playwright |
+|---------|:----------:|
+| Auto-Import | ✅ |
+| Test Data | ✅ |
+| Documentation | ✅ |
+| Headless Mode | ✅ |
+| Debug Mode | ✅ |
+| CI/CD Ready | ✅ |
+| Screenshots | ✅ |
+| Multi-Browser | ✅ |
+| Mobile | ✅ |
 
 ---
 
 ## 🚦 Getting Started Checklist
 
-- [ ] Choose your framework (Cypress/Playwright/Selenium)
 - [ ] Read the QUICK_START.md
 - [ ] Install dependencies
 - [ ] Run import script
@@ -215,32 +166,30 @@ test-suite-project/
 Check [QUICK_START.md](QUICK_START.md#troubleshooting)
 
 ### Framework Issues
-Check respective README in each suite folder
+Check README in playwright-suite folder
 
 ### General Questions
 See main [README.md](README.md)
 
 ### Test Import Issues
-Ensure Test-Code folder exists with .txt files
+Ensure Test-Code folder exists with Playwright.txt
 
 ---
 
 ## 🌟 Pro Tips
 
-1. **Start with Cypress** if you're new to automation
-2. **Use Playwright** for modern apps with complex interactions
-3. **Choose Selenium** for enterprise/legacy applications
-4. **Run in headed mode first** to see what's happening
-5. **Import tests after each code generation**
-6. **Customize test data** for realistic scenarios
-7. **Add to CI/CD** for continuous testing
-8. **Read framework docs** for advanced features
+1. **Use Playwright** for modern apps with complex interactions
+2. **Run in headed mode first** to see what's happening
+3. **Import tests after each code generation**
+4. **Customize test data** for realistic scenarios
+5. **Add to CI/CD** for continuous testing
+6. **Read Playwright docs** for advanced features
 
 ---
 
 ## 📈 Next Level Features
 
-All suites support:
+The suite supports:
 - ✅ Parallel execution
 - ✅ Custom reporters
 - ✅ Page Object Model
@@ -256,7 +205,7 @@ All suites support:
 
 This project gives you everything needed for:
 - ✨ Enterprise-grade test automation
-- ✨ Multiple framework support
+- ✨ Playwright-powered testing
 - ✨ Automated test import
 - ✨ Production-ready structure
 - ✨ Comprehensive documentation
@@ -268,27 +217,23 @@ This project gives you everything needed for:
 
 ### Import Tests
 ```bash
-# All frameworks
+# Via script
 import-tests.bat  # Windows
 ./import-tests.sh # Unix
 
 # Individual
-cd <suite> && npm run import:tests       # Cypress
-cd <suite> && python scripts/import_tests.py  # Others
+cd playwright-suite && python scripts/import_tests.py
 ```
 
 ### Run Tests
 ```bash
-npm test                    # Cypress headless
-npm run test:open          # Cypress interactive
-pytest tests/ -v           # Python frameworks
+pytest tests/ -v           # Headless
 pytest tests/ -v --headed  # With browser visible
 ```
 
 ### Install Dependencies
 ```bash
-npm install                           # Cypress
-pip install -r requirements.txt       # Python
+pip install -r requirements.txt       # Python deps
 playwright install                    # Playwright browsers
 ```
 
@@ -297,10 +242,9 @@ playwright install                    # Playwright browsers
 ## 🎯 Success Metrics
 
 Your project includes:
-- ✅ 3 test frameworks ready to use
-- ✅ 30+ configuration files
-- ✅ 6 import automation scripts  
-- ✅ 5 documentation guides
+- ✅ Playwright test framework ready to use
+- ✅ Import automation scripts  
+- ✅ Documentation guides
 - ✅ 100% automated workflow
 - ✅ 0 manual setup required
 
@@ -308,9 +252,9 @@ Your project includes:
 
 **Status**: ✅ **PRODUCTION READY**
 
-**Last Updated**: December 11, 2025
+**Last Updated**: March 14, 2026
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 
 ---
 

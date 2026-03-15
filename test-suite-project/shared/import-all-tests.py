@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Universal test importer for TestCaptive test suites
-Imports tests from Test-Code folder into all supported frameworks
+Test importer for TestCaptive Playwright test suite
+Imports tests from Test-Code folder into the Playwright framework
 """
 
 import os
@@ -26,15 +26,6 @@ def run_command(command, cwd):
         print(f"Error: {e}")
         return False
 
-def import_cypress_tests():
-    """Import tests for Cypress suite"""
-    print("\n" + "="*60)
-    print("📦 Importing Cypress Tests")
-    print("="*60)
-    
-    cypress_dir = os.path.join(os.path.dirname(__file__), '../cypress-suite')
-    return run_command('node scripts/import-tests.js', cypress_dir)
-
 def import_playwright_tests():
     """Import tests for Playwright suite"""
     print("\n" + "="*60)
@@ -44,44 +35,28 @@ def import_playwright_tests():
     playwright_dir = os.path.join(os.path.dirname(__file__), '../playwright-suite')
     return run_command('python scripts/import_tests.py', playwright_dir)
 
-def import_selenium_tests():
-    """Import tests for Selenium suite"""
-    print("\n" + "="*60)
-    print("📦 Importing Selenium Tests")
-    print("="*60)
-    
-    selenium_dir = os.path.join(os.path.dirname(__file__), '../selenium-suite')
-    return run_command('python scripts/import_tests.py', selenium_dir)
-
 def main():
-    """Main function to import all tests"""
-    print("🚀 TestCaptive Universal Test Importer")
+    """Main function to import Playwright tests"""
+    print("🚀 TestCaptive Test Importer")
     print("="*60)
     
-    results = {
-        'Cypress': import_cypress_tests(),
-        'Playwright': import_playwright_tests(),
-        'Selenium': import_selenium_tests()
-    }
+    success = import_playwright_tests()
     
     print("\n" + "="*60)
     print("📊 Import Summary")
     print("="*60)
     
-    for framework, success in results.items():
-        status = "✅ Success" if success else "❌ Failed"
-        print(f"{framework}: {status}")
+    status = "✅ Success" if success else "❌ Failed"
+    print(f"Playwright: {status}")
     
-    all_success = all(results.values())
-    
-    if all_success:
-        print("\n🎉 All tests imported successfully!")
+    if success:
+        print("\n🎉 Tests imported successfully!")
         print("\nNext steps:")
-        print("  1. Navigate to the framework suite you want to run")
-        print("  2. Install dependencies (see respective README files)")
-        print("  3. Run the tests")
+        print("  1. Navigate to playwright-suite/")
+        print("  2. Install dependencies: pip install -r requirements.txt && playwright install")
+        print("  3. Run the tests: pytest tests/ -v")
     else:
-        print("\n⚠️  Some imports failed. Check the errors above.")
+        print("\n⚠️  Import failed. Check the errors above.")
         sys.exit(1)
 
 if __name__ == '__main__':

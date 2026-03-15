@@ -88,7 +88,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    private async generateCode(framework: 'selenium' | 'playwright' | 'cypress'): Promise<void> {
+    private async generateCode(framework: 'playwright'): Promise<void> {
         if (!this.currentSessionId) return;
 
         const session = this.testDataManager.getSession(this.currentSessionId);
@@ -114,7 +114,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
 
     private async exportCode(framework: string, code: string): Promise<void> {
         try {
-            const fileExtension = framework === 'cypress' ? 'ts' : 'py';
+            const fileExtension = 'py';
             const defaultFileName = `test_${this.currentSessionId}_${framework}.${fileExtension}`;
             
             const uri = await vscode.window.showSaveDialog({
@@ -461,9 +461,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                 </div>
             </div>
             <div class="code-toolbar">
-                <button class="tab-btn active" data-framework="selenium">Selenium</button>
-                <button class="tab-btn" data-framework="playwright">Playwright</button>
-                <button class="tab-btn" data-framework="cypress">Cypress</button>
+                <button class="tab-btn active" data-framework="playwright">Playwright</button>
             </div>
             <div class="panel-content code-section">
                 <textarea id="codeEditor" class="code-content" readonly placeholder="// Generated test code will appear here..."></textarea>
@@ -473,7 +471,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
 
     <script>
         const vscode = acquireVsCodeApi();
-        let currentFramework = 'selenium';
+        let currentFramework = 'playwright';
         let currentEvents = [];
         let currentTestData = {};
         let currentSessionId = null;
@@ -525,15 +523,13 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             events.forEach((event, index) => {
                 const eventType = event.event || event.type;
                 
-                // 1. Extract Input Values
-                if (eventType === 'input' || eventType === 'change') {
-                    // Check inputValue (top level) or element.value
+                // 1. Extract Input/Fill Values
+                if (eventType === 'fill' || eventType === 'input' || eventType === 'change') {
                     const value = event.inputValue || (event.element && event.element.value);
                     
                     if (value) {
                         let key = 'unknown_field';
                         if (event.element) {
-                            // Priority: testid > id > name > placeholder > tag
                             key = event.element.testid || 
                                   event.element['data-testid'] || 
                                   event.element.id || 
@@ -542,11 +538,29 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                                   event.element.tag || 
                                   'input';
                         }
+                        // Last value wins (handles multiple fills on same field)
                         data[key] = value;
                     }
                 }
 
-                // 2. Extract Button Text (Only for actual buttons)
+                // 2. Extract Select/Dropdown Values
+                if (eventType === 'select' && event.element) {
+                    const value = event.inputValue || event.value || (event.element && event.element.value);
+                    if (value) {
+                        let key = 'unknown_field';
+                        if (event.element) {
+                            key = event.element.testid || 
+                                  event.element['data-testid'] || 
+                                  event.element.id || 
+                                  event.element.name || 
+                                  event.element.tag || 
+                                  'select';
+                        }
+                        data[key] = value;
+                    }
+                }
+
+                // 3. Extract Button Text (Only for actual buttons)
                 if (eventType === 'click' && event.element && event.element.text) {
                     const tag = event.element.tag ? event.element.tag.toLowerCase() : '';
                     const type = event.element.type ? event.element.type.toLowerCase() : '';
@@ -557,7 +571,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                     }
                 }
 
-                // 3. Extract Navigation URLs
+                // 4. Extract Navigation URLs
                 if (eventType === 'navigation' && event.page) {
                     const urlKey = 'navigation_' + index + '_url';
                     data[urlKey] = event.page.url;
@@ -583,7 +597,8 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                 const eventType = event.event || event.type;
                 
                 if (eventType === 'click') { icon = '🖱️'; color = '#007acc'; }
-                if (eventType === 'input' || eventType === 'change') { icon = '⌨️'; color = '#28a745'; }
+                if (eventType === 'fill' || eventType === 'input' || eventType === 'change') { icon = '⌨️'; color = '#28a745'; }
+                if (eventType === 'select') { icon = '📋'; color = '#17a2b8'; }
                 if (eventType === 'navigation') { icon = '🧭'; color = '#ffc107'; }
                 if (eventType === 'assertion') { icon = '✅'; color = '#9333ea'; }
                 

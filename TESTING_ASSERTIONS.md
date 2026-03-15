@@ -84,18 +84,9 @@ code --install-extension testcaptive-1.0.0.vsix
    - Assertion events show description
    - Expected values displayed
 
-2. **Generate Selenium Code**
-   - Click "Selenium" tab
-   - Click "Generate Code"
-   - **Verify** assertions appear in code:
-   ```python
-   # Should see lines like:
-   assert "Success" in element.text
-   assert element.is_displayed()
-   ```
-
-3. **Generate Playwright Code**
+2. **Generate Playwright Code**
    - Click "Playwright" tab
+   - Click "Generate Code"
    - **Verify** Playwright-style assertions:
    ```python
    # Should see lines like:
@@ -103,17 +94,8 @@ code --install-extension testcaptive-1.0.0.vsix
    await expect(self.page.locator('#btn')).to_be_visible()
    ```
 
-4. **Generate Cypress Code**
-   - Click "Cypress" tab
-   - **Verify** Cypress-style assertions:
-   ```typescript
-   // Should see lines like:
-   cy.get('#msg').should('contain.text', 'Success');
-   cy.get('#btn').should('be.visible');
-   ```
-
 ### Expected Results
-- ✅ All 3 frameworks generate proper assertion code
+- ✅ Playwright generates proper assertion code
 - ✅ Assertions use correct framework syntax
 - ✅ No template markers (no `{{` or `}}`)
 - ✅ Clean, runnable code
@@ -126,31 +108,31 @@ Create a recording with all assertion types:
 
 ### 1. Text Equals
 - Right-click button → "Assert Text Equals..." → Enter "Submit"
-- **Expected Code (Selenium):** `assert element.text == "Submit"`
+- **Expected Code (Playwright):** `await expect(locator).to_have_text("Submit")`
 
 ### 2. Text Contains
 - Right-click message → "Assert Text Contains..." → Enter "Welcome"
-- **Expected Code (Selenium):** `assert "Welcome" in element.text`
+- **Expected Code (Playwright):** `await expect(locator).to_contain_text("Welcome")`
 
 ### 3. Visible
 - Right-click visible element → "Assert Element Visible"
-- **Expected Code (Selenium):** `assert element.is_displayed()`
+- **Expected Code (Playwright):** `await expect(locator).to_be_visible()`
 
 ### 4. Not Visible
 - Right-click hidden element → "Assert Element Not Visible"
-- **Expected Code (Selenium):** `assert len(elements) == 0 or not elements[0].is_displayed()`
+- **Expected Code (Playwright):** `await expect(locator).not_to_be_visible()`
 
 ### 5. Enabled
 - Right-click active button → "Assert Element Enabled"
-- **Expected Code (Selenium):** `assert element.is_enabled()`
+- **Expected Code (Playwright):** `await expect(locator).to_be_enabled()`
 
 ### 6. Disabled
 - Right-click disabled field → "Assert Element Disabled"
-- **Expected Code (Selenium):** `assert not element.is_enabled()`
+- **Expected Code (Playwright):** `await expect(locator).to_be_disabled()`
 
 ### 7. URL Contains
 - Right-click anywhere → "Assert URL Contains..." → Enter "/dashboard"
-- **Expected Code (Selenium):** `assert "/dashboard" in self.driver.current_url`
+- **Expected Code (Playwright):** `await expect(page).to_have_url(re.compile("/dashboard"))`
 
 ---
 
@@ -174,9 +156,6 @@ Create a recording with all assertion types:
 1. Check browser console: `console.log('✅ Assertion added')`
 2. Verify `showAssertionFeedback()` function in content.js
 3. Try different assertion type
-
-### TypeScript Errors in Generated Code?
-**Note:** This is expected for TypeScript - the templates are designed for runtime execution. The code should still be valid for Cypress.
 
 ---
 
@@ -206,7 +185,7 @@ Create a recording with all assertion types:
 5. **Generate Code**
    - Import in VS Code
    - Show purple ✅ icons in event list
-   - Generate Selenium code
+   - Generate Playwright code
    - **Point out assertion lines** 👈 IMPORTANT!
    - "These assertions run automatically in CI/CD"
    - "No manual validation needed"
@@ -222,7 +201,7 @@ Create a recording with all assertion types:
 
 ### Current Version (1.1.0)
 - ✅ All 7 assertion types working
-- ✅ All 3 frameworks supported
+- ✅ Playwright framework supported
 - ✅ Visual feedback implemented
 - ⚠️ No bulk assertion import yet
 - ⚠️ No AI suggestion yet (roadmap item)
@@ -240,7 +219,7 @@ Create a recording with all assertion types:
 1. Context menu appears with 7 assertion types
 2. Green notification shows after adding assertion
 3. Assertions appear in VS Code with ✅ icon
-4. All 3 frameworks generate proper assertion code
+4. Playwright generates proper assertion code
 5. No template markers in generated code
 6. Code is clean and runnable
 
@@ -288,14 +267,8 @@ Right-click → ✅ TestCaptive Assertions → [Select Type]
 
 ### Generated Code Pattern
 ```python
-# Selenium
-assert element.is_displayed()
-
 # Playwright
 await expect(locator).to_be_visible()
-
-# Cypress
-cy.get('#id').should('be.visible');
 ```
 
 ---

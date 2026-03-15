@@ -42,7 +42,7 @@ end note
 |#LightBlue|QA Engineer|
 :Review Event List;
 :Review Assertions;
-:Select Framework\n(Selenium/Playwright/Cypress);
+:Select Playwright Framework;
 
 |#Yellow|VS Code Extension|
 :Generate Test Code;

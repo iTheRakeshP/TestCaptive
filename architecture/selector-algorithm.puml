@@ -35,8 +35,8 @@ if (Has aria-label?) then (yes)
     - Semantic meaning
     - Rarely changes
     
-    **Frameworks:** Playwright, Cypress
-    (Selenium uses ID instead)
+    **Frameworks:** Playwright
+    (Uses aria-label for accessible selectors)
   end note
   stop
 else (no)

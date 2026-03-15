@@ -49,7 +49,7 @@ group TestCaptive Test Creation (1-2 hours per test)
     activate TC
     TC -> TC: Smart event capture
     TC -> TC: Extract selectors automatically
-    TC -> TC: Generate code for 3 frameworks
+    TC -> TC: Generate Playwright test code
     TC -> Test: Export ready-to-use tests
     deactivate TC
     
@@ -96,7 +96,7 @@ note over QA, CICD
   ✅ Reduced technical debt
   ✅ Enable business analysts to write tests
   ✅ Consistent test quality
-  ✅ Multi-framework support (no vendor lock-in)
+  ✅ Playwright-powered testing
 end note
 
 @enduml

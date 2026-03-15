@@ -13,30 +13,27 @@ const sessionData = JSON.parse(fs.readFileSync(sessionPath, 'utf-8'));
 const generator = new CodeGenerator();
 
 // Generate tests for all frameworks
-const frameworks = ['selenium', 'playwright', 'cypress'];
 const outputDir = path.join(__dirname, '..', 'Test-Code');
 
-console.log('🔄 Regenerating test code files...\n');
+console.log('🔄 Regenerating Playwright test code...\n');
 
-frameworks.forEach(framework => {
-    sessionData.framework = framework;
-    try {
-        const testCode = generator.generateTestCode(sessionData);
-        const outputFile = path.join(outputDir, `${framework.charAt(0).toUpperCase() + framework.slice(1)}.txt`);
-        
-        // Check for template markers
-        const hasMarkers = testCode.includes('{{') || testCode.includes('}}');
-        
-        fs.writeFileSync(outputFile, testCode, 'utf-8');
-        
-        if (hasMarkers) {
-            console.log(`⚠️  ${framework}: Generated but still contains template markers`);
-        } else {
-            console.log(`✅ ${framework}: Clean generation (no template markers)`);
-        }
-    } catch (error) {
-        console.log(`❌ ${framework}: Error - ${error.message}`);
+sessionData.framework = 'playwright';
+try {
+    const testCode = generator.generateTestCode(sessionData);
+    const outputFile = path.join(outputDir, 'Playwright.txt');
+    
+    // Check for template markers
+    const hasMarkers = testCode.includes('{{') || testCode.includes('}}');
+    
+    fs.writeFileSync(outputFile, testCode, 'utf-8');
+    
+    if (hasMarkers) {
+        console.log('⚠️  Playwright: Generated but still contains template markers');
+    } else {
+        console.log('✅ Playwright: Clean generation (no template markers)');
     }
-});
+} catch (error) {
+    console.log(`❌ Playwright: Error - ${error.message}`);
+}
 
-console.log('\n✨ Done! Check the Test-Code folder for updated files.');
+console.log('\n✨ Done! Check the Test-Code folder for the updated file.');

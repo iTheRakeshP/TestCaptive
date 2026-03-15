@@ -12,7 +12,7 @@
 - **Framework lock-in** (vendor dependency)
 
 ### Our Solution
-- **Record once, generate tests for 3 frameworks** (Selenium, Playwright, Cypress)
+- **Record once, generate Playwright tests** automatically
 - **Smart assertion capture** - Right-click to add validations during recording (7 assertion types)
 - **Smart selector algorithm** (prioritizes stable, maintainable selectors)
 - **Integrated with developer workflow** (VS Code extension)
@@ -32,20 +32,15 @@
 
 ## Unique Value Propositions
 
-### 1. **Multi-Framework Freedom** 🎯
-**Unique Point:** Record once, output to Selenium, Playwright, AND Cypress simultaneously.
+### 1. **Playwright-Powered Testing** 🎯
+**Unique Point:** Record user flows and automatically generate production-ready Playwright test code.
 
 **Why It Matters:**
-- No vendor lock-in
-- Team can choose best tool for each scenario
-- Easy framework migration
-- Future-proof automation investment
-
-**Competitive Advantage:**
-- Selenium IDE: Selenium only
-- Playwright Inspector: Playwright only
-- Cypress Studio: Cypress only
-- **TestCaptive: ALL THREE** ✅
+- Modern, fast, multi-browser support
+- Mobile emulation included
+- Network interception capabilities
+- Active development and community growth
+- No vendor lock-in (open source)
 
 ---
 
@@ -79,7 +74,7 @@ Priority 6: CSS class (Last resort)
 - 7 assertion types available via context menu
 - Prompts for expected values (pre-filled with actual content)
 - Visual feedback (green notification)
-- Generates proper assertions for all 3 frameworks
+- Generates proper Playwright assertions automatically
 - No post-recording manual work needed
 
 **Available Assertions:**
@@ -175,7 +170,7 @@ Priority 6: CSS class (Last resort)
 - ✅ Chrome extension with smart event capture
 - ✅ **Smart assertion capture** - 7 types of assertions via right-click context menu
 - ✅ VS Code extension with code generation
-- ✅ Multi-framework support (Selenium, Playwright, Cypress)
+- ✅ Playwright support (Python)
 - ✅ Smart selector priority algorithm
 - ✅ Test data extraction
 - ✅ Session management
@@ -369,7 +364,7 @@ Record Session → Generate Tests → Auto-Commit to Git → Trigger CI/CD → R
 
 | Feature | TestCaptive | Selenium IDE | Playwright Inspector | Cypress Studio | Katalon | Testim.io |
 |---------|-------------|--------------|---------------------|----------------|---------|-----------|
-| **Multi-Framework** | ✅ 3 frameworks | ❌ Selenium only | ❌ Playwright only | ❌ Cypress only | ✅ Multiple | ✅ Multiple |
+| **Multi-Framework** | Playwright | ❌ Selenium only | ❌ Playwright only | ❌ Cypress only | ✅ Multiple | ✅ Multiple |
 | **Smart Selectors** | ✅ Priority algorithm | ⚠️ Basic | ⚠️ Basic | ⚠️ Basic | ✅ Yes | ✅ AI-powered |
 | **IDE Integration** | ✅ VS Code | ❌ Browser only | ❌ Browser only | ❌ Browser only | ✅ Custom IDE | ❌ Web only |
 | **Open Source** | ✅ MIT License | ✅ Apache 2.0 | ✅ Apache 2.0 | ⚠️ Limited | ❌ Proprietary | ❌ SaaS |
@@ -498,7 +493,7 @@ Record Session → Generate Tests → Auto-Commit to Git → Trigger CI/CD → R
 
 ### The Elevator Pitch (30 seconds)
 
-> "TestCaptive reduces test automation costs by 80% and creation time by 90%. Our QA team can record user flows in the browser, and TestCaptive automatically generates clean, maintainable test code for Selenium, Playwright, and Cypress—all from a single recording. We've built a smart selector algorithm that makes tests more stable, and everything integrates with VS Code. It's open source, so there's no vendor lock-in. For 100 tests, we'd save $35,000-$70,000 in the first year alone."
+> "TestCaptive reduces test automation costs by 80% and creation time by 90%. Our QA team can record user flows in the browser, and TestCaptive automatically generates clean, maintainable Playwright test code from a single recording. We've built a smart selector algorithm that makes tests more stable, and everything integrates with VS Code. It's open source, so there's no vendor lock-in. For 100 tests, we'd save $35,000-$70,000 in the first year alone."
 
 ---
 
@@ -515,7 +510,7 @@ Our current test automation approach is expensive and slow:
 **Our Solution:**
 TestCaptive is an internal tool that:
 - Records user actions in the browser
-- Generates tests for 3 frameworks simultaneously
+- Generates Playwright tests automatically
 - Uses smart selectors for stability
 - Integrates with VS Code
 - Open source (MIT license)
@@ -531,7 +526,7 @@ TestCaptive is an internal tool that:
 - Better test coverage (lower cost = more tests)
 - Lower skill barrier (enable QA analysts)
 - No vendor lock-in (open source)
-- Competitive advantage (unique multi-framework capability)
+- Competitive advantage (Playwright-powered with smart selectors)
 
 **Investment Needed:**
 - Phase 1 (Enterprise Foundation): $50,000-$100,000
@@ -548,9 +543,9 @@ TestCaptive is an internal tool that:
 ### Addressing Common Objections
 
 **"Why not just use existing tools?"**
-- Free tools (Selenium IDE, Playwright Inspector) are single-framework only
+- Free tools (Selenium IDE, Playwright Inspector) lack smart selectors and assertion capture
 - Commercial tools (Katalon, Testim) are expensive ($$$) and proprietary
-- TestCaptive offers multi-framework support (unique) + open source + VS Code integration
+- TestCaptive offers Playwright support + open source + VS Code integration + smart assertions
 
 **"Is this really enterprise-ready?"**
 - Current state: MVP/POC—works well for basic scenarios
@@ -558,8 +553,8 @@ TestCaptive is an internal tool that:
 - Approach: Start with internal pilot, iterate based on feedback, then enterprise features
 
 **"What's the competitive moat?"**
-- Technical: Multi-framework generation, smart selector algorithm, VS Code integration
-- Strategic: Open source (community), first-mover in multi-framework space
+- Technical: Playwright code generation, smart selector algorithm, VS Code integration
+- Strategic: Open source (community), smart assertion capture
 - Long-term: AI-powered features, network effects (template library)
 
 **"What's the risk?"**
@@ -595,7 +590,7 @@ TestCaptive is an internal tool that:
 **TestCaptive has strong potential as an enterprise practice** because:
 
 1. **Solves real pain** (expensive, slow test automation)
-2. **Unique value** (multi-framework, smart selectors, VS Code integration)
+2. **Unique value** (Playwright-powered, smart selectors, VS Code integration)
 3. **Proven technology** (working MVP with clean architecture)
 4. **Clear ROI** (80-90% cost reduction)
 5. **Low risk** (open source, internal pilot first)

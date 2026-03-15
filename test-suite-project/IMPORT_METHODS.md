@@ -1,6 +1,6 @@
 # 🔄 Test Import Methods - Quick Reference
 
-Two ways to add your generated tests to the suite. Choose what works best for you!
+Two ways to add your generated tests to the Playwright suite. Choose what works best for you!
 
 ---
 
@@ -25,15 +25,6 @@ Two ways to add your generated tests to the suite. Choose what works best for yo
 
 ### How to Use
 
-#### Cypress
-```bash
-# Windows
-copy ..\Test-Code\Cypress.txt cypress\e2e\testcaptive-generated.cy.ts
-
-# Linux/Mac
-cp ../Test-Code/Cypress.txt cypress/e2e/testcaptive-generated.cy.ts
-```
-
 #### Playwright
 ```bash
 # Windows
@@ -41,15 +32,6 @@ copy ..\Test-Code\Playwright.txt tests\test_generated.py
 
 # Linux/Mac
 cp ../Test-Code/Playwright.txt tests/test_generated.py
-```
-
-#### Selenium
-```bash
-# Windows
-copy ..\Test-Code\Selenium.txt tests\test_generated.py
-
-# Linux/Mac
-cp ../Test-Code/Selenium.txt tests/test_generated.py
 ```
 
 ### Benefits
@@ -70,21 +52,9 @@ cp ../Test-Code/Selenium.txt tests/test_generated.py
 
 ### How to Use
 
-#### Cypress
-```bash
-cd cypress-suite
-npm run import:tests
-```
-
 #### Playwright
 ```bash
 cd playwright-suite
-python scripts/import_tests.py
-```
-
-#### Selenium
-```bash
-cd selenium-suite
 python scripts/import_tests.py
 ```
 
@@ -112,33 +82,33 @@ python scripts/import_tests.py
 
 ## 🆚 Side-by-Side Example
 
-### Scenario: You just generated Cypress test code
+### Scenario: You just generated Playwright test code
 
 #### Manual Copy Approach
 ```bash
-# Step 1: Navigate to cypress suite
-cd test-suite-project/cypress-suite
+# Step 1: Navigate to playwright suite
+cd test-suite-project/playwright-suite
 
 # Step 2: Copy file
-copy ..\Test-Code\Cypress.txt cypress\e2e\testcaptive-generated.cy.ts
+copy ..\Test-Code\Playwright.txt tests\test_generated.py
 
 # Step 3: Run tests
-npm test
+pytest tests/ -v
 ```
 **Time: ~5 seconds**
 
 #### Auto-Import Approach
 ```bash
-# Step 1: Navigate to cypress suite
-cd test-suite-project/cypress-suite
+# Step 1: Navigate to playwright suite
+cd test-suite-project/playwright-suite
 
 # Step 2: Run import script
-npm run import:tests
+python scripts/import_tests.py
 
 # Step 3: Run tests
-npm test
+pytest tests/ -v
 ```
-**Time: ~10 seconds**
+**Time: ~15 seconds**
 
 ---
 
@@ -167,15 +137,12 @@ Generated test code ready?
 ### For Manual Copy Users
 
 1. **Check file extensions**
-   - Cypress: `.cy.ts` (not `.txt`)
    - Python: `.py` (not `.txt`)
 
 2. **Verify paths**
    ```bash
-   # Make sure target folders exist
-   cypress-suite/cypress/e2e/
+   # Make sure target folder exists
    playwright-suite/tests/
-   selenium-suite/tests/
    ```
 
 3. **Edit as needed**
@@ -187,13 +154,13 @@ Generated test code ready?
 1. **Check source files exist**
    ```bash
    ls ../Test-Code/
-   # Should see: Cypress.txt, Playwright.txt, Selenium.txt
+   # Should see: Playwright.txt
    ```
 
 2. **Run from correct directory**
    ```bash
    # Should be in the suite folder
-   pwd  # Should show: .../cypress-suite or .../playwright-suite
+   pwd  # Should show: .../playwright-suite
    ```
 
 3. **Review output**
@@ -208,41 +175,21 @@ You can mix and match!
 
 ```bash
 # Use manual copy for quick updates
-copy ..\Test-Code\Cypress.txt cypress\e2e\testcaptive-generated.cy.ts
+copy ..\Test-Code\Playwright.txt tests\test_generated.py
 
 # Use auto-import when you need cleanup
-npm run import:tests
+python scripts/import_tests.py
 ```
 
 ---
 
-## 🚀 Recommended Workflow by Framework
-
-### Cypress
-**Recommended: Manual Copy**
-- Code is usually clean
-- TypeScript syntax is straightforward
-- Faster workflow
-
-```bash
-copy ..\Test-Code\Cypress.txt cypress\e2e\testcaptive-generated.cy.ts
-```
+## 🚀 Recommended Workflow
 
 ### Playwright
 **Recommended: Auto-Import**
 - May have class-to-function conversion
 - pytest integration needs proper format
 - Import script handles conversions
-
-```bash
-python scripts/import_tests.py
-```
-
-### Selenium
-**Recommended: Auto-Import**
-- Often has template artifacts
-- Needs assertion cleanup
-- Import script removes duplicates
 
 ```bash
 python scripts/import_tests.py
@@ -256,7 +203,7 @@ python scripts/import_tests.py
 **A:** Yes! Use whichever works best for each situation.
 
 ### Q: Will manual copy break anything?
-**A:** No, as long as the file extension is correct (.cy.ts or .py).
+**A:** No, as long as the file extension is correct (.py).
 
 ### Q: What if I have template artifacts?
 **A:** Use Auto-Import - it cleans `{{...}}` handlebars automatically.
@@ -276,17 +223,17 @@ python scripts/import_tests.py
 
 ### Example 1: Clean Code - Manual Copy
 ```bash
-# Your generated Cypress code is perfect
-cd cypress-suite
-copy ..\Test-Code\Cypress.txt cypress\e2e\testcaptive-generated.cy.ts
-npm test
+# Your generated Playwright code is perfect
+cd playwright-suite
+copy ..\Test-Code\Playwright.txt tests\test_generated.py
+pytest tests/ -v
 # ✅ Tests run successfully
 ```
 
 ### Example 2: Has Artifacts - Auto-Import
 ```bash
 # Your code has {{assertion.element.testid}} artifacts
-cd selenium-suite
+cd playwright-suite
 python scripts/import_tests.py
 # ✅ Script removes artifacts automatically
 pytest tests/ -v

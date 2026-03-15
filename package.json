@@ -18,9 +18,7 @@
   "keywords": [
     "test-automation",
     "ui-testing",
-    "selenium",
     "playwright",
-    "cypress",
     "chrome-extension",
     "vscode-extension",
     "recording",

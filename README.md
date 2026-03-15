@@ -2,14 +2,14 @@
 
 ![TestCaptive Logo](https://img.shields.io/badge/TestCaptive-v1.0.0-blue) ![Status](https://img.shields.io/badge/Status-Production%20Ready-green) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-**TestCaptive** is a comprehensive UI behavior recording tool that captures user interactions in web browsers and automatically generates test automation scripts for Selenium, Playwright, and Cypress frameworks.
+**TestCaptive** is a comprehensive UI behavior recording tool that captures user interactions in web browsers and automatically generates Playwright test automation scripts.
 
 ## 🚀 **Features**
 
 ### **Core Functionality**
 - ✅ **Real-time Event Capture** - Records clicks, inputs, form submissions, and navigation
 - ✅ **Smart Assertion Capture** - Right-click context menu to add 7 types of assertions during recording
-- ✅ **Multi-Framework Support** - Generates code for Selenium (Python), Playwright (Python), and Cypress (TypeScript)
+- ✅ **Playwright Code Generation** - Generates production-ready Playwright (Python) test scripts
 - ✅ **Professional VS Code Integration** - Clean, modern extension UI with split-pane layout
 - ✅ **Automatic Test Data Extraction** - Captures form data and variables for parameterized tests
 - ✅ **Cross-Browser Compatibility** - Works with Chrome, Edge, and other Chromium-based browsers
@@ -50,16 +50,12 @@ TestCaptive/
 │   │   └── webview-ui/
 │   │       └── review-panel.ts  # Main UI panel (split-pane layout)
 │   ├── templates/               # Code generation templates
-│   │   ├── selenium_template.py
-│   │   ├── playwright_template.py
-│   │   └── cypress_template.ts
+│   │   └── playwright_template.py
 │   ├── package.json
 │   └── testcaptive-1.0.0.vsix  # Installable extension package
 │
 ├── 📁 test-suite-project/        # Ready-to-use test execution environment
-│   ├── cypress-suite/           # Cypress test runner (TypeScript)
 │   ├── playwright-suite/        # Playwright test runner (Python)
-│   ├── selenium-suite/          # Selenium test runner (Python)
 │   └── shared/                  # Shared utilities and helpers
 │
 ├── 📁 TechSpecs/                # Technical documentation
@@ -69,9 +65,7 @@ TestCaptive/
 │   └── *.json                   # Session files from Chrome extension
 │
 ├── 📁 Test-Code/                # Generated test code
-│   ├── Cypress.txt              # Generated Cypress tests
-│   ├── Playwright.txt           # Generated Playwright tests
-│   └── Selenium.txt             # Generated Selenium tests
+│   └── Playwright.txt           # Generated Playwright tests
 │
 ├── 📄 demo.html                 # Demo web page for testing
 ├── 📄 diagnostic.html           # Diagnostic tool for troubleshooting
@@ -93,33 +87,31 @@ TestCaptive/
 - **Features**: 
   - Split-pane interface (Setup | Events/Data/Code)
   - Event display with color-coded icons
-  - Multi-framework code generation
+  - Playwright code generation
   - Test data extraction and export
   - Session persistence and management
 - **Package**: testcaptive-1.0.0.vsix (ready for installation)
 
 ### 📋 **Code Generation Templates**
-- **Selenium (Python)**: WebDriver-based test scripts with pytest fixtures
 - **Playwright (Python)**: Modern async browser automation with pytest support
-- **Cypress (TypeScript)**: End-to-end testing with built-in assertions
 - **Clean Output**: Ready-to-use code - no import scripts needed
 
 ### 🧪 **Test Suite Project** (`test-suite-project/`)
-- **Purpose**: Complete test execution environment for all three frameworks
+- **Purpose**: Complete Playwright test execution environment
 - **Features**:
-  - Pre-configured Cypress, Playwright, and Selenium test suites
+  - Pre-configured Playwright test suite
   - Test data management with JSON files
   - Import scripts for automated test file conversion (optional)
   - Comprehensive documentation and quick-start guides
   - Production-ready configuration files
-- **Usage**: Simply copy generated test code directly into the appropriate suite folder and run tests
+- **Usage**: Simply copy generated test code into the Playwright suite folder and run tests
 
 ## Prerequisites
 
 - Node.js 18+ and npm
 - Visual Studio Code
 - Google Chrome browser
-- Python 3.8+ (for generated Selenium/Playwright tests)
+- Python 3.8+ (for generated Playwright tests)
 
 ## Installation & Setup
 
@@ -181,25 +173,13 @@ npm run compile
 1. Open VS Code and launch the **TestCaptive** extension (click the record icon in Activity Bar).
 2. Drag and drop the downloaded `.json` file into the **Import Recording** zone in the left panel.
 3. The events will be loaded and displayed with color-coded icons.
-4. Select your desired framework (Selenium, Playwright, Cypress).
-5. The test code will be automatically generated - clean and ready to use.
+4. The Playwright test code will be automatically generated - clean and ready to use.
 6. Click **Copy** or **Export** to save the code.
 
 ### Step 3: Run Tests (Test Suite Project)
 
 The generated code is ready to use immediately. Simply copy it to the test suite:
 
-**For Cypress:**
-```bash
-# Copy generated code
-copy Test-Code\Cypress.txt test-suite-project\cypress-suite\cypress\e2e\testcaptive.cy.ts
-
-# Run tests
-cd test-suite-project\cypress-suite
-npm test
-```
-
-**For Playwright:**
 ```bash
 # Copy generated code
 copy Test-Code\Playwright.txt test-suite-project\playwright-suite\test_testcaptive.py
@@ -209,29 +189,11 @@ cd test-suite-project\playwright-suite
 pytest
 ```
 
-**For Selenium:**
+**Setup Test Suite (First Time Only):**
 ```bash
-# Copy generated code
-copy Test-Code\Selenium.txt test-suite-project\selenium-suite\test_testcaptive.py
-
-# Run tests
-cd test-suite-project\selenium-suite
-pytest
-```
-
-**Setup Test Suites (First Time Only):**
-```bash
-# Cypress
-cd test-suite-project\cypress-suite
-npm install
-
-# Playwright
 cd test-suite-project\playwright-suite
 pip install -r requirements.txt
-
-# Selenium
-cd test-suite-project\selenium-suite
-pip install -r requirements.txt
+playwright install
 ```
 
 See [test-suite-project/README.md](test-suite-project/README.md) for complete documentation.
@@ -287,50 +249,36 @@ code --install-extension testcaptive-1.0.0.vsix
    - Drag & Drop the JSON file into the import area
 
 2. **Select Framework**
-   - Choose from: Selenium, Playwright, or Cypress tabs
+   - Playwright code is generated automatically
 
 3. **Export Results**
    - **Copy Code**: Copies generated code to clipboard
    - **Export Data**: Saves test data as JSON file
-   - Code can be saved as .py or .ts file via export
+   - Code can be saved as .py file via export
 
 ### **🎯 Example Generated Output**
 
-#### **Selenium Example**
+#### **Playwright Example**
 ```python
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import pytest
+from playwright.sync_api import Page, expect
 
-def test_form_submission():
-    driver = webdriver.Chrome()
-    driver.get("http://localhost:8080")
+def test_form_submission(page: Page):
+    page.goto("http://localhost:8080")
     
     # Fill form fields
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.ID, "firstName"))
-    ).send_keys("John")
-    
-    driver.find_element(By.ID, "lastName").send_keys("Doe")
-    driver.find_element(By.ID, "email").send_keys("john.doe@example.com")
+    page.get_by_test_id("firstName").fill("John")
+    page.get_by_test_id("lastName").fill("Doe")
+    page.get_by_test_id("email").fill("john.doe@example.com")
     
     # Submit form
-    driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+    page.locator("button[type='submit']").click()
     
     # Assertion: Assert success message is visible
-    element = WebDriverWait(driver, 10).until(
-        EC.visibility_of_element_located((By.ID, "success-msg"))
-    )
-    assert element.is_displayed(), "Element should be visible"
+    expect(page.locator("#success-msg")).to_be_visible()
     
     # Assertion: Assert success message contains "Success"
-    assert "Success" in element.text, f"Expected text to contain 'Success', got '{element.text}'"
-    
-    driver.quit()
-
-if __name__ == "__main__":
-    test_form_submission()
+    expect(page.locator("#success-msg")).to_contain_text("Success")
 ```
 
 #### **Extracted Test Data**
@@ -354,7 +302,7 @@ Templates are located in the `templates/` folder and use Handlebars-style syntax
 
 ### VS Code Extension Settings
 Configure in VS Code settings:
-- `testcaptive.defaultFramework` - Default testing framework
+- `testcaptive.defaultFramework` - Testing framework (Playwright)
 
 ## Troubleshooting
 
@@ -388,9 +336,7 @@ Create custom templates by:
 
 ### Integration with CI/CD
 Generated tests can be integrated into CI/CD pipelines:
-- Selenium: Use pytest or unittest
 - Playwright: Use pytest-playwright
-- Cypress: Use Cypress CLI
 
 ## Development
 
@@ -427,9 +373,7 @@ TestCaptive/
 │   │   └── ...
 │   └── out/                   # Compiled extension files
 ├── templates/                 # Code generation templates
-│   ├── selenium_template.py   # Selenium template
-│   ├── playwright_template.py # Playwright template
-│   └── cypress_template.ts    # Cypress template
+│   └── playwright_template.py # Playwright template
 └── test-data/                 # Sample test data and sessions
 ```
 

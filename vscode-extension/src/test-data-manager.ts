@@ -40,7 +40,7 @@ export class TestDataManager {
       startTime: new Date().toISOString(),
       events: [],
       testData: {},
-      framework: 'selenium' // Default framework
+      framework: 'playwright' // Default framework
     };
 
     this.sessions.set(sessionId, session);
@@ -145,16 +145,28 @@ export class TestDataManager {
     const testData: { [key: string]: any } = {};
 
     session.events.forEach((event, index) => {
-      const eventType = event.event || event.type;
+      // Support both VS Code TestEvent ('event' field) and Chrome RecordedEvent ('type' field)
+      const eventType = event.event || (event as any).type;
       
-      // Extract input values
-      // Check inputValue (top level) or element.value
+      // Extract input/fill values
       const value = event.inputValue || (event.element && event.element.value);
       
-      if ((eventType === 'change' || eventType === 'input') && value) {
+      if ((eventType === 'fill' || eventType === 'change' || eventType === 'input') && value) {
         const fieldName = this.generateFieldName(event.element);
         if (fieldName) {
+          // For fill events, later values overwrite earlier ones (last fill wins)
           testData[fieldName] = value;
+        }
+      }
+
+      // Extract select/dropdown values
+      if (eventType === 'select' && event.element) {
+        const selectValue = event.inputValue || event.value || (event.element && event.element.value);
+        if (selectValue) {
+          const fieldName = this.generateFieldName(event.element);
+          if (fieldName) {
+            testData[fieldName] = selectValue;
+          }
         }
       }
 

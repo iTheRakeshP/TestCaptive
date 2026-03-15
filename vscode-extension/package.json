@@ -63,11 +63,9 @@
         "testcaptive.defaultFramework": {
           "type": "string",
           "enum": [
-            "selenium",
-            "playwright",
-            "cypress"
+            "playwright"
           ],
-          "default": "selenium",
+          "default": "playwright",
           "description": "Default test framework to use"
         },
         "testcaptive.outputDirectory": {

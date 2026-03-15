@@ -1,0 +1,12 @@
+{
+  "navigation_0_url": "file:///D:/Projects/Advance/TestCaptive/demo.html",
+  "input-first-name": "rakesh",
+  "input-last-name": "parmar",
+  "input-email": "rakesh@hh.com",
+  "input-phone": "2019083456",
+  "select-country": "us",
+  "textarea-comments": "test",
+  "button_10_text": "Validate Form",
+  "button_11_text": "Submit Form",
+  "button_14_text": "Close"
+}

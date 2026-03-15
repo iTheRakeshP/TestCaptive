@@ -107,10 +107,8 @@ activate Template
 
 Template -> Template: Load framework template
 note right
-  Templates:
-  - selenium_template.py
+  Template:
   - playwright_template.py
-  - cypress_template.ts
 end note
 
 Template -> Template: Multi-pass processing
@@ -168,9 +166,7 @@ deactivate CodeGen
 TestFiles -> TestFiles: Run in framework
 note right
   Framework execution:
-  - pytest (Selenium)
   - pytest-playwright (Playwright)
-  - cypress run (Cypress)
 end note
 
 TestFiles -> WebPage: Execute test steps

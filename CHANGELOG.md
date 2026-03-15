@@ -30,20 +30,12 @@
 - ✅ Code generator processes assertion events
 
 **Code Generation Templates:**
-- ✅ **Selenium (Python)**: Proper WebDriverWait + assert statements
 - ✅ **Playwright (Python)**: Native expect() API with assertions
-- ✅ **Cypress (TypeScript)**: Fluent should() chaining for all assertion types
 
 **Example Generated Code:**
 ```python
-# Selenium
-assert "Success" in element.text, f"Expected text to contain 'Success', got '{element.text}'"
-
 # Playwright
 await expect(self.page.locator('#success-msg')).to_contain_text("Success")
-
-# Cypress
-cy.get('#success-msg').should('contain.text', 'Success');
 ```
 
 ### 📚 Documentation Updates
@@ -75,7 +67,6 @@ cy.get('#success-msg').should('contain.text', 'Success');
 |---------|-------------|---------------------|----------------|-------------|
 | Record Actions | ✅ | ✅ | ✅ | ✅ |
 | Assertion Capture | Manual only | Manual only | Limited | **7 types** ✅ |
-| Multi-Framework | ❌ | ❌ | ❌ | ✅ |
 | Context Menu | ❌ | ❌ | ❌ | ✅ |
 
 **ROI Enhancement:**
@@ -157,7 +148,7 @@ Framework-Specific Assertion Code
 ### Initial Features
 - Chrome extension with event capture
 - VSCode extension with code generation
-- Multi-framework support (Selenium, Playwright, Cypress)
+- Playwright support
 - Smart selector priority algorithm
 - Test data extraction
 - Session management

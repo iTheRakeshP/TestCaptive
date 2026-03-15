@@ -10,7 +10,8 @@ export interface TemplateEngine {
 // Simple template engine implementation
 class SimpleTemplateEngine implements TemplateEngine {
   compile(template: string, data: any): string {
-    let result = template;
+    try {
+      let result = template;
 
     // Handle {{#events}} loops
     const eventsMatch = result.match(/{{#events}}([\s\S]*?){{\/events}}/);
@@ -20,33 +21,164 @@ class SimpleTemplateEngine implements TemplateEngine {
       const generatedEvents: string[] = [];
       let navigationCount = 0;
 
-      // Filter out redundant input events (debounce on the generator side)
+      // Smart event coalescence — handles both new 'fill' events and legacy 'input' events
       const processedEvents: TestEvent[] = [];
       if (data.events && Array.isArray(data.events)) {
-        for (let i = 0; i < data.events.length; i++) {
-          const currentEvent = data.events[i];
-          const nextEvent = i < data.events.length - 1 ? data.events[i + 1] : null;
-          
-          const currentType = currentEvent.event || currentEvent.type;
-          
-          if (currentType === 'input' && nextEvent) {
-              const nextType = nextEvent.event || nextEvent.type;
-              // Use selector or xpath to identify the element
-              const currentSelector = currentEvent.selector || (currentEvent.element && currentEvent.element.xpath) || (currentEvent.element && currentEvent.element.id);
-              const nextSelector = nextEvent.selector || (nextEvent.element && nextEvent.element.xpath) || (nextEvent.element && nextEvent.element.id);
-              
-              if (nextType === 'input' && currentSelector && nextSelector && currentSelector === nextSelector) {
-                  continue; // Skip this event as it's an intermediate input
-              }
+        const events = data.events;
+        let i = 0;
+        while (i < events.length) {
+          const current = events[i];
+          const currentType = current.event || (current as any).type;
+          const currentKey = this.getElementKey(current);
+
+          // Skip focus/blur events entirely (legacy sessions may have them)
+          if (currentType === 'focus' || currentType === 'blur') {
+            i++;
+            continue;
           }
-          processedEvents.push(currentEvent);
+
+          // For 'fill' events: merge consecutive fills on the same element (keep last value)
+          if (currentType === 'fill') {
+            let lastFillEvent = current;
+            let j = i + 1;
+            while (j < events.length) {
+              const next = events[j];
+              const nextType = next.event || (next as any).type;
+              const nextKey = this.getElementKey(next);
+              if (nextType === 'focus' || nextType === 'blur') { j++; continue; }
+              if (nextType === 'fill' && nextKey === currentKey) {
+                lastFillEvent = next;
+                j++;
+                continue;
+              }
+              break;
+            }
+            processedEvents.push(lastFillEvent);
+            i = j;
+            continue;
+          }
+
+          // For legacy 'input' events: merge consecutive inputs on the same element into one 'fill'
+          if (currentType === 'input') {
+            let lastInputEvent = current;
+            let j = i + 1;
+            while (j < events.length) {
+              const next = events[j];
+              const nextType = next.event || (next as any).type;
+              const nextKey = this.getElementKey(next);
+              // Skip focus/blur between inputs on same field
+              if (nextType === 'focus' || nextType === 'blur') { j++; continue; }
+              // Keep merging consecutive inputs on same element
+              if (nextType === 'input' && nextKey === currentKey) {
+                lastInputEvent = next;
+                j++;
+                continue;
+              }
+              break;
+            }
+            // Convert the last input to a 'fill' event
+            const fillEvent = { ...lastInputEvent };
+            if (fillEvent.event) { fillEvent.event = 'fill' as any; }
+            else { (fillEvent as any).type = 'fill'; }
+            processedEvents.push(fillEvent);
+            i = j;
+            continue;
+          }
+
+          // Click on text-like inputs before input/fill events: skip (implicit in fill)
+          // Click on <select> elements before/after select events: skip (implicit in select)
+          if (currentType === 'click' && current.element) {
+            const tag = current.element.tag?.toLowerCase();
+            const inputType = current.element.type?.toLowerCase() || 'text';
+            const isTextInput = tag === 'textarea' ||
+              (tag === 'input' && ['text', 'password', 'email', 'search', 'tel', 'url', 'number'].includes(inputType));
+            const isSelect = tag === 'select';
+
+            if (isTextInput) {
+              // Look ahead for input/fill on same element
+              let hasFollowingFill = false;
+              for (let k = i + 1; k < Math.min(i + 5, events.length); k++) {
+                const ahead = events[k];
+                const aheadType = ahead.event || (ahead as any).type;
+                if (aheadType === 'focus' || aheadType === 'blur') continue;
+                if ((aheadType === 'input' || aheadType === 'fill') && this.getElementKey(ahead) === currentKey) {
+                  hasFollowingFill = true;
+                }
+                break;
+              }
+              if (hasFollowingFill) {
+                i++;
+                continue; // Skip this click — it's just clicking into a text field
+              }
+            }
+
+            // Skip clicks on <select> elements — the 'select' event captures the action
+            if (isSelect) {
+              i++;
+              continue;
+            }
+
+            // Skip clicks on checkbox/radio before 'check' events
+            if (tag === 'input' && (inputType === 'checkbox' || inputType === 'radio')) {
+              let hasFollowingCheck = false;
+              for (let k = i + 1; k < Math.min(i + 3, events.length); k++) {
+                const ahead = events[k];
+                const aheadType = ahead.event || (ahead as any).type;
+                if (aheadType === 'check' && this.getElementKey(ahead) === currentKey) {
+                  hasFollowingCheck = true;
+                  break;
+                }
+              }
+              if (hasFollowingCheck) {
+                i++;
+                continue;
+              }
+            }
+          }
+
+          // Skip Tab keydown events (just field navigation)
+          if (currentType === 'keydown') {
+            const keyValue = current.value || current.inputValue || '';
+            if (keyValue === 'Tab') {
+              i++;
+              continue;
+            }
+          }
+
+          // For legacy 'change' events on text inputs: convert to fill
+          if (currentType === 'change' && current.element) {
+            const tag = current.element.tag?.toLowerCase();
+            const inputType = current.element.type?.toLowerCase() || 'text';
+            const isTextInput = tag === 'textarea' ||
+              (tag === 'input' && ['text', 'password', 'email', 'search', 'tel', 'url', 'number'].includes(inputType));
+            if (isTextInput) {
+              const fillEvent = { ...current };
+              if (fillEvent.event) { fillEvent.event = 'fill' as any; }
+              else { (fillEvent as any).type = 'fill'; }
+              processedEvents.push(fillEvent);
+              i++;
+              continue;
+            }
+          }
+
+          processedEvents.push(current);
+          i++;
         }
       }
 
       processedEvents.forEach((event: TestEvent, index: number) => {
         let eventCode = eventTemplate;
-        const eventType = event.event || event.type || '';
-        const eventValue = event.inputValue || event.value || (event.element && event.element.value) || '';
+        const eventType = event.event || (event as any).type || '';
+        // For scroll events, extract scrollY from scrollPosition
+        let eventValue = event.inputValue || event.value || (event.element && event.element.value) || '';
+        if (eventType === 'scroll' && !eventValue) {
+          const scrollPos = (event as any).scrollPosition;
+          if (scrollPos) {
+            eventValue = String(scrollPos.y || 0);
+          } else if (event.page && (event.page as any).scrollY !== undefined) {
+            eventValue = String((event.page as any).scrollY);
+          }
+        }
         
         if (eventType === 'navigation') {
             navigationCount++;
@@ -111,6 +243,10 @@ class SimpleTemplateEngine implements TemplateEngine {
     });
 
     return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Template compilation failed: ${message}`);
+    }
   }
 
   private handleConditionals(template: string, event: TestEvent): string {
@@ -131,146 +267,16 @@ class SimpleTemplateEngine implements TemplateEngine {
   
   private processSinglePass(template: string, event: TestEvent): string {
     let result = template;
-    const eventType = event.event || event.type;
+    const eventType = event.event || (event as any).type || '';
     const eventValue = event.inputValue || event.value || (event.element && event.element.value) || '';
 
-    // Handle Field Name Generation Chain (Specific for data key generation)
-    // {{#if element.testid}}...{{else if element.id}}...{{else if element.name}}...{{else}}...{{/if}}
-    // Must run first to ensure nested conditionals in {{#if value}} are resolved
-    const fieldNameChainMatches = result.matchAll(/{{#if\s+element\.testid}}([\s\S]*?){{else\s+if\s+element\.id}}([\s\S]*?){{else\s+if\s+element\.name}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
+    // CRITICAL: Resolve the event-type chain FIRST, before any inner selector chains.
+    // This extracts only the matching branch content, eliminating cross-branch interference.
+    result = this.processEventTypeChain(result, eventType);
 
-    for (const match of fieldNameChainMatches) {
-      const [fullMatch, contentTestId, contentId, contentName, contentElse] = match;
-      if (event.element && event.element.testid) {
-        result = result.replace(fullMatch, contentTestId);
-      } else if (event.element && event.element.id) {
-        result = result.replace(fullMatch, contentId);
-      } else if (event.element && event.element.name) {
-        result = result.replace(fullMatch, contentName);
-      } else {
-        result = result.replace(fullMatch, contentElse);
-      }
-    }
-
-    // Handle element selector priority chain (Big Chain - Playwright)
-    // {{#if element.testid}}...{{else if element.ariaLabel}}...{{else if element.id}}...{{else if element.name}}...{{else if element.xpath}}...{{else}}...{{/if}}
-    // Must run before {{#if value}} because this chain is used INSIDE {{#if value}} blocks
-    const selectorChainMatches = result.matchAll(/{{#if\s+element\.testid}}([\s\S]*?){{else\s+if\s+element\.ariaLabel}}([\s\S]*?){{else\s+if\s+element\.id}}([\s\S]*?){{else\s+if\s+element\.name}}([\s\S]*?){{else\s+if\s+element\.xpath}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
-
-    for (const match of selectorChainMatches) {
-      const [fullMatch, contentTestId, contentAria, contentId, contentName, contentXpath, contentElse] = match;
-      if (event.element && event.element.testid) {
-        result = result.replace(fullMatch, contentTestId);
-      } else if (event.element && event.element.ariaLabel) {
-        result = result.replace(fullMatch, contentAria);
-      } else if (event.element && event.element.id) {
-        result = result.replace(fullMatch, contentId);
-      } else if (event.element && event.element.name) {
-        result = result.replace(fullMatch, contentName);
-      } else if (event.element && event.element.xpath) {
-        result = result.replace(fullMatch, contentXpath);
-      } else {
-        result = result.replace(fullMatch, contentElse);
-      }
-    }
-
-    // Handle Playwright Keydown Chain (TestID -> Aria -> ID -> Name -> Else) - Fallback for older templates or missing xpath
-    const playwrightKeydownChainMatches = result.matchAll(/{{#if\s+element\.testid}}([\s\S]*?){{else\s+if\s+element\.ariaLabel}}([\s\S]*?){{else\s+if\s+element\.id}}([\s\S]*?){{else\s+if\s+element\.name}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
-
-    for (const match of playwrightKeydownChainMatches) {
-      const [fullMatch, contentTestId, contentAria, contentId, contentName, contentElse] = match;
-      if (event.element && event.element.testid) {
-        result = result.replace(fullMatch, contentTestId);
-      } else if (event.element && event.element.ariaLabel) {
-        result = result.replace(fullMatch, contentAria);
-      } else if (event.element && event.element.id) {
-        result = result.replace(fullMatch, contentId);
-      } else if (event.element && event.element.name) {
-        result = result.replace(fullMatch, contentName);
-      } else {
-        result = result.replace(fullMatch, contentElse);
-      }
-    }
-
-    // Handle element selector priority chain (Medium Chain - Cypress)
-    // {{#if element.testid}}...{{else if element.id}}...{{else if element.name}}...{{else if element.xpath}}...{{else}}...{{/if}}
-    const selectorChainNoAriaMatches = result.matchAll(/{{#if\s+element\.testid}}([\s\S]*?){{else\s+if\s+element\.id}}([\s\S]*?){{else\s+if\s+element\.name}}([\s\S]*?){{else\s+if\s+element\.xpath}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
-
-    for (const match of selectorChainNoAriaMatches) {
-      const [fullMatch, contentTestId, contentId, contentName, contentXpath, contentElse] = match;
-      if (event.element && event.element.testid) {
-        result = result.replace(fullMatch, contentTestId);
-      } else if (event.element && event.element.id) {
-        result = result.replace(fullMatch, contentId);
-      } else if (event.element && event.element.name) {
-        result = result.replace(fullMatch, contentName);
-      } else if (event.element && event.element.xpath) {
-        result = result.replace(fullMatch, contentXpath);
-      } else {
-        result = result.replace(fullMatch, contentElse);
-      }
-    }
-
-    // Handle element selector priority chain (Selenium Chain)
-    // {{#if element.testid}}...{{else if element.id}}...{{else if element.name}}...{{else}}...{{/if}}
-    const seleniumChainMatches = result.matchAll(/{{#if\s+element\.testid}}([\s\S]*?){{else\s+if\s+element\.id}}([\s\S]*?){{else\s+if\s+element\.name}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
-
-    for (const match of seleniumChainMatches) {
-      const [fullMatch, contentTestId, contentId, contentName, contentElse] = match;
-      if (event.element && event.element.testid) {
-        result = result.replace(fullMatch, contentTestId);
-      } else if (event.element && event.element.id) {
-        result = result.replace(fullMatch, contentId);
-      } else if (event.element && event.element.name) {
-        result = result.replace(fullMatch, contentName);
-      } else {
-        result = result.replace(fullMatch, contentElse);
-      }
-    }
-
-    // Handle {{#if isFirstNavigation}}
-
-    // Handle element name/id chain (Small Chain)
-    // {{#if element.name}}...{{else if element.id}}...{{else}}...{{/if}}
-    const nameIdChainMatches = result.matchAll(/{{#if element\.name}}([\s\S]*?){{else if element\.id}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
-
-    for (const match of nameIdChainMatches) {
-      const [fullMatch, contentName, contentId, contentElse] = match;
-      if (event.element && event.element.name) {
-        result = result.replace(fullMatch, contentName);
-      } else if (event.element && event.element.id) {
-        result = result.replace(fullMatch, contentId);
-      } else {
-        result = result.replace(fullMatch, contentElse);
-      }
-    }
-
-    // Handle element id/name chain (Selenium Keydown Chain)
-    // {{#if element.id}}...{{else if element.name}}...{{else}}...{{/if}}
-    const idNameChainMatches = result.matchAll(/{{#if element\.id}}([\s\S]*?){{else if element\.name}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
-
-    for (const match of idNameChainMatches) {
-      const [fullMatch, contentId, contentName, contentElse] = match;
-      if (event.element && event.element.id) {
-        result = result.replace(fullMatch, contentId);
-      } else if (event.element && event.element.name) {
-        result = result.replace(fullMatch, contentName);
-      } else {
-        result = result.replace(fullMatch, contentElse);
-      }
-    }
-
-    // Handle element text check
-    // {{#if element.text}}...{{else}}...{{/if}}
-    const textMatches = result.matchAll(/{{#if element\.text}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
-    for (const match of textMatches) {
-        const [fullMatch, contentIf, contentElse] = match;
-        if (event.element && event.element.text) {
-            result = result.replace(fullMatch, contentIf);
-        } else {
-            result = result.replace(fullMatch, contentElse);
-        }
-    }
+    // Resolve ALL element property conditional chains (selector chains, field name chains, text checks)
+    // Uses nesting-aware depth tracking — handles any number of branches correctly
+    result = this.processElementSelectorChain(result, event);
 
     // Handle {{#if value}} (Check if value exists/is not empty)
     const valueIfMatches = result.matchAll(/{{#if value}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
@@ -299,58 +305,9 @@ class SimpleTemplateEngine implements TemplateEngine {
         }
     }
 
-    // Handle {{#if (eq event 'value')}} conditions
-    // Pattern 1: Navigation -> Click -> Change/Input -> Keydown (No final else)
-    const mainLoopMatches = result.matchAll(/{{#if \(eq event '([^']+)'\)}}([\s\S]*?){{else if \(eq event '([^']+)'\)}}([\s\S]*?){{else if \(or \(eq event '([^']+)'\) \(eq event '([^']+)'\)\)}}([\s\S]*?){{else if \(eq event '([^']+)'\)}}([\s\S]*?){{\/if}}/g);
-    
-    for (const match of mainLoopMatches) {
-      const [fullMatch, cond1, content1, cond2, content2, cond3a, cond3b, content3, cond4, content4] = match;
-      
-      if (eventType === cond1) {
-        result = result.replace(fullMatch, content1);
-      } else if (eventType === cond2) {
-        result = result.replace(fullMatch, content2);
-      } else if (eventType === cond3a || eventType === cond3b) {
-        result = result.replace(fullMatch, content3);
-      } else if (eventType === cond4) {
-        result = result.replace(fullMatch, content4);
-      } else {
-        result = result.replace(fullMatch, '');
-      }
-    }
-
-    // Pattern 2: Navigation -> Click -> Change/Input -> Else (Legacy/Fallback)
-    const legacyLoopMatches = result.matchAll(/{{#if \(eq event '([^']+)'\)}}([\s\S]*?){{else if \(eq event '([^']+)'\)}}([\s\S]*?){{else if \(or \(eq event '([^']+)'\) \(eq event '([^']+)'\)\)}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
-    
-    for (const match of legacyLoopMatches) {
-      const [fullMatch, condition1, content1, condition2, content2, condition3, condition4, content3, elseContent] = match;
-      
-      if (eventType === condition1) {
-        result = result.replace(fullMatch, content1);
-      } else if (eventType === condition2) {
-        result = result.replace(fullMatch, content2);
-      } else if (eventType === condition3 || eventType === condition4) {
-        result = result.replace(fullMatch, content3);
-      } else {
-        result = result.replace(fullMatch, elseContent);
-      }
-    }
-
-    // Handle simpler {{#if (eq event 'value')}} conditions
-    const simpleIfMatches = result.matchAll(/{{#if \(eq event '([^']+)'\)}}([\s\S]*?){{\/if}}/g);
-    
-    for (const match of simpleIfMatches) {
-      const [fullMatch, condition, content] = match;
-      
-      if (eventType === condition) {
-        result = result.replace(fullMatch, content);
-      } else {
-        result = result.replace(fullMatch, '');
-      }
-    }
-
     // Handle {{#if isFirstNavigation}} - check if property exists on event
-    const simplePropertyMatches = result.matchAll(/{{#if ([^}]+)}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
+    // Only match simple property names (\w+), not complex expressions like (eq assertion.type '...')
+    const simplePropertyMatches = result.matchAll(/{{#if (\w+)}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
     for (const match of simplePropertyMatches) {
       const [fullMatch, property, contentIf, contentElse] = match;
       const propertyValue = (event as any)[property];
@@ -363,54 +320,12 @@ class SimpleTemplateEngine implements TemplateEngine {
     }
 
     // Handle assertion type conditionals - {{#if (eq assertion.type 'text-equals')}}
-    // Pattern: {{#if (eq assertion.type 'TYPE')}}...{{else if (eq assertion.type 'TYPE2')}}...{{/if}}
-    const assertionTypeChainMatches = result.matchAll(/{{#if \(eq assertion\.type '([^']+)'\)}}([\s\S]*?)(?:{{else if \(eq assertion\.type '([^']+)'\)}}([\s\S]*?))*{{\/if}}/g);
-    
-    for (const match of assertionTypeChainMatches) {
-      const fullMatch = match[0];
-      const assertion = (event as any).assertion;
-      
-      if (assertion && assertion.type) {
-        // Find all conditions in this chain
-        const conditionPattern = /{{(?:#if|else if) \(eq assertion\.type '([^']+)'\)}}([\s\S]*?)(?={{(?:else if|\/if)})/g;
-        const conditions = [...fullMatch.matchAll(conditionPattern)];
-        
-        let replacement = '';
-        for (const cond of conditions) {
-          if (cond[1] === assertion.type) {
-            replacement = cond[2];
-            break;
-          }
-        }
-        
-        result = result.replace(fullMatch, replacement);
-      } else {
-        result = result.replace(fullMatch, '');
-      }
-    }
+    // Uses nesting-aware depth tracking (assertion type blocks contain nested element selector blocks)
+    result = this.processAssertionTypeChain(result, event);
 
     // Handle assertion.element conditionals - {{#if assertion.element.testid}}
-    // These are nested inside assertion type blocks
-    const assertionElementChainMatches = result.matchAll(/{{#if assertion\.element\.testid}}([\s\S]*?)(?:{{else if assertion\.element\.id}}([\s\S]*?))?(?:{{else if assertion\.element\.xpath}}([\s\S]*?))?{{\/if}}/g);
-    
-    for (const match of assertionElementChainMatches) {
-      const [fullMatch, contentTestId, contentId, contentXpath] = match;
-      const assertion = (event as any).assertion;
-      
-      if (assertion && assertion.element) {
-        if (assertion.element.testid) {
-          result = result.replace(fullMatch, contentTestId || '');
-        } else if (assertion.element.id) {
-          result = result.replace(fullMatch, contentId || '');
-        } else if (assertion.element.xpath) {
-          result = result.replace(fullMatch, contentXpath || '');
-        } else {
-          result = result.replace(fullMatch, '');
-        }
-      } else {
-        result = result.replace(fullMatch, '');
-      }
-    }
+    // These may remain after assertion type selection — process them like element selector chains
+    result = this.processAssertionElementChain(result, event);
 
     // Handle event.assertion variable replacements
     const assertion = (event as any).assertion;
@@ -441,26 +356,489 @@ class SimpleTemplateEngine implements TemplateEngine {
       }
     }
 
-    // Handle element property conditionals
-    const elementIfMatches = result.matchAll(/{{#if element\.([^}]+)}}([\s\S]*?){{\/if}}/g);
-    
-    for (const match of elementIfMatches) {
-      const [fullMatch, property, content] = match;
-      
-      if (event.element && (event.element as any)[property]) {
-        result = result.replace(fullMatch, content);
-      } else {
-        result = result.replace(fullMatch, '');
+    // Clean up orphaned template tags (bounded to single lines to avoid deleting code)
+    // Remove orphaned {{else if ...}} through the next template tag on the same logical block
+    result = result.replace(/{{else\s+if\s+[^}]+}}[^\n]*\n?/g, '');
+    // Remove orphaned {{else}} tags (single line only)
+    result = result.replace(/{{else}}[^\n]*\n?/g, '');
+    // Remove orphaned {{/if}} tags
+    result = result.replace(new RegExp('{{/if}}[^\\n]*\\n?', 'g'), '');
+
+    return result;
+  }
+
+  /**
+   * Nesting-aware parser for element property conditional chains.
+   * Handles ANY {{#if element.PROPERTY}}...{{else if element.PROPERTY2}}...{{/if}} block
+   * regardless of how many branches or which properties are used.
+   */
+  private processElementSelectorChain(template: string, event: TestEvent): string {
+    let result = template;
+    const startPattern = /{{#if\s+element\.(\w+)}}/;
+    let searchPos = 0;
+
+    while (searchPos < result.length) {
+      const remaining = result.substring(searchPos);
+      const startMatch = remaining.match(startPattern);
+
+      if (!startMatch || startMatch.index === undefined) { break; }
+
+      const blockStart = searchPos + startMatch.index;
+
+      // Walk forward tracking depth to find the matching {{/if}}
+      let depth = 1;
+      let pos = blockStart + startMatch[0].length;
+      let foundEnd = false;
+
+      while (depth > 0 && pos < result.length) {
+        const rest = result.substring(pos);
+        const nextOpen = rest.search(/{{#if\s/);
+        const nextClose = rest.search(/{{\/if}}/);
+
+        if (nextClose === -1) { break; }
+
+        if (nextOpen !== -1 && nextOpen < nextClose) {
+          depth++;
+          pos += nextOpen + 1;
+        } else {
+          depth--;
+          if (depth === 0) {
+            const blockEnd = pos + nextClose + '{{/if}}'.length;
+            const fullBlock = result.substring(blockStart, blockEnd);
+            const replacement = this.selectElementBranch(fullBlock, event);
+            result = result.substring(0, blockStart) + replacement + result.substring(blockEnd);
+            searchPos = blockStart + replacement.length;
+            foundEnd = true;
+            break;
+          }
+          pos += nextClose + '{{/if}}'.length;
+        }
+      }
+
+      if (!foundEnd) {
+        // No matching close found, skip past this tag
+        searchPos = blockStart + startMatch[0].length;
       }
     }
 
-    // Clean up orphaned {{else if}}, {{else}}, and {{/if}} tags
-    // These occur when outer conditionals are resolved but leave behind unmatched inner tags
-    result = result.replace(/{{else\s+if\s+[^}]+}}[\s\S]*?(?={{#if|{{else|$)/g, '');
-    result = result.replace(/{{else}}[\s\S]*?(?={{#if|$)/g, '');
-    result = result.replace(/{{\/if}}/g, '');
-
     return result;
+  }
+
+  /**
+   * Given an element property conditional block, extract branches and select the matching one.
+   * Handles blocks like {{#if element.testid}}...{{else if element.id}}...{{else}}...{{/if}}
+   */
+  private selectElementBranch(block: string, event: TestEvent): string {
+    const branches: Array<{ property: string; startContent: number; endContent: number }> = [];
+    let elseStart = -1;
+    let elseEnd = -1;
+    let depth = 0;
+
+    const tagPattern = /{{(#if|else if|else|\/if)([^}]*)}}/g;
+    let tagMatch: RegExpExecArray | null;
+
+    while ((tagMatch = tagPattern.exec(block)) !== null) {
+      const tagType = tagMatch[1];
+      const tagArgs = tagMatch[2].trim();
+      const tagEnd = tagMatch.index + tagMatch[0].length;
+
+      if (tagType === '#if') {
+        if (depth === 0) {
+          const propMatch = tagArgs.match(/^element\.(\w+)$/);
+          if (propMatch) {
+            branches.push({ property: propMatch[1], startContent: tagEnd, endContent: block.length });
+          }
+        }
+        depth++;
+      } else if (tagType === '/if') {
+        depth--;
+        if (depth === 0) {
+          if (elseStart === -1 && branches.length > 0) {
+            branches[branches.length - 1].endContent = tagMatch.index;
+          }
+          if (elseStart !== -1) {
+            elseEnd = tagMatch.index;
+          }
+          break;
+        }
+      } else if (depth === 1 && tagType === 'else if') {
+        if (branches.length > 0) {
+          branches[branches.length - 1].endContent = tagMatch.index;
+        }
+        const propMatch = tagArgs.match(/^element\.(\w+)$/);
+        if (propMatch) {
+          branches.push({ property: propMatch[1], startContent: tagEnd, endContent: block.length });
+        }
+      } else if (depth === 1 && tagType === 'else') {
+        if (branches.length > 0) {
+          branches[branches.length - 1].endContent = tagMatch.index;
+        }
+        elseStart = tagEnd;
+      }
+    }
+
+    // Select matching branch based on element property truthiness
+    for (const branch of branches) {
+      if (event.element && (event.element as any)[branch.property]) {
+        return block.substring(branch.startContent, branch.endContent);
+      }
+    }
+
+    // Else branch
+    if (elseStart !== -1) {
+      return block.substring(elseStart, elseEnd !== -1 ? elseEnd : block.length);
+    }
+
+    // No match and no else — return empty
+    return '';
+  }
+
+  /**
+   * Nesting-aware parser for the main event-type conditional chain.
+   * Finds the outermost {{#if (eq event '...')}}...{{/if}} block by tracking
+   * nesting depth, then extracts branches and selects the matching one.
+   */
+  private processEventTypeChain(template: string, eventType: string): string {
+    let result = template;
+    
+    // Find the start of an event-type chain
+    const startPattern = /{{#if \((?:eq event '([^']+)'|or \(eq event '([^']+)'\) \(eq event '([^']+)'\))\)}}/;
+    let startMatch = result.match(startPattern);
+    
+    while (startMatch && startMatch.index !== undefined) {
+      const blockStart = startMatch.index;
+      
+      // Walk forward from after the opening tag, tracking nesting depth
+      let depth = 1;
+      let pos = blockStart + startMatch[0].length;
+      const ifOpenPattern = /{{#if\s/;
+      const ifClosePattern = /{{\/if}}/;
+      
+      while (depth > 0 && pos < result.length) {
+        const remaining = result.substring(pos);
+        const nextOpen = remaining.search(ifOpenPattern);
+        const nextClose = remaining.search(ifClosePattern);
+        
+        if (nextClose === -1) { break; } // No matching close found
+        
+        if (nextOpen !== -1 && nextOpen < nextClose) {
+          // Found a nested {{#if before the next {{/if}}
+          depth++;
+          pos += nextOpen + 1; // Move past the {{#if start
+        } else {
+          // Found {{/if}}
+          depth--;
+          if (depth === 0) {
+            // This is the matching outer {{/if}}
+            const blockEnd = pos + nextClose + '{{/if}}'.length;
+            const fullBlock = result.substring(blockStart, blockEnd);
+            
+            // Now parse branches at depth 0 within this block
+            const replacement = this.selectEventBranch(fullBlock, eventType);
+            result = result.substring(0, blockStart) + replacement + result.substring(blockEnd);
+            break;
+          }
+          pos += nextClose + '{{/if}}'.length;
+        }
+      }
+      
+      // Look for next event-type chain after current position
+      const searchFrom = blockStart + (depth === 0 ? 0 : startMatch[0].length);
+      const nextResult = result.substring(searchFrom + 1);
+      startMatch = nextResult.match(startPattern);
+      if (startMatch && startMatch.index !== undefined) {
+        startMatch.index += searchFrom + 1;
+      }
+    }
+    
+    return result;
+  }
+
+  /**
+   * Given a full event-type block (from {{#if (eq event...)}} to its matching {{/if}}),
+   * extract branches at depth 0 and return the content of the matching branch.
+   */
+  private selectEventBranch(block: string, eventType: string): string {
+    // Find all depth-0 branch boundaries
+    // These are: {{#if (eq event '...')}} / {{else if (eq event '...')}} / {{else if (or ...)}} / {{else}} / {{/if}}
+    const branches: Array<{ conditions: string[]; startContent: number }> = [];
+    let elseStart = -1;
+    let depth = 0;
+    let pos = 0;
+    
+    const tagPattern = /{{(#if|else if|else|\/if)([^}]*)}}/g;
+    let tagMatch: RegExpExecArray | null;
+    
+    while ((tagMatch = tagPattern.exec(block)) !== null) {
+      const tagType = tagMatch[1];
+      const tagArgs = tagMatch[2];
+      const tagEnd = tagMatch.index + tagMatch[0].length;
+      
+      if (tagType === '#if') {
+        if (depth === 0) {
+          // This is the opening tag — extract conditions
+          const conditions = this.extractEventConditions(tagArgs);
+          if (conditions.length > 0) {
+            branches.push({ conditions, startContent: tagEnd });
+          }
+        }
+        depth++;
+      } else if (tagType === '/if') {
+        depth--;
+        if (depth === 0) {
+          // End of the block — mark the end of the last branch
+          // The content ends at tagMatch.index
+          if (branches.length > 0) {
+            (branches[branches.length - 1] as any).endContent = tagMatch.index;
+          }
+          if (elseStart !== -1) {
+            (branches as any).__elseEnd = tagMatch.index;
+          }
+          break;
+        }
+      } else if (depth === 1 && tagType === 'else if') {
+        // Depth-0 branch boundary (depth is 1 because we're inside the outer #if)
+        // Close previous branch
+        if (branches.length > 0) {
+          (branches[branches.length - 1] as any).endContent = tagMatch.index;
+        }
+        const conditions = this.extractEventConditions(tagArgs);
+        if (conditions.length > 0) {
+          branches.push({ conditions, startContent: tagEnd });
+        }
+      } else if (depth === 1 && tagType === 'else') {
+        // Close previous branch
+        if (branches.length > 0) {
+          (branches[branches.length - 1] as any).endContent = tagMatch.index;
+        }
+        elseStart = tagEnd;
+      }
+    }
+    
+    // Find matching branch
+    for (const branch of branches) {
+      if (branch.conditions.includes(eventType)) {
+        const end = (branch as any).endContent || block.length;
+        return block.substring(branch.startContent, end);
+      }
+    }
+    
+    // No match — return else content or empty
+    if (elseStart !== -1) {
+      const elseEnd = (branches as any).__elseEnd || block.length;
+      return block.substring(elseStart, elseEnd);
+    }
+    
+    return '';
+  }
+
+  /**
+   * Extract event type conditions from a tag's arguments string.
+   * Handles both: (eq event 'click') and (or (eq event 'change') (eq event 'input'))
+   */
+  private extractEventConditions(args: string): string[] {
+    const conditions: string[] = [];
+    const eqMatches = args.matchAll(/eq event '([^']+)'/g);
+    for (const m of eqMatches) {
+      conditions.push(m[1]);
+    }
+    return conditions;
+  }
+
+  /**
+   * Nesting-aware parser for assertion type conditional chains.
+   * Handles {{#if (eq assertion.type 'visible')}}...{{else if (eq assertion.type 'text-equals')}}...{{/if}}
+   * with nested {{#if assertion.element.XXX}} blocks inside each branch.
+   */
+  private processAssertionTypeChain(template: string, event: TestEvent): string {
+    let result = template;
+    const startPattern = /{{#if \(eq assertion\.type '([^']+)'\)}}/;
+    let startMatch = result.match(startPattern);
+
+    while (startMatch && startMatch.index !== undefined) {
+      const blockStart = startMatch.index;
+      let depth = 1;
+      let pos = blockStart + startMatch[0].length;
+
+      while (depth > 0 && pos < result.length) {
+        const rest = result.substring(pos);
+        const nextOpen = rest.search(/{{#if\s/);
+        const nextClose = rest.search(/{{\/if}}/);
+        if (nextClose === -1) break;
+        if (nextOpen !== -1 && nextOpen < nextClose) {
+          depth++;
+          pos += nextOpen + 1;
+        } else {
+          depth--;
+          if (depth === 0) {
+            const blockEnd = pos + nextClose + '{{/if}}'.length;
+            const fullBlock = result.substring(blockStart, blockEnd);
+            const replacement = this.selectAssertionBranch(fullBlock, event);
+            result = result.substring(0, blockStart) + replacement + result.substring(blockEnd);
+            break;
+          }
+          pos += nextClose + '{{/if}}'.length;
+        }
+      }
+
+      const nextResult = result.substring(blockStart + 1);
+      startMatch = nextResult.match(startPattern);
+      if (startMatch && startMatch.index !== undefined) {
+        startMatch.index += blockStart + 1;
+      }
+    }
+    return result;
+  }
+
+  private selectAssertionBranch(block: string, event: TestEvent): string {
+    const assertion = (event as any).assertion;
+    if (!assertion || !assertion.type) return '';
+
+    const branches: Array<{ type: string; startContent: number; endContent: number }> = [];
+    let elseStart = -1;
+    let depth = 0;
+    const tagPattern = /{{(#if|else if|else|\/if)([^}]*)}}/g;
+    let tagMatch: RegExpExecArray | null;
+
+    while ((tagMatch = tagPattern.exec(block)) !== null) {
+      const tagType = tagMatch[1];
+      const tagArgs = tagMatch[2].trim();
+      const tagEnd = tagMatch.index + tagMatch[0].length;
+
+      if (tagType === '#if') {
+        if (depth === 0) {
+          const typeMatch = tagArgs.match(/\(eq assertion\.type '([^']+)'\)/);
+          if (typeMatch) {
+            branches.push({ type: typeMatch[1], startContent: tagEnd, endContent: block.length });
+          }
+        }
+        depth++;
+      } else if (tagType === '/if') {
+        depth--;
+        if (depth === 0) {
+          if (elseStart === -1 && branches.length > 0) branches[branches.length - 1].endContent = tagMatch.index;
+          break;
+        }
+      } else if (depth === 1 && tagType === 'else if') {
+        if (branches.length > 0) branches[branches.length - 1].endContent = tagMatch.index;
+        const typeMatch = tagArgs.match(/\(eq assertion\.type '([^']+)'\)/);
+        if (typeMatch) {
+          branches.push({ type: typeMatch[1], startContent: tagEnd, endContent: block.length });
+        }
+      } else if (depth === 1 && tagType === 'else') {
+        if (branches.length > 0) branches[branches.length - 1].endContent = tagMatch.index;
+        elseStart = tagEnd;
+      }
+    }
+
+    for (const branch of branches) {
+      if (branch.type === assertion.type) {
+        return block.substring(branch.startContent, branch.endContent);
+      }
+    }
+    return '';
+  }
+
+  /**
+   * Process assertion.element conditional chains remaining after assertion type selection.
+   */
+  private processAssertionElementChain(template: string, event: TestEvent): string {
+    let result = template;
+    const startPattern = /{{#if\s+assertion\.element\.(\w+)}}/;
+    let searchPos = 0;
+
+    while (searchPos < result.length) {
+      const remaining = result.substring(searchPos);
+      const startMatch = remaining.match(startPattern);
+      if (!startMatch || startMatch.index === undefined) break;
+
+      const blockStart = searchPos + startMatch.index;
+      let depth = 1;
+      let pos = blockStart + startMatch[0].length;
+      let foundEnd = false;
+
+      while (depth > 0 && pos < result.length) {
+        const rest = result.substring(pos);
+        const nextOpen = rest.search(/{{#if\s/);
+        const nextClose = rest.search(/{{\/if}}/);
+        if (nextClose === -1) break;
+        if (nextOpen !== -1 && nextOpen < nextClose) {
+          depth++;
+          pos += nextOpen + 1;
+        } else {
+          depth--;
+          if (depth === 0) {
+            const blockEnd = pos + nextClose + '{{/if}}'.length;
+            const fullBlock = result.substring(blockStart, blockEnd);
+            const replacement = this.selectAssertionElementBranch(fullBlock, event);
+            result = result.substring(0, blockStart) + replacement + result.substring(blockEnd);
+            searchPos = blockStart + replacement.length;
+            foundEnd = true;
+            break;
+          }
+          pos += nextClose + '{{/if}}'.length;
+        }
+      }
+      if (!foundEnd) searchPos = blockStart + startMatch[0].length;
+    }
+    return result;
+  }
+
+  private selectAssertionElementBranch(block: string, event: TestEvent): string {
+    const assertion = (event as any).assertion;
+    if (!assertion || !assertion.element) return '';
+
+    const branches: Array<{ property: string; startContent: number; endContent: number }> = [];
+    let elseStart = -1;
+    let elseEnd = -1;
+    let depth = 0;
+    const tagPattern = /{{(#if|else if|else|\/if)([^}]*)}}/g;
+    let tagMatch: RegExpExecArray | null;
+
+    while ((tagMatch = tagPattern.exec(block)) !== null) {
+      const tagType = tagMatch[1];
+      const tagArgs = tagMatch[2].trim();
+      const tagEnd = tagMatch.index + tagMatch[0].length;
+
+      if (tagType === '#if') {
+        if (depth === 0) {
+          const propMatch = tagArgs.match(/^assertion\.element\.(\w+)$/);
+          if (propMatch) branches.push({ property: propMatch[1], startContent: tagEnd, endContent: block.length });
+        }
+        depth++;
+      } else if (tagType === '/if') {
+        depth--;
+        if (depth === 0) {
+          if (elseStart === -1 && branches.length > 0) branches[branches.length - 1].endContent = tagMatch.index;
+          if (elseStart !== -1) elseEnd = tagMatch.index;
+          break;
+        }
+      } else if (depth === 1 && tagType === 'else if') {
+        if (branches.length > 0) branches[branches.length - 1].endContent = tagMatch.index;
+        const propMatch = tagArgs.match(/^assertion\.element\.(\w+)$/);
+        if (propMatch) branches.push({ property: propMatch[1], startContent: tagEnd, endContent: block.length });
+      } else if (depth === 1 && tagType === 'else') {
+        if (branches.length > 0) branches[branches.length - 1].endContent = tagMatch.index;
+        elseStart = tagEnd;
+      }
+    }
+
+    for (const branch of branches) {
+      if (assertion.element[branch.property]) {
+        return block.substring(branch.startContent, branch.endContent);
+      }
+    }
+    if (elseStart !== -1) {
+      return block.substring(elseStart, elseEnd !== -1 ? elseEnd : block.length);
+    }
+    return '';
+  }
+
+  /** Get a stable identity key for an element to detect same-field events */
+  private getElementKey(event: TestEvent): string {
+    const el = event.element;
+    if (!el) return '';
+    return el.testid || el.id || el.name || (event as any).selector || el.xpath || '';
   }
 }
 
@@ -491,6 +869,10 @@ export class CodeGenerator {
   }
 
   public generateTestCode(sessionData: SessionData): string {
+    if (!sessionData.events || sessionData.events.length === 0) {
+      throw new Error('No events found in session data');
+    }
+
     const framework = sessionData.framework;
     const templateFile = this.getTemplateFile(framework);
     
@@ -510,7 +892,19 @@ export class CodeGenerator {
       applicationUrl: sessionData.applicationUrl
     };
 
-    return this.templateEngine.compile(template, templateData);
+    const result = this.templateEngine.compile(template, templateData);
+    
+    // Verify no unresolved template tags remain (except comments)
+    const unresolvedTags = result.match(/{{(?!!)(?!--)([^}]+)}}/g);
+    if (unresolvedTags && unresolvedTags.length > 0) {
+      console.warn('Unresolved template tags found:', unresolvedTags.slice(0, 5));
+    }
+
+    // Normalize line endings to LF, strip trailing whitespace per line, collapse blank lines
+    return result
+      .replace(/\r\n/g, '\n')
+      .replace(/[ \t]+$/gm, '')
+      .replace(/\n{3,}/g, '\n\n');
   }
 
   public generateTestDataFile(sessionData: SessionData): string {
@@ -518,28 +912,15 @@ export class CodeGenerator {
   }
 
   private getTemplateFile(framework: string): string {
-    const templateFiles = {
-      'selenium': 'selenium_template.py',
-      'playwright': 'playwright_template.py',
-      'cypress': 'cypress_template.ts'
-    };
-
-    const fileName = templateFiles[framework as keyof typeof templateFiles];
-    if (!fileName) {
+    if (framework !== 'playwright') {
       throw new Error(`Unsupported framework: ${framework}`);
     }
 
-    return path.join(this.templatesPath, fileName);
+    return path.join(this.templatesPath, 'playwright_template.py');
   }
 
   public getFileExtension(framework: string): string {
-    const extensions = {
-      'selenium': '.py',
-      'playwright': '.py',
-      'cypress': '.ts'
-    };
-
-    return extensions[framework as keyof typeof extensions] || '.txt';
+    return '.py';
   }
 
   public getTestDataFileName(): string {

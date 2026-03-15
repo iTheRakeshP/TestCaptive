@@ -11,6 +11,12 @@ dist/
 out/
 *.vsix
 
+# Chrome extension build artifacts
+chrome-extension/*.js
+!chrome-extension/build.js
+!chrome-extension/webpack.config.js
+chrome-extension/*.zip
+
 # Temporary files
 *.tmp
 *.temp

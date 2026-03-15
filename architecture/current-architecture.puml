@@ -32,9 +32,7 @@ package "Storage Layer" {
 }
 
 package "Output Layer" {
-    file "Selenium Test\n(.py)" as SeleniumOutput
     file "Playwright Test\n(.py)" as PlaywrightOutput
-    file "Cypress Test\n(.ts)" as CypressOutput
     file "Test Data\n(.json)" as TestDataOutput
 }
 
@@ -47,9 +45,7 @@ SessionDB --> [Test Data Manager\n(Session Storage)] : Load Session
 [Test Data Manager\n(Session Storage)] --> [Review Panel\n(Webview UI)] : Display Events
 [Review Panel\n(Webview UI)] --> [Code Generator\n(Template Engine)] : Generate Code
 
-[Code Generator\n(Template Engine)] --> SeleniumOutput : Template Processing
 [Code Generator\n(Template Engine)] --> PlaywrightOutput : Template Processing
-[Code Generator\n(Template Engine)] --> CypressOutput : Template Processing
 [Test Data Manager\n(Session Storage)] --> TestDataOutput : Extract Data
 
 note right of Chrome

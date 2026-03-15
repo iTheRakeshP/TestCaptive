@@ -13,7 +13,7 @@ This folder contains PlantUML diagrams for presenting TestCaptive to stakeholder
 - Chrome extension captures events and assertions
 - VS Code extension generates code with validations
 - Session-based workflow
-- Multi-framework support
+- Playwright test generation
 - **✅ Smart assertion capture (7 types)**
 - Context menu integration
 
@@ -216,13 +216,13 @@ These diagrams complement:
 All diagrams have been updated to reflect the new smart assertion capture feature:
 - **7 assertion types** (text, visibility, state, URL validation)
 - **Context menu integration** in Chrome extension
-- **Automated code generation** for all frameworks
+- **Automated code generation** for Playwright
 - **Zero manual validation** overhead
 
 **Impact on Pitch:**
 - Eliminates "no assertions" gap from enterprise readiness
 - Significantly strengthens ROI analysis
-- Differentiates from competitors (Selenium IDE, Playwright Inspector, Cypress Studio)
+- Differentiates from competitors (Selenium IDE, Playwright Inspector)
 - Makes product immediately usable for CI/CD pipelines
 
 ---

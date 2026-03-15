@@ -13,11 +13,7 @@ ENV/
 env/
 
 # Test outputs
-cypress-suite/cypress/screenshots/
-cypress-suite/cypress/videos/
-cypress-suite/cypress/downloads/
 playwright-suite/.pytest_cache/
-selenium-suite/.pytest_cache/
 *.log
 test-results/
 allure-results/

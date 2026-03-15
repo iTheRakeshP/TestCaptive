@@ -2,7 +2,7 @@
 
 ## Objective
 
-TestCaptive enables developers and QA engineers to automatically generate test scripts for Selenium (Python), Playwright (Python), or Cypress (TypeScript) by interacting with a live application in the browser. The tool consists of a Chrome Extension to capture user behavior and a VS Code Extension to preview and export the generated scripts.
+TestCaptive enables developers and QA engineers to automatically generate test scripts for Playwright (Python) by interacting with a live application in the browser. The tool consists of a Chrome Extension to capture user behavior and a VS Code Extension to preview and export the generated scripts.
 
 **Architecture:** Offline/Standalone Mode. The Chrome Extension records events and saves them to a JSON file. The VS Code Extension imports this JSON file to generate code. No active network connection or local server bridge is required between the two components.
 
@@ -43,7 +43,7 @@ TestCaptive enables developers and QA engineers to automatically generate test s
 - **Events Section**: List of captured events with details.
 - **Data Section**: Table of extracted test data (inputs, values).
 - **Code Section**: 
-  - Framework selection tabs (Selenium, Playwright, Cypress).
+  - Framework selection tab (Playwright).
   - Code editor with syntax highlighting.
   - Copy and Export buttons.
 
