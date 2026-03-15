@@ -1,10 +1,10 @@
 {
-  "id": "session_1773530953934",
-  "timestamp": "2026-03-14T23:29:57.022Z",
+  "id": "session_1773535419629",
+  "timestamp": "2026-03-15T00:44:27.781Z",
   "events": [
     {
       "type": "navigation",
-      "timestamp": "2026-03-14T23:29:13.935Z",
+      "timestamp": "2026-03-15T00:43:39.631Z",
       "page": {
         "url": "file:///D:/Projects/Advance/TestCaptive/demo.html",
         "title": "TestCaptive Demo Page"
@@ -23,11 +23,11 @@
         "role": "",
         "xpath": ""
       },
-      "sessionId": "session_1773530953934"
+      "sessionId": "session_1773535419629"
     },
     {
       "type": "fill",
-      "timestamp": "2026-03-14T23:29:16.979Z",
+      "timestamp": "2026-03-15T00:43:44.051Z",
       "element": {
         "tag": "input",
         "id": "firstName",
@@ -53,7 +53,7 @@
         "scrollX": 0,
         "scrollY": 0
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "[data-testid=\"input-first-name\"]",
       "inputValue": "rakesh",
       "position": {
@@ -65,7 +65,7 @@
     },
     {
       "type": "fill",
-      "timestamp": "2026-03-14T23:29:19.032Z",
+      "timestamp": "2026-03-15T00:43:46.698Z",
       "element": {
         "tag": "input",
         "id": "lastName",
@@ -91,7 +91,7 @@
         "scrollX": 0,
         "scrollY": 0
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "[data-testid=\"input-last-name\"]",
       "inputValue": "parmar",
       "position": {
@@ -103,7 +103,7 @@
     },
     {
       "type": "fill",
-      "timestamp": "2026-03-14T23:29:23.272Z",
+      "timestamp": "2026-03-15T00:43:52.462Z",
       "element": {
         "tag": "input",
         "id": "email",
@@ -129,9 +129,9 @@
         "scrollX": 0,
         "scrollY": 0
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "[data-testid=\"input-email\"]",
-      "inputValue": "rakesh@hh.com",
+      "inputValue": "rak@yah.com",
       "position": {
         "x": 492,
         "y": 493,
@@ -141,7 +141,7 @@
     },
     {
       "type": "fill",
-      "timestamp": "2026-03-14T23:29:27.016Z",
+      "timestamp": "2026-03-15T00:43:59.002Z",
       "element": {
         "tag": "input",
         "id": "phone",
@@ -167,9 +167,47 @@
         "scrollX": 0,
         "scrollY": 0
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "[data-testid=\"input-phone\"]",
-      "inputValue": "2019083456",
+      "inputValue": "20190454777=",
+      "position": {
+        "x": 492,
+        "y": 577,
+        "width": 720,
+        "height": 36
+      }
+    },
+    {
+      "type": "fill",
+      "timestamp": "2026-03-15T00:44:02.374Z",
+      "element": {
+        "tag": "input",
+        "id": "phone",
+        "className": "testcaptive-recordable",
+        "text": "",
+        "value": "20190454777",
+        "type": "tel",
+        "name": "",
+        "placeholder": "(555) 123-4567",
+        "testid": "input-phone",
+        "ariaLabel": "",
+        "role": "",
+        "xpath": "//*[@id=\"phone\"]",
+        "cssSelector": "[data-testid=\"input-phone\"]",
+        "checked": false,
+        "href": "",
+        "src": "",
+        "isContentEditable": false
+      },
+      "page": {
+        "url": "file:///D:/Projects/Advance/TestCaptive/demo.html",
+        "title": "TestCaptive Demo Page",
+        "scrollX": 0,
+        "scrollY": 0
+      },
+      "sessionId": "session_1773535419629",
+      "selector": "[data-testid=\"input-phone\"]",
+      "inputValue": "201904888",
       "position": {
         "x": 492,
         "y": 577,
@@ -179,7 +217,7 @@
     },
     {
       "type": "select",
-      "timestamp": "2026-03-14T23:29:31.491Z",
+      "timestamp": "2026-03-15T00:44:06.157Z",
       "element": {
         "tag": "select",
         "id": "country",
@@ -207,7 +245,7 @@
         "scrollX": 0,
         "scrollY": 0
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "[data-testid=\"select-country\"]",
       "value": "us",
       "inputValue": "us",
@@ -220,7 +258,7 @@
     },
     {
       "type": "fill",
-      "timestamp": "2026-03-14T23:29:33.909Z",
+      "timestamp": "2026-03-15T00:44:08.028Z",
       "element": {
         "tag": "textarea",
         "id": "comments",
@@ -245,7 +283,7 @@
         "scrollX": 0,
         "scrollY": 0
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "[data-testid=\"textarea-comments\"]",
       "inputValue": "test",
       "position": {
@@ -257,7 +295,7 @@
     },
     {
       "type": "scroll",
-      "timestamp": "2026-03-14T23:29:36.129Z",
+      "timestamp": "2026-03-15T00:44:09.630Z",
       "element": {
         "tag": "window",
         "id": "",
@@ -278,7 +316,7 @@
         "scrollX": 0,
         "scrollY": 300
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "scrollPosition": {
         "x": 0,
         "y": 300
@@ -286,7 +324,7 @@
     },
     {
       "type": "click",
-      "timestamp": "2026-03-14T23:29:37.032Z",
+      "timestamp": "2026-03-15T00:44:10.416Z",
       "element": {
         "tag": "input",
         "id": "newsletter",
@@ -312,7 +350,7 @@
         "scrollX": 0,
         "scrollY": 300
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "[data-testid=\"checkbox-newsletter\"]",
       "position": {
         "x": 492,
@@ -321,13 +359,13 @@
         "height": 13
       },
       "clickPosition": {
-        "clientX": 494,
-        "clientY": 569
+        "clientX": 499,
+        "clientY": 564
       }
     },
     {
       "type": "check",
-      "timestamp": "2026-03-14T23:29:37.033Z",
+      "timestamp": "2026-03-15T00:44:10.417Z",
       "element": {
         "tag": "input",
         "id": "newsletter",
@@ -353,7 +391,7 @@
         "scrollX": 0,
         "scrollY": 300
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "[data-testid=\"checkbox-newsletter\"]",
       "value": "true",
       "position": {
@@ -365,7 +403,7 @@
     },
     {
       "type": "click",
-      "timestamp": "2026-03-14T23:29:38.105Z",
+      "timestamp": "2026-03-15T00:44:11.016Z",
       "element": {
         "tag": "button",
         "id": "",
@@ -390,7 +428,7 @@
         "scrollX": 0,
         "scrollY": 300
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "[data-testid=\"btn-validate\"]",
       "position": {
         "x": 492,
@@ -399,13 +437,13 @@
         "height": 36
       },
       "clickPosition": {
-        "clientX": 558,
-        "clientY": 621
+        "clientX": 534,
+        "clientY": 612
       }
     },
     {
       "type": "click",
-      "timestamp": "2026-03-14T23:29:40.303Z",
+      "timestamp": "2026-03-15T00:44:13.551Z",
       "element": {
         "tag": "button",
         "id": "",
@@ -430,7 +468,7 @@
         "scrollX": 0,
         "scrollY": 300
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "[data-testid=\"btn-submit\"]",
       "position": {
         "x": 965,
@@ -439,13 +477,13 @@
         "height": 36
       },
       "clickPosition": {
-        "clientX": 1067,
-        "clientY": 624
+        "clientX": 1089,
+        "clientY": 618
       }
     },
     {
       "type": "click",
-      "timestamp": "2026-03-14T23:29:43.910Z",
+      "timestamp": "2026-03-15T00:44:16.288Z",
       "element": {
         "tag": "h2",
         "id": "",
@@ -470,7 +508,7 @@
         "scrollX": 0,
         "scrollY": 300
       },
-      "sessionId": "session_1773530953934",
+      "sessionId": "session_1773535419629",
       "selector": "h2",
       "position": {
         "x": 674,
@@ -479,18 +517,18 @@
         "height": 32
       },
       "clickPosition": {
-        "clientX": 911,
-        "clientY": 410
+        "clientX": 912,
+        "clientY": 413
       }
     },
     {
       "type": "assertion",
-      "timestamp": "2026-03-14T23:29:52.269Z",
-      "sessionId": "session_1773530953934",
+      "timestamp": "2026-03-15T00:44:21.107Z",
+      "sessionId": "session_1773535419629",
       "assertion": {
         "type": "visible",
         "description": "Assert \"✅ Success!\" is visible",
-        "timestamp": "2026-03-14T23:29:52.269Z",
+        "timestamp": "2026-03-15T00:44:21.107Z",
         "element": {
           "tag": "h2",
           "id": "",
@@ -531,46 +569,6 @@
       "page": {
         "url": "file:///D:/Projects/Advance/TestCaptive/demo.html",
         "title": "TestCaptive Demo Page"
-      }
-    },
-    {
-      "type": "click",
-      "timestamp": "2026-03-14T23:29:54.223Z",
-      "element": {
-        "tag": "button",
-        "id": "",
-        "className": "testcaptive-recordable",
-        "text": "Close",
-        "value": "",
-        "type": "submit",
-        "name": "",
-        "placeholder": "",
-        "testid": "",
-        "ariaLabel": "",
-        "role": "",
-        "xpath": "//*[@id=\"successPopup\"]/button[1]",
-        "cssSelector": "button.testcaptive-recordable",
-        "href": "",
-        "src": "",
-        "isContentEditable": false
-      },
-      "page": {
-        "url": "file:///D:/Projects/Advance/TestCaptive/demo.html",
-        "title": "TestCaptive Demo Page",
-        "scrollX": 0,
-        "scrollY": 300
-      },
-      "sessionId": "session_1773530953934",
-      "selector": "button.testcaptive-recordable",
-      "position": {
-        "x": 793,
-        "y": 789,
-        "width": 98,
-        "height": 36
-      },
-      "clickPosition": {
-        "clientX": 838,
-        "clientY": 511
       }
     }
   ],

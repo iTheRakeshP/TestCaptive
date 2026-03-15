@@ -1,24 +1,19 @@
 {
-  "name": "testcaptive-test-suite-project",
+  "name": "testcaptive-test-suite",
   "version": "1.0.0",
-  "description": "Test suite project for TestCaptive - Playwright test execution environment",
+  "description": "Playwright test runner for TestCaptive generated tests",
   "scripts": {
-    "import:all": "python shared/import-all-tests.py",
-    "setup:playwright": "cd playwright-suite && pip install -r requirements.txt && playwright install",
-    "test:playwright": "cd playwright-suite && pytest tests/ -v"
+    "setup": "pip install -r requirements.txt && playwright install",
+    "test": "pytest tests/ -v",
+    "test:headed": "pytest tests/ -v --headed",
+    "test:debug": "pytest tests/ -v -s"
   },
   "keywords": [
     "testing",
     "automation",
     "playwright",
-    "testcaptive",
-    "e2e",
-    "test-suite"
+    "testcaptive"
   ],
   "author": "TestCaptive",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/iTheRakeshP/TestCaptive"
-  }
+  "license": "MIT"
 }

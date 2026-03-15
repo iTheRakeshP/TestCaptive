@@ -1,33 +1,15 @@
-# Playwright Python Test Template
-
 import os
-import pytest
 import json
-import re
-from playwright.async_api import async_playwright, expect
+import pytest
+from playwright.async_api import expect
 
-@pytest.fixture(scope="module")
-def test_data():
-    """Load test data from JSON file"""
-    with open('test_data.json', 'r') as f:
-        return json.load(f)
+DATA_DIR = os.path.dirname(__file__)
+with open(os.path.join(DATA_DIR, "test_data.json"), "r") as f:
+    TEST_DATA = json.load(f)
 
-@pytest.fixture
-async def page():
-    """Create a new page for each test"""
-    async with async_playwright() as p:
-        headless = os.environ.get("HEADLESS", "false").lower() == "true"
-        browser = await p.chromium.launch(headless=headless)
-        context = await browser.new_context(
-            viewport={"width": 1280, "height": 720}
-        )
-        page = await context.new_page()
-        yield page
-        await context.close()
-        await browser.close()
 
 @pytest.mark.asyncio
-async def test_recorded_flow(page, test_data):
+async def test_recorded_flow(page):
     """Generated test case from recorded interactions"""
     {{#events}}
     {{#if (eq event 'navigation')}}
@@ -77,7 +59,7 @@ async def test_recorded_flow(page, test_data):
     
     {{else if (eq event 'fill')}}
     # Fill {{#if element.name}}"{{element.name}}"{{else if element.placeholder}}"{{element.placeholder}}"{{else if element.id}}"{{element.id}}"{{else}}input field{{/if}}
-    test_value = test_data.get("{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}field_value{{/if}}", "")
+    test_value = TEST_DATA.get("{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}field_value{{/if}}", "")
     {{#if element.testid}}
     await page.get_by_test_id("{{element.testid}}").fill(test_value)
     {{else if element.ariaLabel}}
@@ -96,8 +78,7 @@ async def test_recorded_flow(page, test_data):
     
     {{else if (or (eq event 'change') (eq event 'input'))}}
     # Enter text in {{#if element.name}}"{{element.name}}"{{else if element.id}}"{{element.id}}"{{else}}input field{{/if}}
-    # Use test data from JSON file
-    test_value = test_data.get("{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}field_value{{/if}}", "")
+    test_value = TEST_DATA.get("{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}field_value{{/if}}", "")
     {{#if element.testid}}
     await page.get_by_test_id("{{element.testid}}").fill(test_value)
     {{else if element.ariaLabel}}
@@ -114,7 +95,7 @@ async def test_recorded_flow(page, test_data):
     
     {{else if (eq event 'select')}}
     # Select option in dropdown
-    test_value = test_data.get("{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}select_value{{/if}}", "")
+    test_value = TEST_DATA.get("{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}select_value{{/if}}", "")
     {{#if element.testid}}
     await page.get_by_test_id("{{element.testid}}").select_option(test_value)
     {{else if element.ariaLabel}}
@@ -336,7 +317,5 @@ async def test_recorded_flow(page, test_data):
     
     {{/if}}
     {{/events}}
-    
-    print("Test completed successfully!")
 
 

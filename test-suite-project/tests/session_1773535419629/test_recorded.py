@@ -1,33 +1,14 @@
-# Playwright Python Test Template
-
 import os
-import pytest
 import json
-import re
-from playwright.async_api import async_playwright, expect
+import pytest
+from playwright.async_api import expect
 
-@pytest.fixture(scope="module")
-def test_data():
-    """Load test data from JSON file"""
-    with open('test_data.json', 'r') as f:
-        return json.load(f)
-
-@pytest.fixture
-async def page():
-    """Create a new page for each test"""
-    async with async_playwright() as p:
-        headless = os.environ.get("HEADLESS", "false").lower() == "true"
-        browser = await p.chromium.launch(headless=headless)
-        context = await browser.new_context(
-            viewport={"width": 1280, "height": 720}
-        )
-        page = await context.new_page()
-        yield page
-        await context.close()
-        await browser.close()
+DATA_DIR = os.path.dirname(__file__)
+with open(os.path.join(DATA_DIR, "test_data.json"), "r") as f:
+    TEST_DATA = json.load(f)
 
 @pytest.mark.asyncio
-async def test_recorded_flow(page, test_data):
+async def test_recorded_flow(page):
     """Generated test case from recorded interactions"""
 
     # Navigate to TestCaptive Demo Page
@@ -35,32 +16,32 @@ async def test_recorded_flow(page, test_data):
     await page.goto("file:///D:/Projects/Advance/TestCaptive/demo.html", wait_until="domcontentloaded")
 
     # Fill "Enter your first name"
-    test_value = test_data.get("input-first-name", "")
+    test_value = TEST_DATA.get("input-first-name", "")
 
     await page.get_by_test_id("input-first-name").fill(test_value)
 
     # Fill "Enter your last name"
-    test_value = test_data.get("input-last-name", "")
+    test_value = TEST_DATA.get("input-last-name", "")
 
     await page.get_by_test_id("input-last-name").fill(test_value)
 
     # Fill "your.email@example.com"
-    test_value = test_data.get("input-email", "")
+    test_value = TEST_DATA.get("input-email", "")
 
     await page.get_by_test_id("input-email").fill(test_value)
 
     # Fill "(555) 123-4567"
-    test_value = test_data.get("input-phone", "")
+    test_value = TEST_DATA.get("input-phone", "")
 
     await page.get_by_test_id("input-phone").fill(test_value)
 
     # Select option in dropdown
-    test_value = test_data.get("select-country", "")
+    test_value = TEST_DATA.get("select-country", "")
 
     await page.get_by_test_id("select-country").select_option(test_value)
 
     # Fill "Any additional comments..."
-    test_value = test_data.get("textarea-comments", "")
+    test_value = TEST_DATA.get("textarea-comments", "")
 
     await page.get_by_test_id("textarea-comments").fill(test_value)
 
@@ -86,6 +67,4 @@ async def test_recorded_flow(page, test_data):
     # Assertion: Assert "✅ Success!" is visible
 
     await expect(page.locator('xpath=//*[@id="successPopup"]/h2[1]')).to_be_visible()
-
-    print("Test completed successfully!")
 

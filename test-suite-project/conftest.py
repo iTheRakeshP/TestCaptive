@@ -1,5 +1,4 @@
 import os
-import json
 import pytest
 from playwright.async_api import async_playwright
 
@@ -14,10 +13,3 @@ async def page():
         yield page
         await context.close()
         await browser.close()
-
-@pytest.fixture
-def test_data():
-    """Load test data from JSON file"""
-    data_path = os.path.join(os.path.dirname(__file__), "test_data.json")
-    with open(data_path, "r") as f:
-        return json.load(f)
