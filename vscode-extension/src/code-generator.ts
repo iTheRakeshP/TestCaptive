@@ -198,6 +198,11 @@ class SimpleTemplateEngine implements TemplateEngine {
             navigationCount++;
             (event as any).isFirstNavigation = (navigationCount === 1);
         }
+
+        // Propagate triggersNavigation flag for wait strategy
+        if ((event as any).triggersNavigation) {
+          (event as any).triggersNavigation = true;
+        }
         
         // Copy selector to element.cssSelector if it doesn't exist
         if (event.element && (event as any).selector && !event.element.cssSelector) {
@@ -321,6 +326,7 @@ class SimpleTemplateEngine implements TemplateEngine {
 
     // Handle {{#if isFirstNavigation}} - check if property exists on event
     // Only match simple property names (\w+), not complex expressions like (eq assertion.type '...')
+    // First handle with-else variant
     const simplePropertyMatches = result.matchAll(/{{#if (\w+)}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);
     for (const match of simplePropertyMatches) {
       const [fullMatch, property, contentIf, contentElse] = match;
@@ -330,6 +336,18 @@ class SimpleTemplateEngine implements TemplateEngine {
         result = result.replace(fullMatch, contentIf);
       } else {
         result = result.replace(fullMatch, contentElse);
+      }
+    }
+
+    // Handle {{#if prop}}...{{/if}} (no else branch)
+    const simplePropertyNoElseMatches = result.matchAll(/{{#if (\w+)}}([\s\S]*?){{\/if}}/g);
+    for (const match of simplePropertyNoElseMatches) {
+      const [fullMatch, property, contentIf] = match;
+      const propertyValue = (event as any)[property];
+      if (propertyValue) {
+        result = result.replace(fullMatch, contentIf);
+      } else {
+        result = result.replace(fullMatch, '');
       }
     }
 

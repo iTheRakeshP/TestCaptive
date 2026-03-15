@@ -202,6 +202,56 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   });
 });
 
+// ===== Multi-Tab / Popup Window Tracking =====
+// Detect new tabs/popups opened during recording and inject content script
+chrome.tabs.onCreated.addListener((tab) => {
+  if (!isRecording || !currentSessionId) return;
+
+  const newTabId = tab.id;
+  if (!newTabId) return;
+
+  // Record a new-tab event
+  recordedEvents.push({
+    type: 'new-tab',
+    timestamp: new Date().toISOString(),
+    page: {
+      url: tab.pendingUrl || tab.url || 'about:blank',
+      title: ''
+    },
+    element: {
+      tag: 'window', id: '', className: '', text: '', value: '',
+      type: '', name: '', placeholder: '', testid: '', ariaLabel: '',
+      role: '', xpath: ''
+    },
+    sessionId: currentSessionId,
+    tabId: newTabId,
+    windowId: tab.windowId
+  });
+
+  console.log('🆕 New tab detected:', tab.pendingUrl || tab.url);
+  persistState();
+
+  // Wait for the tab to finish loading, then inject content script
+  const onTabReady = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
+    if (tabId !== newTabId || changeInfo.status !== 'complete') return;
+    chrome.tabs.onUpdated.removeListener(onTabReady);
+
+    chrome.scripting.executeScript({
+      target: { tabId: newTabId },
+      files: ['content.js']
+    }).then(() => {
+      setTimeout(() => {
+        chrome.tabs.sendMessage(newTabId, {
+          type: 'start-recording',
+          sessionId: currentSessionId
+        }).catch(() => {});
+      }, 200);
+    }).catch(() => {});
+  };
+
+  chrome.tabs.onUpdated.addListener(onTabReady);
+});
+
 // ===== Context Menu for Assertions =====
 chrome.runtime.onInstalled.addListener(() => {
   // Create parent menu

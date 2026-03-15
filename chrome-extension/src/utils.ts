@@ -102,34 +102,40 @@ export function escapeCSSValue(value: string): string {
 /**
  * Generate the best CSS selector for an element, following priority:
  * 1. data-testid / data-test-id
- * 2. aria-label3. Stable ID (not dynamic)
+ * 2. aria-label
+ * 3. Stable ID (not dynamic)
  * 4. name attribute
  * 5. Role + text combination
  * 6. Stable class selector with tag
- * 7. XPath fallback
+ * 7. Tag + nth-child fallback
+ *
+ * Each candidate is validated for uniqueness before returning.
+ * If a candidate matches multiple elements, it falls through to the next level.
  */
 export function generateSelector(element: Element): string {
+  const candidates: string[] = [];
+
   // 1. data-testid (strongest contract)
   const testId = element.getAttribute('data-testid') || element.getAttribute('data-test-id');
   if (testId) {
-    return `[data-testid="${escapeCSSValue(testId)}"]`;
+    candidates.push(`[data-testid="${escapeCSSValue(testId)}"]`);
   }
 
   // 2. aria-label
   const ariaLabel = element.getAttribute('aria-label');
   if (ariaLabel) {
-    return `[aria-label="${escapeCSSValue(ariaLabel)}"]`;
+    candidates.push(`[aria-label="${escapeCSSValue(ariaLabel)}"]`);
   }
 
   // 3. Stable ID
   if (element.id && !isDynamicId(element.id)) {
-    return `#${escapeCSSValue(element.id)}`;
+    candidates.push(`#${escapeCSSValue(element.id)}`);
   }
 
   // 4. name attribute
   const name = element.getAttribute('name');
   if (name) {
-    return `${element.tagName.toLowerCase()}[name="${escapeCSSValue(name)}"]`;
+    candidates.push(`${element.tagName.toLowerCase()}[name="${escapeCSSValue(name)}"]`);
   }
 
   // 5. Role + accessible name
@@ -137,7 +143,7 @@ export function generateSelector(element: Element): string {
   if (role) {
     const text = element.textContent?.trim().substring(0, 50);
     if (text) {
-      return `[role="${role}"]`;
+      candidates.push(`[role="${role}"]`);
     }
   }
 
@@ -149,30 +155,43 @@ export function generateSelector(element: Element): string {
       .filter(c => c.trim() && !isDynamicClass(c.trim()))
       .slice(0, 2);
     if (stableClasses.length > 0) {
-      let selector = tag + '.' + stableClasses.map(c => escapeCSSValue(c)).join('.');
-      // Add nth-child for uniqueness
-      const parent = element.parentElement;
-      if (parent) {
-        const siblings = Array.from(parent.children).filter(
-          el => el.tagName === element.tagName
-        );
-        if (siblings.length > 1) {
-          const index = siblings.indexOf(element) + 1;
-          selector += `:nth-child(${index})`;
-        }
-      }
-      return selector;
+      candidates.push(tag + '.' + stableClasses.map(c => escapeCSSValue(c)).join('.'));
     }
   }
 
-  // 7. Tag + nth-child fallback
+  // Validate candidates for uniqueness
+  for (const candidate of candidates) {
+    try {
+      const matches = document.querySelectorAll(candidate);
+      if (matches.length === 1) {
+        return candidate;
+      }
+    } catch (_) {
+      // Invalid selector, skip
+    }
+  }
+
+  // If no unique candidate, try refining the best one with :nth-of-type
+  for (const candidate of candidates) {
+    try {
+      const matches = document.querySelectorAll(candidate);
+      if (matches.length > 1) {
+        const idx = Array.from(matches).indexOf(element);
+        if (idx >= 0) {
+          return `${candidate}:nth-of-type(${idx + 1})`;
+        }
+      }
+    } catch (_) { /* skip */ }
+  }
+
+  // 7. Tag + nth-child fallback (always unique)
   const parent = element.parentElement;
   if (parent) {
     const siblings = Array.from(parent.children).filter(
       el => el.tagName === element.tagName
     );
+    const index = siblings.indexOf(element) + 1;
     if (siblings.length > 1) {
-      const index = siblings.indexOf(element) + 1;
       return `${tag}:nth-child(${index})`;
     }
   }

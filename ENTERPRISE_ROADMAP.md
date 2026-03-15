@@ -42,42 +42,42 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
 ## Phase 2: Stability & Reliability (High Priority)
 
 ### 2.1 Wait Strategies / Anti-Flakiness
-- **Problem**: No `wait_for_selector`, `wait_for_load_state`, or explicit waits between actions. Async SPAs will produce flaky tests.
+- **Status**: ✅ DONE
 - **Fix**: Insert `await page.wait_for_load_state("networkidle")` after navigation. Add configurable auto-wait after clicks that trigger navigation. Detect XHR/fetch in content script and annotate events with "network pending" flag.
 - **Files**: `chrome-extension/src/content.ts`, `vscode-extension/templates/playwright_template.py`
 
 ### 2.2 Cross-Origin Iframe Support
-- **Problem**: Content script runs in iframes (`all_frames: true`) but events from child frames have no parent correlation. Cross-origin iframes can't share data.
+- **Status**: ✅ DONE
 - **Fix**: Use `chrome.runtime.sendMessage` from each frame with frame metadata (URL, index). Background script correlates by tabId. Template generates `page.frame_locator()` chains.
 - **Files**: `chrome-extension/src/content.ts`, `chrome-extension/src/background.ts`, `vscode-extension/templates/playwright_template.py`
 
 ### 2.3 Shadow DOM Support
-- **Problem**: Open Shadow DOM events bubble but `event.target` is retargeted. Closed Shadow DOM is invisible. No `pierce` selectors generated.
+- **Status**: ✅ DONE
 - **Fix**: Use `event.composedPath()` to get real target. Generate `.locator('shadow-host >> css=inner-selector')` chains. Closed shadow roots remain unsupported (browser limitation).
 - **Files**: `chrome-extension/src/content.ts`, `chrome-extension/src/utils.ts`
 
 ### 2.4 `contentEditable` Rich Text Fix
-- **Problem**: `pendingFill` reads `inputEl.value` which is always empty for contentEditable elements. Should use `textContent`.
+- **Status**: ✅ DONE
 - **Fix**: In `commitPendingFill`, check `isContentEditable` and read `textContent` instead of `value`.
 - **Files**: `chrome-extension/src/content.ts`
 
 ### 2.5 `beforeunload` Fill Commit
-- **Problem**: If page navigates within 1500ms of last keystroke, pending fill is lost.
+- **Status**: ✅ DONE
 - **Fix**: Add `window.addEventListener('beforeunload', commitPendingFill)`.
 - **Files**: `chrome-extension/src/content.ts`
 
 ### 2.6 Selector Uniqueness Validation
-- **Problem**: Generated selectors like `[role="button"]` may match multiple elements. No verification.
+- **Status**: ✅ DONE
 - **Fix**: After generating a selector, run `document.querySelectorAll(selector)` and if count > 1, fall through to next priority level or append `:nth-child()`.
 - **Files**: `chrome-extension/src/utils.ts`
 
 ### 2.7 Custom Dropdown / Component Detection
-- **Problem**: Select2, React-Select, MUI Autocomplete, Ant Design Select — all appear as random click sequences.
+- **Status**: ✅ DONE
 - **Fix**: Detect common ARIA patterns (`role="combobox"`, `role="listbox"`, `aria-expanded`) and emit semantic `select` events. Register known component class patterns.
 - **Files**: `chrome-extension/src/content.ts`
 
 ### 2.8 Multi-Tab / Popup Window Support
-- **Problem**: Only the active tab in the current window is tracked. `window.open()` popups are invisible.
+- **Status**: ✅ DONE
 - **Fix**: Track tab creation events (`chrome.tabs.onCreated`). Inject content script into new tabs. Emit `new-tab` / `popup` events with opener tab correlation.
 - **Files**: `chrome-extension/src/background.ts`, `chrome-extension/src/types.ts`
 
@@ -87,8 +87,6 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
 
 ### 3.1 VS Code Configuration Settings
 - Add `contributes.configuration` to `package.json`:
-  - `testcaptive.framework`: playwright | cypress | selenium (default: playwright)
-  - `testcaptive.language`: python | typescript | javascript
   - `testcaptive.selectorStrategy`: testid-first | id-first | aria-first
   - `testcaptive.outputDirectory`: default output path
   - `testcaptive.autoWait`: enable/disable auto-wait insertion
@@ -98,37 +96,33 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
 - Extract locators into page classes. Generate `LoginPage`, `FormPage`, etc. from navigation boundaries.
 - Maintain locator → page class mapping.
 
-### 3.3 Multi-Framework Templates
-- Add `cypress_template.js`, `selenium_template.py`, `playwright_template.ts`.
-- Each template follows the same `{{#events}}` pattern.
-
-### 3.4 Screenshot on Failure
+### 3.3 Screenshot on Failure
 - Add `@pytest.fixture(autouse=True)` that captures a screenshot on test failure.
 - Include in `conftest.py` template.
 
-### 3.5 Retry / Flaky Test Support
+### 3.4 Retry / Flaky Test Support
 - Add `pytest-rerunfailures` to requirements.
 - Generate `@pytest.mark.flaky(reruns=2)` marker option.
 
-### 3.6 CI/CD Pipeline Generation
+### 3.5 CI/CD Pipeline Generation
 - Generate `.github/workflows/test.yml` with Playwright setup steps.
 - Support Jenkins, GitLab CI, Azure DevOps pipeline formats.
 
-### 3.7 Session Schema Versioning
+### 3.6 Session Schema Versioning
 - Add `schemaVersion: number` to `SessionData` type.
 - Write migration functions for breaking changes.
 
-### 3.8 Network Wait Annotations
+### 3.7 Network Wait Annotations
 - In content script: use `PerformanceObserver` to detect pending XHR/fetch.
 - Annotate events with `networkBusy: true/false`.
 - Template generates `wait_for_load_state("networkidle")` when network was busy.
 
-### 3.9 Structured Logging
+### 3.8 Structured Logging
 - Replace `console.log` with VS Code Output Channel.
 - Add log levels (debug, info, warn, error).
 - Remove console logging of sensitive data.
 
-### 3.10 Session Management UI
+### 3.9 Session Management UI
 - Session list in sidebar with metadata (date, page, event count).
 - Delete, rename, re-export sessions.
 - Session size limits and auto-cleanup.
@@ -163,7 +157,7 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
 LOW EFFORT ---------+--------- HIGH EFFORT
                     |
     P4 Advanced    |    P3 Enterprise
-    (nice-to-have)  |    (3.1-3.10)
+    (nice-to-have)  |    (3.1-3.9)
                     |
                     LOW IMPACT
 ```
@@ -183,13 +177,13 @@ LOW EFFORT ---------+--------- HIGH EFFORT
 | 1.2 | Service worker persistence | ✅ DONE | 1 |
 | 1.3 | PII handling | 🟡 Partial | 1 |
 | 1.4 | Missing import re | ✅ DONE | 1 |
-| 2.1 | Wait strategies | 🔴 TODO | 2 |
-| 2.2 | Iframe support | 🔴 TODO | 2 |
-| 2.3 | Shadow DOM | 🔴 TODO | 2 |
-| 2.4 | contentEditable | 🔴 TODO | 2 |
-| 2.5 | beforeunload | 🔴 TODO | 2 |
-| 2.6 | Selector uniqueness | 🔴 TODO | 2 |
-| 2.7 | Custom dropdowns | 🔴 TODO | 2 |
-| 2.8 | Multi-tab | 🔴 TODO | 2 |
-| 3.1-3.10 | Enterprise features | 🔴 TODO | 3 |
+| 2.1 | Wait strategies | ✅ DONE | 2 |
+| 2.2 | Iframe support | ✅ DONE | 2 |
+| 2.3 | Shadow DOM | ✅ DONE | 2 |
+| 2.4 | contentEditable | ✅ DONE | 2 |
+| 2.5 | beforeunload | ✅ DONE | 2 |
+| 2.6 | Selector uniqueness | ✅ DONE | 2 |
+| 2.7 | Custom dropdowns | ✅ DONE | 2 |
+| 2.8 | Multi-tab | ✅ DONE | 2 |
+| 3.1-3.9 | Enterprise features | 🔴 TODO | 3 |
 | 4.x | Advanced features | 🔴 TODO | 4 |

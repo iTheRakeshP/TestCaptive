@@ -73,7 +73,8 @@ export type RecordedEventType =
   | 'assertion'
   | 'spa-navigation'
   | 'drag-drop'
-  | 'hover';
+  | 'hover'
+  | 'new-tab';
 
 export interface RecordedEvent {
   type: RecordedEventType | string;
@@ -95,6 +96,18 @@ export interface RecordedEvent {
   dropTarget?: string;
   scrollPosition?: { x: number; y: number };
   iframeContext?: string;
+  frameInfo?: FrameInfo;
+  triggersNavigation?: boolean;
+  tabId?: number;
+  windowId?: number;
+}
+
+export interface FrameInfo {
+  frameUrl: string;
+  frameId?: string;
+  frameName?: string;
+  frameIndex?: number;
+  isCrossOrigin?: boolean;
 }
 
 export interface SessionData {

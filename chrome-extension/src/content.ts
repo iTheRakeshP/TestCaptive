@@ -85,7 +85,32 @@ import {
   let originalConfirm: typeof window.confirm;
   let originalPrompt: typeof window.prompt;
 
+  // Network activity tracking for wait strategy annotations
+  let pendingNetworkRequests = 0;
+
   // ===== Helpers =====
+
+  /** Check if a click element will likely trigger navigation */
+  function willTriggerNavigation(element: HTMLElement): boolean {
+    // Anchor with href (not # or javascript:)
+    if (element.tagName === 'A') {
+      const href = (element as HTMLAnchorElement).href || '';
+      if (href && !href.startsWith('javascript:') && href !== '#' && !href.endsWith('#')) {
+        // Check if target="_blank" (opens new tab, not navigation in current page)
+        const target = element.getAttribute('target');
+        if (target === '_blank') return false;
+        return true;
+      }
+    }
+    // Submit buttons
+    if (element.tagName === 'BUTTON' && (element as HTMLButtonElement).type === 'submit') return true;
+    if (element.tagName === 'INPUT' && (element as HTMLInputElement).type === 'submit') return true;
+    // Elements with onclick that might navigate
+    if (element.getAttribute('onclick')?.includes('location') ||
+        element.getAttribute('onclick')?.includes('navigate') ||
+        element.getAttribute('onclick')?.includes('href')) return true;
+    return false;
+  }
 
   /** Check if an element is a text-like input that should use fill() */
   function isTextLikeInput(element: HTMLElement): boolean {
@@ -164,6 +189,9 @@ import {
     fillCommitTimer = setTimeout(commitPendingFill, FILL_COMMIT_DELAY);
   }
 
+  // Cached frame info (computed once at recording start, reused for all events)
+  let cachedFrameInfo: { frameUrl: string; frameId?: string; frameName?: string; frameIndex?: number; isCrossOrigin?: boolean } | null = null;
+
   // ===== Core Event Emission =====
 
   function emitEvent(eventData: RecordedEvent): void {
@@ -180,6 +208,11 @@ import {
         lastEmittedEvent.selector === (eventData.selector || '') &&
         (now - lastEmittedEvent.timestamp) < 150) {
       return;
+    }
+
+    // Attach frame info for iframe-sourced events
+    if (cachedFrameInfo) {
+      eventData.frameInfo = cachedFrameInfo;
     }
 
     recordedEvents.push(eventData);
@@ -272,6 +305,7 @@ import {
       fillCommitTimer = null;
     }
     lastEmittedEvent = null;
+    cachedFrameInfo = getFrameInfo();
 
     lastUrl = window.location.href;
 
@@ -304,7 +338,9 @@ import {
     if (!isRecording || !sessionId) return;
 
     try {
-      const element = event.target as HTMLElement;
+      // Use composedPath() to get the real target inside Shadow DOM
+      const path = event.composedPath();
+      const element = (path.length > 0 ? path[0] : event.target) as HTMLElement;
       if (!element || !element.tagName) return;
 
       const eventType = event.type;
@@ -330,6 +366,7 @@ import {
       const rect = element.getBoundingClientRect();
       const elementInfo = getElementInfo(element);
       const iframeContext = getIframeContext();
+      const frameInfo = getFrameInfo();
       const selector = generateSelector(element);
       const shadowPath = getShadowHostPath(element);
       const fullSelector = shadowPath ? `${shadowPath} >> ${selector}` : selector;
@@ -435,7 +472,9 @@ import {
         selector,
         elementInfo,
         timestamp: new Date().toISOString(),
-        value: (element as HTMLInputElement).value || '',
+        value: element.isContentEditable
+          ? (element.textContent || '')
+          : ((element as HTMLInputElement).value || ''),
         page,
         position,
         iframeContext
@@ -446,6 +485,38 @@ import {
     // Click on <select> element: suppress (the 'select' change event captures the action)
     if (element.tagName === 'SELECT') {
       return;
+    }
+
+    // Custom dropdown/combobox detection (Select2, React-Select, MUI, Ant Design)
+    // If clicking an option inside a listbox, emit 'select' instead of 'click'
+    const optionRole = element.getAttribute('role');
+    if (optionRole === 'option' || optionRole === 'menuitem') {
+      const listbox = element.closest('[role="listbox"], [role="menu"]');
+      if (listbox) {
+        commitPendingFill();
+        const optionText = element.textContent?.trim() || '';
+        // Try to find the owning combobox for a better selector
+        const comboboxId = listbox.getAttribute('aria-labelledby') || listbox.id;
+        const combobox = comboboxId
+          ? document.querySelector(`[aria-controls="${listbox.id}"], [aria-owns="${listbox.id}"], [role="combobox"]`)
+          : null;
+        const comboboxSelector = combobox ? generateSelector(combobox) : selector;
+        const comboboxInfo = combobox ? getElementInfo(combobox) : elementInfo;
+
+        emitEvent({
+          type: 'select',
+          timestamp: new Date().toISOString(),
+          element: comboboxInfo,
+          page,
+          sessionId: sessionId!,
+          selector: comboboxSelector,
+          value: optionText,
+          inputValue: optionText,
+          position,
+          iframeContext
+        });
+        return;
+      }
     }
 
     // Non-text click: commit any pending fill, then emit click
@@ -468,7 +539,8 @@ import {
         clientX: event.clientX,
         clientY: event.clientY
       },
-      iframeContext
+      iframeContext,
+      triggersNavigation: willTriggerNavigation(element)
     });
   }
 
@@ -489,7 +561,9 @@ import {
       return;
     }
 
-    const currentValue = inputEl.value || (element as HTMLElement).textContent || '';
+    const currentValue = element.isContentEditable
+      ? (element.textContent || '')
+      : (inputEl.value || '');
 
     if (pendingFill && pendingFill.element === element) {
       // Same field: just update the value (no event emitted)
@@ -928,7 +1002,6 @@ import {
   function getIframeContext(): string | null {
     try {
       if (window === window.top) return null;
-      // We're in an iframe — try to get identifying info
       const frame = window.frameElement;
       if (frame) {
         const id = frame.id || frame.getAttribute('name') || '';
@@ -938,6 +1011,36 @@ import {
       return 'cross-origin-iframe';
     } catch (_) {
       return 'cross-origin-iframe';
+    }
+  }
+
+  /** Build detailed frame info for events originating from iframes */
+  function getFrameInfo(): { frameUrl: string; frameId?: string; frameName?: string; frameIndex?: number; isCrossOrigin?: boolean } | null {
+    try {
+      if (window === window.top) return null;
+      const frame = window.frameElement;
+      if (frame) {
+        // Same-origin iframe — we can access the frame element
+        const parentFrames = frame.parentElement ? Array.from(frame.parentElement.querySelectorAll('iframe')) : [];
+        const frameIndex = parentFrames.indexOf(frame as HTMLIFrameElement);
+        return {
+          frameUrl: window.location.href,
+          frameId: frame.id || undefined,
+          frameName: frame.getAttribute('name') || undefined,
+          frameIndex: frameIndex >= 0 ? frameIndex : undefined,
+          isCrossOrigin: false
+        };
+      }
+      // Cross-origin iframe — limited info
+      return {
+        frameUrl: window.location.href,
+        isCrossOrigin: true
+      };
+    } catch (_) {
+      return {
+        frameUrl: window.location.href,
+        isCrossOrigin: true
+      };
     }
   }
 
@@ -967,6 +1070,9 @@ import {
     // Right-click capture (for assertions)
     document.addEventListener('contextmenu', captureRightClick, true);
 
+    // Commit pending fill before page unloads (2.5)
+    window.addEventListener('beforeunload', commitPendingFill);
+
     console.log('🎯 Event listeners attached (enterprise mode)');
   }
 
@@ -983,6 +1089,7 @@ import {
     document.removeEventListener('mouseenter', handleMouseEnter as EventListener, true);
     document.removeEventListener('mouseleave', handleMouseLeave, true);
     document.removeEventListener('contextmenu', captureRightClick, true);
+    window.removeEventListener('beforeunload', commitPendingFill);
 
     if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
     if (hoverTimer) clearTimeout(hoverTimer);

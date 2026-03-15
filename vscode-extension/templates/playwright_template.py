@@ -17,6 +17,7 @@ async def test_recorded_flow(page):
     # Navigate to {{page.title}}
     {{#if isFirstNavigation}}
     await page.goto("{{page.url}}", wait_until="domcontentloaded")
+    await page.wait_for_load_state("networkidle")
     {{else}}
     # Verify URL change
     await expect(page).to_have_url("{{page.url}}")
@@ -25,6 +26,7 @@ async def test_recorded_flow(page):
     {{else if (eq event 'spa-navigation')}}
     # SPA navigation detected
     await page.wait_for_url("{{page.url}}", wait_until="domcontentloaded")
+    await page.wait_for_load_state("networkidle")
     
     {{else if (eq event 'click')}}
     # Click {{#if element.text}}"{{element.text}}"{{else}}element{{/if}}
@@ -40,6 +42,9 @@ async def test_recorded_flow(page):
     await page.locator('xpath={{element.xpath}}').click()
     {{else}}
     await page.locator('{{element.cssSelector}}').click()
+    {{/if}}
+    {{#if triggersNavigation}}
+    await page.wait_for_load_state("domcontentloaded")
     {{/if}}
     
     {{else if (eq event 'dblclick')}}
@@ -217,6 +222,13 @@ async def test_recorded_flow(page):
     {{else if (eq event 'dialog')}}
     # Handle browser dialog
     page.once("dialog", lambda dialog: dialog.accept())
+    
+    {{else if (eq event 'new-tab')}}
+    # New tab/popup opened — wait for it
+    async with page.context.expect_page() as new_page_info:
+        pass  # The click/action that opens the tab should precede this
+    new_page = await new_page_info.value
+    await new_page.wait_for_load_state("domcontentloaded")
     
     {{else if (eq event 'assertion')}}
     # Assertion: {{event.assertion.description}}
