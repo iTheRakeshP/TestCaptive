@@ -99,129 +99,33 @@ The matcher:
 4. **Multi-Pass Processing:** Handles nested conditionals correctly
 5. **Clean Output:** Orphaned template tags are removed
 
-### 🔄 Room for Improvement
+### Room for Improvement
 
-1. **No Weighting System:** Current algorithm is binary (exists vs. doesn't exist)
-   - **Enhancement:** Score selectors based on uniqueness/stability
-   - Example: Prefer `data-testid="submit-btn"` over `id="btn-1234"` (generic ID)
-
-2. **No Validation:** Doesn't check if selector actually works
-   - **Enhancement:** Validate selectors during capture (count matching elements)
-   - Reject selectors that match multiple elements
-
-3. **Hard-Coded Priority:** Cannot be customized per project
-   - **Enhancement:** Allow users to configure priority in settings
-   - Example: Some teams prioritize ARIA labels over test IDs
-
-4. **No Context Awareness:** Doesn't use parent/sibling relationships
-   - **Enhancement:** Generate relative selectors like `form#checkout > button[type="submit"]`
-   - More resilient than absolute selectors
-
-5. **XPath Placement:** XPath is before CSS selector, but could be smarter
-   - **Enhancement:** Prefer relative XPath (`//form[@id='login']//button`) over absolute
-   - Or move XPath to last resort after improving CSS selector logic
+- **No weighting system** — Currently binary (property exists vs. doesn't). Could score selectors by uniqueness/stability.
+- **No validation** — Doesn't verify selector uniqueness during capture. Could count matching elements.
+- **Hard-coded priority** — Cannot be customized per project. Could allow user configuration.
+- **No context awareness** — Doesn't use parent/sibling relationships for more resilient selectors.
 
 ---
 
-## Recommended Enhancements
-
-### 🎯 Phase 1: Selector Validation (High Impact)
-```typescript
-interface SelectorScore {
-  selector: string;
-  type: 'testid' | 'aria' | 'id' | 'name' | 'xpath' | 'css';
-  uniqueness: number; // 1 = unique, >1 = matches multiple elements
-  stability: number;  // 1-10 score based on selector type
-}
-
-function scoreSelector(element: Element, type: string): SelectorScore {
-  const selector = buildSelector(element, type);
-  const matches = document.querySelectorAll(selector).length;
-  
-  const stabilityScores = {
-    testid: 10,
-    aria: 9,
-    id: 7,
-    name: 5,
-    xpath: 3,
-    css: 2
-  };
-  
-  return {
-    selector,
-    type,
-    uniqueness: matches,
-    stability: stabilityScores[type]
-  };
-}
-```
-
-### 🎯 Phase 2: Smart Fallback
-```typescript
-function getBestSelector(element: HTMLElement): string {
-  const scores: SelectorScore[] = [
-    scoreSelector(element, 'testid'),
-    scoreSelector(element, 'aria'),
-    scoreSelector(element, 'id'),
-    scoreSelector(element, 'name'),
-    scoreSelector(element, 'xpath'),
-    scoreSelector(element, 'css')
-  ];
-  
-  // Filter to unique selectors only
-  const uniqueSelectors = scores.filter(s => s.uniqueness === 1);
-  
-  // If no unique selector, fallback to highest stability
-  const candidates = uniqueSelectors.length > 0 ? uniqueSelectors : scores;
-  
-  // Sort by stability descending
-  candidates.sort((a, b) => b.stability - a.stability);
-  
-  return candidates[0].selector;
-}
-```
-
-### 🎯 Phase 3: Relative Selectors
-```typescript
-function getContextualSelector(element: HTMLElement): string {
-  // Try parent context
-  const parent = element.closest('[data-testid], [id]');
-  if (parent) {
-    const parentSelector = parent.dataset.testid 
-      ? `[data-testid="${parent.dataset.testid}"]`
-      : `#${parent.id}`;
-    
-    return `${parentSelector} ${getDirectSelector(element)}`;
-  }
-  
-  return getDirectSelector(element);
-}
-```
-
----
-
-## Example: Selector Selection in Action
+## Example
 
 Given this HTML:
 ```html
-<input 
+<input
   id="firstName"
   name="firstName"
   class="form-control input-lg"
-  placeholder="Enter your first name"
   data-testid="input-first-name"
   aria-label="First Name"
 />
 ```
 
-**Current Behavior:**
-1. ✅ Checks `data-testid="input-first-name"` → **FOUND** → Stops here
-2. ⏭️ Skips `aria-label` (already selected)
-3. ⏭️ Skips `id` (already selected)
-4. ⏭️ Skips everything else
+**Behavior:** Checks `data-testid="input-first-name"` → found → stops.
 
-**Generated Code:**
-- Playwright: `page.get_by_test_id("input-first-name")`
+**Generated:** `page.get_by_test_id("input-first-name")`
+
+If `data-testid` were missing, it would try `aria-label`, then `id`, then `name`, then `xpath`, then CSS selector.
 
 **If `data-testid` was missing:**
 1. ❌ No `data-testid`

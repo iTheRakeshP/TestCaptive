@@ -28,10 +28,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/testcaptive.git"
+    "url": "https://github.com/iTheRakeshP/TestCaptive.git"
   },
   "bugs": {
-    "url": "https://github.com/your-org/testcaptive/issues"
+    "url": "https://github.com/iTheRakeshP/TestCaptive/issues"
   },
-  "homepage": "https://github.com/your-org/testcaptive#readme"
+  "homepage": "https://github.com/iTheRakeshP/TestCaptive#readme"
 }

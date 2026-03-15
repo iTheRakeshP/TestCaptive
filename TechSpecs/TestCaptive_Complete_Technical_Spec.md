@@ -14,12 +14,7 @@ TestCaptive enables developers and QA engineers to automatically generate test s
 
 **Purpose:** Capture user interactions (clicks, input, form changes, etc.) and export them as a structured JSON session file.
 
-**Preferred Language:**
-- TypeScript (compiled to JavaScript)
-
-**Reasoning:**
-- TypeScript offers better type safety and tooling for managing growing complexity.
-- Code will be transpiled to JavaScript using tools like `esbuild`, `webpack`, or `Vite`, ensuring compatibility with Chrome's JavaScript-only runtime.
+**Language:** TypeScript (compiled to JavaScript via `build.js` script)
 
 **Features:**
 
@@ -86,9 +81,9 @@ Since the tool is now offline/file-based, role simulation is handled during the 
 
 ## Technical Stack
 
--   **Chrome Extension**: HTML, CSS, JavaScript (Manifest V3)
+-   **Chrome Extension**: TypeScript compiled to JavaScript (Manifest V3)
 -   **VS Code Extension**: TypeScript, VS Code Webview API
--   **Build Tools**: npm, tsc, webpack (for Chrome extension)
+-   **Build Tools**: npm, tsc (VS Code extension), node build.js (Chrome extension)
 
 ---
 

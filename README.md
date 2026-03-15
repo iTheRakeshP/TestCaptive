@@ -1,397 +1,217 @@
-# TestCaptive - Professional UI Behavior Recording Tool
+# TestCaptive - UI Behavior Recording & Test Generation
 
-![TestCaptive Logo](https://img.shields.io/badge/TestCaptive-v1.0.0-blue) ![Status](https://img.shields.io/badge/Status-Production%20Ready-green) ![License](https://img.shields.io/badge/License-MIT-yellow)
+![TestCaptive](https://img.shields.io/badge/TestCaptive-v1.2.0-blue) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-**TestCaptive** is a comprehensive UI behavior recording tool that captures user interactions in web browsers and automatically generates Playwright test automation scripts.
+**TestCaptive** captures user interactions in Chrome and generates Playwright (Python) test scripts via a VS Code extension. No server, no WebSocket bridge — fully offline.
 
-## 🚀 **Features**
+## Features
 
-### **Core Functionality**
-- ✅ **Real-time Event Capture** - Records clicks, inputs, form submissions, and navigation
-- ✅ **Smart Assertion Capture** - Right-click context menu to add 7 types of assertions during recording
-- ✅ **Playwright Code Generation** - Generates production-ready Playwright (Python) test scripts
-- ✅ **Professional VS Code Integration** - Clean, modern extension UI with split-pane layout
-- ✅ **Automatic Test Data Extraction** - Captures form data and variables for parameterized tests
-- ✅ **Cross-Browser Compatibility** - Works with Chrome, Edge, and other Chromium-based browsers
-- ✅ **Session Management** - Save, load, and replay recording sessions
-- ✅ **Code Export & Copy** - Export generated code or copy to clipboard
-- ✅ **Data Export** - Export captured test data as JSON
-- ✅ **Offline Mode** - Fully independent Chrome and VS Code extensions (No WebSocket bridge required)
+- **Smart Event Capture** — Records clicks, fills, selects, checkboxes, scrolls, and navigation with intelligent deduplication
+- **Action-Based Recording** — Coalesces raw DOM events into high-level actions (fill, check, select) like Playwright Codegen
+- **Assertion Capture** — Right-click context menu with 7 assertion types (text, visibility, state, URL, attribute, count)
+- **Smart Selector Priority** — Prefers `data-testid` → `aria-label` → `id` → `name` → `xpath` → CSS fallback
+- **Playwright Code Generation** — Template-based engine with nesting-aware conditional processing
+- **Automatic Test Data Extraction** — Captures form values as parameterized test data (JSON)
+- **VS Code Integration** — Split-pane UI for session import, event review, and code export
 
-### **Professional UI**
-- 🎯 **Left Panel**: Setup & Recording Controls
-- 📊 **Right Panel**: Three organized sections:
-  1. **Captured Events** - Real-time event display with color-coded icons (includes assertions with ✅)
-  2. **Extracted Test Data** - Key-value pairs with export functionality
-
-### **Smart Assertions** ✅
-Right-click on any element during recording to add validations:
-- **Text Validation**: Assert text equals/contains expected value
-- **Visibility Checks**: Assert element visible/not visible
-- **State Validation**: Assert element enabled/disabled
-- **Navigation**: Assert URL contains expected path
-- **All 7 assertion types** generate proper framework-specific code
-
-## 📁 **Project Structure**
+## Project Structure
 
 ```
 TestCaptive/
-├── 📁 chrome-extension/          # Production Chrome extension (ACTIVE)
-│   ├── manifest.json            # Manifest v3 configuration
-│   ├── background.js            # Service worker for session management
-│   ├── content.js               # Main content script for event capture
-│   └── popup.html/js           # Extension popup UI
-│
-├── 📁 vscode-extension/          # VS Code extension (ACTIVE)
+├── chrome-extension/           # Chrome Extension (Manifest V3)
 │   ├── src/
-│   │   ├── extension.ts         # Main extension entry point
-│   │   ├── test-data-manager.ts # Session and data management
-│   │   ├── code-generator.ts    # Test code generation engine
+│   │   ├── content.ts          # Event capture with smart coalescing
+│   │   ├── background.ts       # Service worker, session management
+│   │   ├── popup.ts            # Extension popup UI
+│   │   ├── types.ts            # Shared type definitions
+│   │   └── utils.ts            # Utility functions
+│   ├── dist/                   # Built extension (load unpacked from here)
+│   ├── build.js                # Build script
+│   ├── manifest.json
+│   └── popup.html
+│
+├── vscode-extension/           # VS Code Extension
+│   ├── src/
+│   │   ├── extension.ts        # Extension entry point
+│   │   ├── code-generator.ts   # Template engine + code generation
+│   │   ├── test-data-manager.ts # Session & test data management
+│   │   ├── types.ts            # Type definitions
 │   │   └── webview-ui/
-│   │       └── review-panel.ts  # Main UI panel (split-pane layout)
-│   ├── templates/               # Code generation templates
-│   │   └── playwright_template.py
-│   ├── package.json
-│   └── testcaptive-1.0.0.vsix  # Installable extension package
+│   │       └── review-panel.ts # Main UI panel (split-pane layout)
+│   ├── templates/
+│   │   └── playwright_template.py  # Playwright code template
+│   ├── out/                    # Compiled JS
+│   └── testcaptive-1.0.0.vsix # Installable package
 │
-├── 📁 test-suite-project/        # Ready-to-use test execution environment
-│   ├── playwright-suite/        # Playwright test runner (Python)
-│   └── shared/                  # Shared utilities and helpers
+├── test-suite-project/         # Pre-configured Playwright test runner
+│   └── playwright-suite/       # pytest + Playwright setup
 │
-├── 📁 TechSpecs/                # Technical documentation
-│   └── TestCaptive_Complete_Technical_Spec.md
-│
-├── 📁 Test-Session/             # Recorded test sessions
-│   └── *.json                   # Session files from Chrome extension
-│
-├── 📁 Test-Code/                # Generated test code
-│   └── Playwright.txt           # Generated Playwright tests
-│
-├── 📄 demo.html                 # Demo web page for testing
-├── 📄 diagnostic.html           # Diagnostic tool for troubleshooting
-├── 📄 build-extensions.bat      # Build both extensions
-├── 📄 package.json             # Root project configuration
-└── 📄 README.md                # This file
+├── architecture/               # PlantUML architecture diagrams
+├── TechSpecs/                  # Technical specification
+├── Test-Session/               # Sample recorded sessions
+├── demo.html                   # Demo page for testing
+├── build-extensions.bat        # Build both extensions
+└── package.json                # Root project scripts
 ```
-
-## 🛠️ **Components Overview**
-
-### 🌐 **Chrome Extension** (`chrome-extension/`)
-- **Purpose**: Records user interactions in real-time
-- **Features**: DOM event capture, CSS selector generation, Session Export
-- **Files**: manifest.json, background.js, content.js, popup.html/js
-- **Browser Support**: Chrome, Edge, Chromium-based browsers
-
-### 📝 **VS Code Extension** (`vscode-extension/`)
-- **Purpose**: Professional UI for session management and code generation
-- **Features**: 
-  - Split-pane interface (Setup | Events/Data/Code)
-  - Event display with color-coded icons
-  - Playwright code generation
-  - Test data extraction and export
-  - Session persistence and management
-- **Package**: testcaptive-1.0.0.vsix (ready for installation)
-
-### 📋 **Code Generation Templates**
-- **Playwright (Python)**: Modern async browser automation with pytest support
-- **Clean Output**: Ready-to-use code - no import scripts needed
-
-### 🧪 **Test Suite Project** (`test-suite-project/`)
-- **Purpose**: Complete Playwright test execution environment
-- **Features**:
-  - Pre-configured Playwright test suite
-  - Test data management with JSON files
-  - Import scripts for automated test file conversion (optional)
-  - Comprehensive documentation and quick-start guides
-  - Production-ready configuration files
-- **Usage**: Simply copy generated test code into the Playwright suite folder and run tests
 
 ## Prerequisites
 
-- Node.js 18+ and npm
-- Visual Studio Code
-- Google Chrome browser
-- Python 3.8+ (for generated Playwright tests)
+- **Node.js** v16+ and npm
+- **VS Code** v1.74+
+- **Chrome** or Edge browser
+- **Python** 3.8+ (for running generated tests)
 
-## Installation & Setup
+## Installation
 
-### Quick Build (Recommended)
+### Quick Build
 ```bash
-# Build both Chrome and VS Code extensions
 build-extensions.bat
 ```
 
-This will:
-- Build Chrome extension → `chrome-extension/dist/`
-- Install VS Code extension dependencies
-- Compile TypeScript files
-- Package VS Code extension → `vscode-extension/testcaptive-1.0.0.vsix`
-
 ### Manual Setup
 
-#### 1. Clone and Setup Project
-```powershell
-git clone <repository-url>
-cd TestCaptive
-```
-
-### 2. Install Chrome Extension Dependencies
-```powershell
+**Chrome Extension:**
+```bash
 cd chrome-extension
 npm install
-npm run build
+npm run build        # Build to dist/
+npm run package      # Create ZIP for distribution
 ```
 
-### 3. Install VS Code Extension Dependencies
-```powershell
-cd ../vscode-extension
+**VS Code Extension:**
+```bash
+cd vscode-extension
 npm install
-npm run compile
+npm run compile      # Compile TypeScript
+npm run package      # Create .vsix package
 ```
 
-### 4. Load Chrome Extension
-1. Open Chrome and navigate to `chrome://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked" and select the `chrome-extension` folder
+**Load Chrome Extension:**
+1. Open `chrome://extensions/`
+2. Enable **Developer mode**
+3. Click **Load unpacked** → select `chrome-extension/dist/`
 
-### 5. Install VS Code Extension
-1. Open VS Code
-2. Go to Extensions (Ctrl+Shift+X)
-3. Click "..." menu > "Install from VSIX..."
-4. Package the vscode-extension folder or install in development mode
+**Install VS Code Extension:**
+```bash
+code --install-extension vscode-extension/testcaptive-1.0.0.vsix
+```
 
 ## Usage
 
-### Step 1: Record Session (Chrome)
-1. Open the TestCaptive Chrome Extension popup.
-2. Click **Start Recording**.
-3. Navigate to your application and perform the actions you want to record.
-4. Click **Stop Recording**.
-5. The extension will automatically download a `.json` session file (e.g., `testcaptive-session_12345.json`).
+### 1. Record a Session (Chrome)
+1. Click the TestCaptive icon → **Start Recording**
+2. Interact with your web app (fill forms, click buttons, navigate)
+3. Right-click elements to add **assertions** (text, visibility, state, URL)
+4. Click **Stop Recording** — a JSON session file downloads automatically
 
-### Step 2: Generate Code (VS Code)
-1. Open VS Code and launch the **TestCaptive** extension (click the record icon in Activity Bar).
-2. Drag and drop the downloaded `.json` file into the **Import Recording** zone in the left panel.
-3. The events will be loaded and displayed with color-coded icons.
-4. The Playwright test code will be automatically generated - clean and ready to use.
-6. Click **Copy** or **Export** to save the code.
+### 2. Generate Code (VS Code)
+1. Open **TestCaptive** panel (record icon in Activity Bar)
+2. Drag & drop the session JSON into the import area
+3. Events display with color-coded icons; test code generates automatically
+4. **Copy** or **Export** the generated Playwright code
 
-### Step 3: Run Tests (Test Suite Project)
-
-The generated code is ready to use immediately. Simply copy it to the test suite:
-
+### 3. Run Tests
 ```bash
-# Copy generated code
-copy Test-Code\Playwright.txt test-suite-project\playwright-suite\test_testcaptive.py
-
-# Run tests
-cd test-suite-project\playwright-suite
-pytest
+cd test-suite-project/playwright-suite
+pip install -r requirements.txt    # First time only
+playwright install                  # First time only
+pytest test_generated.py
 ```
 
-**Setup Test Suite (First Time Only):**
-```bash
-cd test-suite-project\playwright-suite
-pip install -r requirements.txt
-playwright install
-```
+## Example Output
 
-See [test-suite-project/README.md](test-suite-project/README.md) for complete documentation.
-
-## 🚀 **Quick Start Guide**
-
-### **Prerequisites**
-- **Node.js** v16+ and npm
-- **VS Code** v1.74+
-- **Chrome/Edge** browser
-
-### **Installation (5 minutes)**
-
-#### **Step 1: Install VS Code Extension**
-```bash
-# From project root
-cd vscode-extension
-
-# Install the extension
-code --install-extension testcaptive-1.0.0.vsix
-```
-
-#### **Step 2: Load Chrome Extension**
-1. Open Chrome/Edge browser
-2. Navigate to `chrome://extensions/` 
-3. Enable **Developer mode** (top right toggle)
-4. Click **Load unpacked** button
-5. Select the `chrome-extension` folder
-6. Extension should appear with TestCaptive icon
-
-### **Usage Workflow**
-
-#### **🎬 Recording a Session**
-1. **Start Recording**
-   - Click the TestCaptive icon in Chrome toolbar
-   - Click **🔴 Start Recording**
-
-2. **Interact with Web Application**
-   - Navigate to your target web application
-   - Perform user actions: fill forms, click buttons, navigate pages
-   - **Add Assertions**: Right-click any element → Select "✅ TestCaptive Assertions"
-     - Choose assertion type (text equals, visible, enabled, etc.)
-     - Enter expected values when prompted
-   - Watch the event count increase in the popup
-
-3. **Stop & Save**
-   - Click **⏹️ Stop Recording** when complete
-   - A JSON file containing your session will be downloaded automatically
-
-#### **⚡ Code Generation**
-1. **Import Session**
-   - Open TestCaptive in VS Code
-   - Drag & Drop the JSON file into the import area
-
-2. **Select Framework**
-   - Playwright code is generated automatically
-
-3. **Export Results**
-   - **Copy Code**: Copies generated code to clipboard
-   - **Export Data**: Saves test data as JSON file
-   - Code can be saved as .py file via export
-
-### **🎯 Example Generated Output**
-
-#### **Playwright Example**
 ```python
 import pytest
-from playwright.sync_api import Page, expect
+from playwright.async_api import async_playwright, expect
 
-def test_form_submission(page: Page):
-    page.goto("http://localhost:8080")
-    
+@pytest.mark.asyncio
+async def test_recorded_flow(page, test_data):
+    await page.goto("http://localhost:8080", wait_until="domcontentloaded")
+
     # Fill form fields
-    page.get_by_test_id("firstName").fill("John")
-    page.get_by_test_id("lastName").fill("Doe")
-    page.get_by_test_id("email").fill("john.doe@example.com")
-    
-    # Submit form
-    page.locator("button[type='submit']").click()
-    
+    test_value = test_data.get("input-first-name", "")
+    await page.get_by_test_id("input-first-name").fill(test_value)
+
+    test_value = test_data.get("input-email", "")
+    await page.get_by_test_id("input-email").fill(test_value)
+
+    # Select dropdown
+    test_value = test_data.get("select-country", "")
+    await page.get_by_test_id("select-country").select_option(test_value)
+
+    # Submit
+    await page.get_by_test_id("btn-submit").click()
+
     # Assertion: Assert success message is visible
-    expect(page.locator("#success-msg")).to_be_visible()
-    
-    # Assertion: Assert success message contains "Success"
-    expect(page.locator("#success-msg")).to_contain_text("Success")
+    await expect(page.locator('xpath=//*[@id="successPopup"]/h2[1]')).to_be_visible()
 ```
 
-#### **Extracted Test Data**
-```json
-{
-  "firstName": "John",
-  "lastName": "Doe", 
-  "email": "john.doe@example.com",
-  "phone": "555-1234"
-}
-```
+## Smart Event Capture
 
-## Configuration
+The Chrome extension uses action-based recording:
+- **Fill events** — Debounced with 1500ms delay; consecutive fills to the same field are merged
+- **Select events** — Captures selected option value; suppresses redundant click events
+- **Checkbox/Radio** — Records `check` events; suppresses preceding click
+- **Click suppression** — Clicks on text inputs and selects are suppressed (the fill/select action covers them)
+- **Scroll** — Captures scroll position (Y offset)
+- **Navigation** — First navigation marked with `isFirstNavigation` flag
 
-### Template Customization
-Templates are located in the `templates/` folder and use Handlebars-style syntax:
-- `{{events}}` - Loop through captured events
-- `{{testData}}` - Access test data variables
-- `{{applicationUrl}}` - Application URL
-- `{{userRole}}` - User role for the session
+## Selector Priority
 
-### VS Code Extension Settings
-Configure in VS Code settings:
-- `testcaptive.defaultFramework` - Testing framework (Playwright)
+The code generator selects the best locator for each element:
 
-## Troubleshooting
+| Priority | Selector | Stability | Playwright API |
+|----------|----------|-----------|----------------|
+| 1 | `data-testid` | Highest | `page.get_by_test_id()` |
+| 2 | `aria-label` | High | `page.get_by_label()` |
+| 3 | `id` | Medium | `page.locator('#id')` |
+| 4 | `name` | Medium | `page.locator('[name=""]')` |
+| 5 | `xpath` | Low | `page.locator('xpath=...')` |
+| 6 | CSS selector | Lowest | `page.locator('...')` |
 
-### Chrome Extension Not Recording
-- Check if extension is loaded and enabled
-- Check browser console for errors
+## Template Engine
 
-### VS Code Extension Issues
-- Ensure TypeScript compilation succeeded
-- Check VS Code developer console (Help > Toggle Developer Tools)
-- Verify extension activation events
+Code generation uses a custom nesting-aware template engine (`SimpleTemplateEngine`) that processes Handlebars-style templates through multiple passes:
 
-### Generated Code Issues
-- Check template syntax in `templates/` folder
-- Verify test data format in captured sessions
-- Ensure selectors are valid for target elements
+1. **Event type selection** — `{{#if (eq event 'fill')}}...{{else if (eq event 'click')}}...{{/if}}`
+2. **Element selector resolution** — `{{#if element.testid}}...{{else if element.xpath}}...{{/if}}`
+3. **Assertion type selection** — `{{#if (eq assertion.type 'visible')}}...{{/if}}`
+4. **Variable substitution** — `{{element.testid}}`, `{{page.url}}`, `{{value}}`
 
-## Advanced Features
+Templates are in `vscode-extension/templates/`. To customize output, edit the template file directly.
 
-### Custom Event Types
-Add custom event types by modifying:
-1. `chrome-extension/src/content.ts` - Add event listeners
-2. `templates/` - Add handling in templates
-3. `vscode-extension/src/types.ts` - Update type definitions
+## Assertion Types
 
-### Template Extensions
-Create custom templates by:
-1. Adding new template files to `templates/`
-2. Updating `code-generator.ts` template mapping
-3. Adding framework options in VS Code extension
-
-### Integration with CI/CD
-Generated tests can be integrated into CI/CD pipelines:
-- Playwright: Use pytest-playwright
+| Type | Description | Generated Code |
+|------|-------------|----------------|
+| Text Equals | Exact text match | `to_have_text("...")` |
+| Text Contains | Partial text match | `to_contain_text("...")` |
+| Visible | Element is visible | `to_be_visible()` |
+| Not Visible | Element is hidden | `not_to_be_visible()` |
+| Enabled | Element is enabled | `to_be_enabled()` |
+| Disabled | Element is disabled | `to_be_disabled()` |
+| URL Contains | URL pattern match | `to_have_url(re.compile("..."))` |
 
 ## Development
 
-### Building from Source
-```powershell
-# Build all components
+```bash
+# Build everything
 npm run build:all
 
-# Build individual components
-cd chrome-extension && npm run build
-cd vscode-extension && npm run compile
+# Package for distribution
+npm run package:all
+
+# Clean build artifacts
+npm run clean:all
 ```
 
-### Running Tests
-```powershell
-# Run extension tests
-cd vscode-extension && npm test
-```
+## Troubleshooting
 
-## File Structure
-```
-TestCaptive/
-├── chrome-extension/          # Chrome extension source
-│   ├── src/
-│   │   ├── background.ts      # Extension background script
-│   │   ├── content.ts         # Content script for DOM interaction
-│   │   ├── popup.ts          # Extension popup interface
-│   │   └── ...
-│   └── dist/                  # Built extension files
-├── vscode-extension/          # VS Code extension
-│   ├── src/
-│   │   ├── extension.ts       # Main extension entry point
-│   │   ├── webview-ui/        # Webview panels
-│   │   └── ...
-│   └── out/                   # Compiled extension files
-├── templates/                 # Code generation templates
-│   └── playwright_template.py # Playwright template
-└── test-data/                 # Sample test data and sessions
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+- **Chrome not recording**: Reload extension at `chrome://extensions/`, check console for errors
+- **VS Code extension issues**: Check developer tools (Help → Toggle Developer Tools)
+- **Template issues**: Verify template syntax in `vscode-extension/templates/`
+- **Selector problems**: Check element properties in session JSON
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues and questions:
-- Check the troubleshooting section
-- Review logs in browser console and VS Code developer tools
-- Create an issue in the repository with detailed error information
+MIT

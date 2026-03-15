@@ -1,5 +1,35 @@
 # TestCaptive Changelog
 
+## [1.2.0] - March 14, 2026 - Smart Event Capture & Code Generation
+
+### Chrome Extension — Smart Capture
+- **Action-based recording model**: Records high-level actions (fill, check, select) instead of raw DOM events
+- **Fill coalescing**: Debounced with 1500ms delay; only final value per field is recorded
+- **Select capture**: Records `select` event with `inputValue`; suppresses redundant click on `<select>` elements
+- **Checkbox/Radio**: Records `check` event; suppresses preceding click event
+- **Click suppression**: Clicks on text inputs and `<select>` elements are suppressed (covered by fill/select)
+- **Scroll capture**: Records scroll position with Y offset
+
+### VS Code Extension — Smart Code Generation
+- **Nesting-aware template engine**: Correctly processes nested `{{#if}}` conditionals (event type → element selector → assertion type → assertion element)
+- **Smart coalescence**: Merges consecutive fills to same field, suppresses clicks before fill/check/select, filters Tab keydown
+- **Proper selector resolution**: Single locator per action using 6-level priority (testid → ariaLabel → id → name → xpath → CSS)
+- **Assertion code generation**: Selects correct assertion type branch and element selector — outputs clean, single-line assertions
+- **Test data extraction**: Handles `fill`, `select`, `input`, `change` events with `event.type` fallback
+- **Line ending normalization**: Handles Windows CRLF templates correctly
+- **Blank line cleanup**: Strips trailing whitespace and collapses excessive blank lines
+
+### Bug Fixes
+- Fixed duplicate locator output (xpath + cssSelector both rendering) — `selectElementBranch` was overwriting `endContent` when `{{else}}` already set it
+- Fixed all assertion type branches rendering instead of just the matching one — `simplePropertyMatches` regex was too broad, matching complex expressions
+- Fixed test data JSON missing fill/select values — added `fill` and `select` event type recognition
+- Fixed multiple fills per field — increased commit delay and added consecutive fill merge in coalescence
+- Fixed empty `testcode.py` — added `type` field fallback in test data manager
+- Fixed scroll missing Y value — extracts from `scrollPosition.y`
+- Fixed checkbox showing both click and check — added click-before-check suppression
+
+---
+
 ## [1.1.0] - December 10, 2025 - Smart Assertion Capture
 
 ### 🎯 Major Features Added
