@@ -1,10 +1,12 @@
 // Code generator for test scripts
 import * as fs from 'fs';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { TestEvent, SessionData } from './types';
+import { logger } from './logger';
 
 export interface TemplateEngine {
-  compile(template: string, data: any): string;
+  compile(template: string, data: any, options?: { selectorStrategy?: string; autoWait?: boolean }): string;
 }
 
 // Simple template engine implementation
@@ -23,9 +25,11 @@ class SimpleTemplateEngine implements TemplateEngine {
       .replace(/\t/g, '\\t');   // tabs
   }
 
-  compile(template: string, data: any): string {
+  compile(template: string, data: any, options?: { selectorStrategy?: string; autoWait?: boolean }): string {
     try {
       let result = template;
+      const selectorStrategy = options?.selectorStrategy || 'testid-first';
+      const autoWait = options?.autoWait !== false;
 
     // Handle {{#events}} loops
     const eventsMatch = result.match(/{{#events}}([\s\S]*?){{\/events}}/);
@@ -180,6 +184,22 @@ class SimpleTemplateEngine implements TemplateEngine {
         }
       }
 
+      // Apply selector strategy from VS Code settings
+      const selectorStrategySetting = selectorStrategy;
+      if (selectorStrategySetting !== 'testid-first') {
+        processedEvents.forEach((event: TestEvent) => {
+          if (!event.element) { return; }
+          const el = event.element as any;
+          if (selectorStrategySetting === 'id-first') {
+            // Promote id above testid: clear testid so the template falls through to id
+            if (el.id) { el.testid = undefined; }
+          } else if (selectorStrategySetting === 'aria-first') {
+            // Promote ariaLabel above testid and id
+            if (el.ariaLabel) { el.testid = undefined; el.id = undefined; }
+          }
+        });
+      }
+
       processedEvents.forEach((event: TestEvent, index: number) => {
         let eventCode = eventTemplate;
         const eventType = event.event || (event as any).type || '';
@@ -199,9 +219,11 @@ class SimpleTemplateEngine implements TemplateEngine {
             (event as any).isFirstNavigation = (navigationCount === 1);
         }
 
-        // Propagate triggersNavigation flag for wait strategy
-        if ((event as any).triggersNavigation) {
+        // Propagate triggersNavigation flag for wait strategy (respects autoWait setting)
+        if ((event as any).triggersNavigation && autoWait) {
           (event as any).triggersNavigation = true;
+        } else {
+          (event as any).triggersNavigation = false;
         }
         
         // Copy selector to element.cssSelector if it doesn't exist
@@ -883,6 +905,14 @@ export class CodeGenerator {
   private templateEngine: TemplateEngine;
   private templatesPath: string;
 
+  get selectorStrategy(): string {
+    return vscode.workspace.getConfiguration('testcaptive').get<string>('selectorStrategy', 'testid-first');
+  }
+
+  get autoWait(): boolean {
+    return vscode.workspace.getConfiguration('testcaptive').get<boolean>('autoWait', true);
+  }
+
   constructor() {
     this.templateEngine = new SimpleTemplateEngine();
     // Try multiple possible template locations
@@ -902,7 +932,7 @@ export class CodeGenerator {
       }
     }) || possiblePaths[0]; // Fallback to first path
     
-    console.log('CodeGenerator templates path:', this.templatesPath);
+    logger.debug('CodeGenerator templates path:', this.templatesPath);
   }
 
   public generateTestCode(sessionData: SessionData): string {
@@ -929,12 +959,15 @@ export class CodeGenerator {
       applicationUrl: sessionData.applicationUrl
     };
 
-    const result = this.templateEngine.compile(template, templateData);
+    const result = this.templateEngine.compile(template, templateData, {
+      selectorStrategy: this.selectorStrategy,
+      autoWait: this.autoWait
+    });
     
     // Verify no unresolved template tags remain (except comments)
     const unresolvedTags = result.match(/{{(?!!)(?!--)([^}]+)}}/g);
     if (unresolvedTags && unresolvedTags.length > 0) {
-      console.warn('Unresolved template tags found:', unresolvedTags.slice(0, 5));
+      logger.warn('Unresolved template tags found:', unresolvedTags.slice(0, 5));
     }
 
     // Normalize line endings to LF, strip trailing whitespace per line, collapse blank lines

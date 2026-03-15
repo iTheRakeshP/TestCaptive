@@ -26,10 +26,8 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
 - **Files**: `chrome-extension/src/background.ts`
 
 ### 1.3 PII/Credential Handling
-- **Status**: 🟡 Partial (passwords redacted, but emails/phones/addresses are not)
-- **Risk**: Sensitive data in exported JSON and generated test code
-- **Fix**: Expand `SENSITIVE_NAME_PATTERNS` in `utils.ts` to cover email, phone, address, DOB, SSN patterns. Add URL token stripping (`?token=`, `?code=`, `?session=`). Add opt-in full redaction mode. Add warning banner in VS Code review panel.
-- **Files**: `chrome-extension/src/utils.ts`, `vscode-extension/src/webview-ui/review-panel.ts`
+- **Status**: ⏭️ SKIPPED (intranet use, test/fake data only — not needed)
+- **Reason**: Extension targets intranet environments with test data. PII redaction adds unnecessary complexity.
 
 ### 1.4 Missing `import re` in Template
 - **Status**: ✅ DONE
@@ -86,11 +84,9 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
 ## Phase 3: Enterprise Features (Medium Priority)
 
 ### 3.1 VS Code Configuration Settings
-- Add `contributes.configuration` to `package.json`:
-  - `testcaptive.selectorStrategy`: testid-first | id-first | aria-first
-  - `testcaptive.outputDirectory`: default output path
-  - `testcaptive.autoWait`: enable/disable auto-wait insertion
-  - `testcaptive.redactPII`: full | partial | none
+- **Status**: ✅ DONE
+- **Fix**: Added `contributes.configuration` to `package.json` with settings for `selectorStrategy` (testid-first/id-first/aria-first), `outputDirectory`, `autoWait`, and `logLevel`. Code generator reads settings at generation time.
+- **Files**: `vscode-extension/package.json`, `vscode-extension/src/code-generator.ts`, `vscode-extension/src/extension.ts`
 
 ### 3.2 Screenshot & Report Generation
 - **Status**: ✅ DONE
@@ -98,23 +94,10 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
 - **Files**: `test-suite-project/conftest.py`, `test-suite-project/pytest.ini`, `test-suite-project/requirements.txt`
 - **Output**: `reports/report.html`, `reports/screenshots/`, `reports/traces/`
 
-### 3.3 Retry / Flaky Test Support
-- Add `pytest-rerunfailures` to requirements.
-- Generate `@pytest.mark.flaky(reruns=2)` marker option.
-
-### 3.4 Session Schema Versioning
-- Add `schemaVersion: number` to `SessionData` type.
-- Write migration functions for breaking changes.
-
-### 3.5 Network Wait Annotations
-- In content script: use `PerformanceObserver` to detect pending XHR/fetch.
-- Annotate events with `networkBusy: true/false`.
-- Template generates `wait_for_load_state("networkidle")` when network was busy.
-
-### 3.6 Structured Logging
-- Replace `console.log` with VS Code Output Channel.
-- Add log levels (debug, info, warn, error).
-- Remove console logging of sensitive data.
+### 3.3 Structured Logging
+- **Status**: ✅ DONE
+- **Fix**: Created `logger.ts` with VS Code Output Channel ("TestCaptive"), log levels (DEBUG/INFO/WARN/ERROR), configurable via `testcaptive.logLevel` setting. Replaced all `console.log/warn/error` in extension.ts, test-data-manager.ts, and code-generator.ts.
+- **Files**: `vscode-extension/src/logger.ts`, `vscode-extension/src/extension.ts`, `vscode-extension/src/test-data-manager.ts`, `vscode-extension/src/code-generator.ts`
 
 ---
 
@@ -146,7 +129,7 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
 LOW EFFORT ---------+--------- HIGH EFFORT
                     |
     P4 Advanced    |    P3 Enterprise
-    (nice-to-have)  |    (3.1-3.6)
+    (nice-to-have)  |    (3.1-3.3)
                     |
                     LOW IMPACT
 ```
@@ -164,7 +147,7 @@ LOW EFFORT ---------+--------- HIGH EFFORT
 |----|------|--------|-------|
 | 1.1 | String escaping | ✅ DONE | 1 |
 | 1.2 | Service worker persistence | ✅ DONE | 1 |
-| 1.3 | PII handling | 🟡 Partial | 1 |
+| 1.3 | PII handling | ⏭️ SKIPPED | 1 |
 | 1.4 | Missing import re | ✅ DONE | 1 |
 | 2.1 | Wait strategies | ✅ DONE | 2 |
 | 2.2 | Iframe support | ✅ DONE | 2 |
@@ -174,5 +157,5 @@ LOW EFFORT ---------+--------- HIGH EFFORT
 | 2.6 | Selector uniqueness | ✅ DONE | 2 |
 | 2.7 | Custom dropdowns | ✅ DONE | 2 |
 | 2.8 | Multi-tab | ✅ DONE | 2 |
-| 3.1-3.6 | Enterprise features | 🔴 TODO | 3 |
+| 3.1-3.3 | Enterprise features | 🔴 TODO | 3 |
 | 4.x | Advanced features | 🔴 TODO | 4 |

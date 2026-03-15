@@ -72,6 +72,37 @@
           "type": "string",
           "default": "./tests",
           "description": "Directory to save generated test files"
+        },
+        "testcaptive.selectorStrategy": {
+          "type": "string",
+          "enum": [
+            "testid-first",
+            "id-first",
+            "aria-first"
+          ],
+          "default": "testid-first",
+          "description": "Selector priority strategy for generated locators",
+          "enumDescriptions": [
+            "Prefer data-testid attributes (recommended for modern apps)",
+            "Prefer element id attributes",
+            "Prefer ARIA labels and roles"
+          ]
+        },
+        "testcaptive.autoWait": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically insert wait_for_load_state() after navigation and clicks that trigger page loads"
+        },
+        "testcaptive.logLevel": {
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "default": "info",
+          "description": "Log level for the TestCaptive output channel"
         }
       }
     }

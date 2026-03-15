@@ -1,6 +1,7 @@
 // Test data management for captured events and session data
 import * as vscode from 'vscode';
 import { TestEvent, SessionData } from './types';
+import { logger } from './logger';
 
 export class TestDataManager {
   private sessions: Map<string, SessionData> = new Map();
@@ -12,7 +13,7 @@ export class TestDataManager {
     this.loadPersistedData();
   }
   public importSessionData(data: any): string {
-    console.log('TestDataManager.importSessionData called');
+    logger.info('TestDataManager.importSessionData called');
     const sessionId = data.id || `imported_${Date.now()}`;
     
     const session: SessionData = {
@@ -34,7 +35,7 @@ export class TestDataManager {
   }
 
   public startSession(sessionId: string): void {
-    console.log('TestDataManager.startSession called for:', sessionId);
+    logger.info('TestDataManager.startSession called for:', sessionId);
     const session: SessionData = {
       id: sessionId,
       startTime: new Date().toISOString(),
@@ -45,34 +46,34 @@ export class TestDataManager {
 
     this.sessions.set(sessionId, session);
     this.currentSessionId = sessionId;
-    console.log('Session created and set as current. Total sessions:', this.sessions.size);
+    logger.debug('Session created and set as current. Total sessions:', this.sessions.size);
     this.persistData();
   }
   public endSession(sessionId: string): void {
-    console.log('TestDataManager.endSession called for:', sessionId);
+    logger.info('TestDataManager.endSession called for:', sessionId);
     const session = this.sessions.get(sessionId);
     if (session) {
       session.endTime = new Date().toISOString();
-      console.log('Session ended, events count:', session.events.length);
+      logger.debug('Session ended, events count:', session.events.length);
       this.extractTestDataFromEvents(session);
       this.persistData();
     } else {
-      console.warn('Session not found when trying to end:', sessionId);
+      logger.warn('Session not found when trying to end:', sessionId);
     }
   }
   public addEvent(event: TestEvent): void {
-    console.log('TestDataManager.addEvent called:', event);
+    logger.debug('TestDataManager.addEvent called:', event);
     if (this.currentSessionId) {
       const session = this.sessions.get(this.currentSessionId);
       if (session) {
         session.events.push(event);
-        console.log('Event added to session', this.currentSessionId, 'Total events:', session.events.length);
+        logger.debug('Event added to session', this.currentSessionId, 'Total events:', session.events.length);
         this.persistData();
       } else {
-        console.warn('Session not found for currentSessionId:', this.currentSessionId);
+        logger.warn('Session not found for currentSessionId:', this.currentSessionId);
       }
     } else {
-      console.warn('No current session ID when trying to add event');
+      logger.warn('No current session ID when trying to add event');
     }
   }
 
@@ -83,17 +84,17 @@ export class TestDataManager {
     return null;
   }
   public getSession(sessionId: string): SessionData | null {
-    console.log('TestDataManager.getSession called for:', sessionId);
-    console.log('Available sessions:', Array.from(this.sessions.keys()));
+    logger.debug('TestDataManager.getSession called for:', sessionId);
+    logger.debug('Available sessions:', Array.from(this.sessions.keys()));
     const session = this.sessions.get(sessionId) || null;
-    console.log('Session found:', session ? 'Yes' : 'No');
+    logger.debug('Session found:', session ? 'Yes' : 'No');
     return session;
   }
   public getAllSessions(): SessionData[] {
     const sessions = Array.from(this.sessions.values());
-    console.log('TestDataManager.getAllSessions called. Count:', sessions.length);
+    logger.debug('TestDataManager.getAllSessions called. Count:', sessions.length);
     sessions.forEach(session => {
-      console.log(`Session ${session.id}: ${session.events.length} events, ended: ${!!session.endTime}`);
+      logger.debug(`Session ${session.id}: ${session.events.length} events, ended: ${!!session.endTime}`);
     });
     return sessions;
   }

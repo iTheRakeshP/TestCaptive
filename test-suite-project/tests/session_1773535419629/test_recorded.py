@@ -15,6 +15,7 @@ async def test_recorded_flow(page):
     # Navigate to TestCaptive Demo Page
 
     await page.goto("file:///D:/Projects/Advance/TestCaptive/demo.html", wait_until="domcontentloaded")
+    await page.wait_for_load_state("networkidle")
 
     # Fill "Enter your first name"
     test_value = TEST_DATA.get("input-first-name", "")
@@ -47,7 +48,7 @@ async def test_recorded_flow(page):
     await page.get_by_test_id("textarea-comments").fill(test_value)
 
     # Scroll page
-    await page.evaluate("window.scrollTo(0, 400)")
+    await page.evaluate("window.scrollTo(0, 300)")
 
     # Toggle checkbox/radio
 
@@ -57,9 +58,13 @@ async def test_recorded_flow(page):
 
     await page.get_by_test_id("btn-validate").click()
 
+    await page.wait_for_load_state("domcontentloaded")
+
     # Click "Submit Form"
 
     await page.get_by_test_id("btn-submit").click()
+
+    await page.wait_for_load_state("domcontentloaded")
 
     # Click "✅ Success!"
 
