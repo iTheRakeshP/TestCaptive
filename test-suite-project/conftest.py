@@ -9,11 +9,29 @@ TRACES_DIR = os.path.join(REPORTS_DIR, "traces")
 
 @pytest.fixture
 async def page(request):
-    """Create a new browser page for each test with screenshot-on-failure and tracing."""
+    """Create a new browser page for each test with screenshot-on-failure and tracing.
+    
+    Modes:
+      - Default: Launches a fresh Chromium browser.
+      - CDP mode: Set CHROME_CDP_URL env var (e.g. http://localhost:9222) to connect
+        to an already-running Chrome session (useful for SSO-authenticated VMs).
+    """
     async with async_playwright() as p:
-        headless = os.environ.get("HEADLESS", "false").lower() == "true"
-        browser = await p.chromium.launch(headless=headless)
-        context = await browser.new_context(viewport={"width": 1280, "height": 720})
+        cdp_url = os.environ.get("CHROME_CDP_URL")  # e.g. "http://localhost:9222"
+        owns_browser = False
+
+        if cdp_url:
+            # Connect to existing Chrome with SSO session already active
+            browser = await p.chromium.connect_over_cdp(cdp_url)
+            context = browser.contexts[0] if browser.contexts else await browser.new_context(
+                viewport={"width": 1280, "height": 720}
+            )
+        else:
+            # Launch a fresh browser (default / local dev mode)
+            headless = os.environ.get("HEADLESS", "false").lower() == "true"
+            browser = await p.chromium.launch(headless=headless)
+            context = await browser.new_context(viewport={"width": 1280, "height": 720})
+            owns_browser = True
 
         # Start tracing for every test (captures DOM snapshots, network, console)
         await context.tracing.start(screenshots=True, snapshots=True, sources=True)
@@ -38,8 +56,12 @@ async def page(request):
         else:
             await context.tracing.stop()
 
-        await context.close()
-        await browser.close()
+        # Close the page we opened (not the browser — user may still be using it)
+        await pg.close()
+
+        if owns_browser:
+            await context.close()
+            await browser.close()
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
