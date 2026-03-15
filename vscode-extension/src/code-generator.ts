@@ -9,6 +9,20 @@ export interface TemplateEngine {
 
 // Simple template engine implementation
 class SimpleTemplateEngine implements TemplateEngine {
+  /**
+   * Escape a string for safe inclusion inside Python double-quoted string literals.
+   * Handles backslashes, quotes, and newlines that would break generated code.
+   */
+  private escapePythonString(value: string): string {
+    return value
+      .replace(/\\/g, '\\\\')   // backslashes first
+      .replace(/"/g, '\\"')     // double quotes
+      .replace(/'/g, "\\'")     // single quotes
+      .replace(/\n/g, '\\n')    // newlines
+      .replace(/\r/g, '\\r')    // carriage returns
+      .replace(/\t/g, '\\t');   // tabs
+  }
+
   compile(template: string, data: any): string {
     try {
       let result = template;
@@ -194,12 +208,12 @@ class SimpleTemplateEngine implements TemplateEngine {
         eventCode = eventCode.replace(/{{event}}/g, eventType);
         eventCode = eventCode.replace(/{{timestamp}}/g, event.timestamp);
         eventCode = eventCode.replace(/{{sessionId}}/g, event.sessionId);
-        eventCode = eventCode.replace(/{{value}}/g, eventValue);
+        eventCode = eventCode.replace(/{{value}}/g, this.escapePythonString(eventValue));
         
         // Replace page variables
         if (event.page) {
-          eventCode = eventCode.replace(/{{page\.url}}/g, event.page.url || '');
-          eventCode = eventCode.replace(/{{page\.title}}/g, event.page.title || '');
+          eventCode = eventCode.replace(/{{page\.url}}/g, this.escapePythonString(event.page.url || ''));
+          eventCode = eventCode.replace(/{{page\.title}}/g, this.escapePythonString(event.page.title || ''));
         }
         
         // Replace element variables BEFORE conditionals
@@ -207,7 +221,7 @@ class SimpleTemplateEngine implements TemplateEngine {
           Object.keys(event.element).forEach(key => {
             const value = (event.element as any)[key];
             if (value) {
-              eventCode = eventCode.replace(new RegExp(`{{element\\.${key}}}`, 'g'), value);
+              eventCode = eventCode.replace(new RegExp(`{{element\\.${key}}}`, 'g'), this.escapePythonString(String(value)));
             }
           });
         }
@@ -220,7 +234,7 @@ class SimpleTemplateEngine implements TemplateEngine {
           Object.keys(event.element).forEach(key => {
             const value = (event.element as any)[key];
             if (value) {
-              eventCode = eventCode.replace(new RegExp(`{{element\\.${key}}}`, 'g'), value);
+              eventCode = eventCode.replace(new RegExp(`{{element\\.${key}}}`, 'g'), this.escapePythonString(String(value)));
             }
           });
         }
@@ -337,12 +351,17 @@ class SimpleTemplateEngine implements TemplateEngine {
       
       // Replace assertion.expectedValue
       if (assertion.expectedValue !== undefined) {
-        result = result.replace(/{{event\.assertion\.expectedValue}}/g, assertion.expectedValue);
+        result = result.replace(/{{event\.assertion\.expectedValue}}/g, this.escapePythonString(String(assertion.expectedValue)));
       }
       
       // Replace assertion.description
       if (assertion.description) {
-        result = result.replace(/{{event\.assertion\.description}}/g, assertion.description);
+        result = result.replace(/{{event\.assertion\.description}}/g, this.escapePythonString(assertion.description));
+      }
+      
+      // Replace assertion.attributeName
+      if (assertion.attributeName) {
+        result = result.replace(/{{event\.assertion\.attributeName}}/g, this.escapePythonString(assertion.attributeName));
       }
       
       // Replace assertion.element properties
@@ -350,7 +369,7 @@ class SimpleTemplateEngine implements TemplateEngine {
         Object.keys(assertion.element).forEach(key => {
           const value = assertion.element[key];
           if (value) {
-            result = result.replace(new RegExp(`{{event\\.assertion\\.element\\.${key}}}`, 'g'), value);
+            result = result.replace(new RegExp(`{{event\\.assertion\\.element\\.${key}}}`, 'g'), this.escapePythonString(String(value)));
           }
         });
       }

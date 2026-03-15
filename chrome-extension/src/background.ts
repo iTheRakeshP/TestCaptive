@@ -7,8 +7,55 @@ console.log('TestCaptive: Background script starting (enterprise mode)...');
 let isRecording = false;
 let currentSessionId: string | null = null;
 let recordedEvents: any[] = [];
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
 
 const MAX_EVENTS = 10000; // Memory safety limit
+const PERSIST_DEBOUNCE_MS = 500; // Debounce writes to storage
+
+// ===== Persistence Layer =====
+// Survives service worker termination (MV3 can kill after ~5 min idle)
+function persistState() {
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = setTimeout(() => {
+    chrome.storage.local.set({
+      'tc_isRecording': isRecording,
+      'tc_sessionId': currentSessionId,
+      'tc_events': recordedEvents
+    });
+  }, PERSIST_DEBOUNCE_MS);
+}
+
+function persistStateImmediate() {
+  if (persistTimer) clearTimeout(persistTimer);
+  chrome.storage.local.set({
+    'tc_isRecording': isRecording,
+    'tc_sessionId': currentSessionId,
+    'tc_events': recordedEvents
+  });
+}
+
+function clearPersistedState() {
+  if (persistTimer) clearTimeout(persistTimer);
+  chrome.storage.local.remove(['tc_isRecording', 'tc_sessionId', 'tc_events']);
+}
+
+// Restore state on service worker wake-up
+async function restoreState() {
+  try {
+    const data = await chrome.storage.local.get(['tc_isRecording', 'tc_sessionId', 'tc_events']);
+    if (data.tc_isRecording) {
+      isRecording = true;
+      currentSessionId = (data.tc_sessionId as string) || null;
+      recordedEvents = (data.tc_events as any[]) || [];
+      console.log('♻️ Restored recording state:', recordedEvents.length, 'events');
+    }
+  } catch (e) {
+    console.warn('Failed to restore state:', e);
+  }
+}
+
+// Restore immediately on load
+restoreState();
 
 // ===== Message Listener =====
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -28,6 +75,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       currentSessionId = 'session_' + Date.now();
       recordedEvents = [];
       console.log('🔴 Recording started:', currentSessionId);
+      persistStateImmediate();
 
       // Capture initial URL as navigation event
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -64,6 +112,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'stop-recording':
       isRecording = false;
       console.log('⏹️ Recording stopped. Total events:', recordedEvents.length);
+      clearPersistedState();
 
       // Notify content script
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -83,6 +132,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (isRecording && recordedEvents.length < MAX_EVENTS) {
         recordedEvents.push(message.data);
         console.log('📥 Event stored. Total:', recordedEvents.length);
+        persistState();
       } else if (recordedEvents.length >= MAX_EVENTS) {
         console.warn('⚠️ Max events reached, ignoring new events');
       }

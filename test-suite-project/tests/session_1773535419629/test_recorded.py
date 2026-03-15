@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import pytest
 from playwright.async_api import expect
 
@@ -46,7 +47,7 @@ async def test_recorded_flow(page):
     await page.get_by_test_id("textarea-comments").fill(test_value)
 
     # Scroll page
-    await page.evaluate("window.scrollTo(0, 300)")
+    await page.evaluate("window.scrollTo(0, 400)")
 
     # Toggle checkbox/radio
 
@@ -62,9 +63,9 @@ async def test_recorded_flow(page):
 
     # Click "✅ Success!"
 
-    await page.locator('xpath=//*[@id="successPopup"]/h2[1]').click()
+    await page.locator('xpath=//*[@id=\"successPopup\"]/h2[1]').click()
 
-    # Assertion: Assert "✅ Success!" is visible
+    # Assertion: Assert \"✅ Success!\" is visible
 
-    await expect(page.locator('xpath=//*[@id="successPopup"]/h2[1]')).to_be_visible()
+    await expect(page.locator('xpath=//*[@id=\"successPopup\"]/h2[1]')).to_be_visible()
 

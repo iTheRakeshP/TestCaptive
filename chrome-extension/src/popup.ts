@@ -3,7 +3,7 @@
 
 console.log('TestCaptive: Popup loaded');
 
-let isRecording = false;
+let isCurrentlyRecording = false;
 
 // DOM Elements
 const elements = {
@@ -37,9 +37,9 @@ async function refreshStatus(): Promise<void> {
 }
 
 function updateUI(status: { isRecording: boolean; eventCount: number; sessionId: string | null }): void {
-  isRecording = status.isRecording || false;
+  isCurrentlyRecording = status.isRecording || false;
 
-  if (isRecording) {
+  if (isCurrentlyRecording) {
     if (elements.recordingStatus) elements.recordingStatus.className = 'status-indicator recording';
     if (elements.recordingText) elements.recordingText.textContent = 'Recording';
     if (elements.startBtn) elements.startBtn.disabled = true;
