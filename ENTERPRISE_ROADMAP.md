@@ -92,9 +92,11 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
   - `testcaptive.autoWait`: enable/disable auto-wait insertion
   - `testcaptive.redactPII`: full | partial | none
 
-### 3.2 Screenshot on Failure
-- Add `@pytest.fixture(autouse=True)` that captures a screenshot on test failure.
-- Include in `conftest.py` template.
+### 3.2 Screenshot & Report Generation
+- **Status**: ✅ DONE
+- **Fix**: Updated `conftest.py` with screenshot capture on every test (pass & fail), Playwright tracing on failure, and `pytest-html` for HTML report generation.
+- **Files**: `test-suite-project/conftest.py`, `test-suite-project/pytest.ini`, `test-suite-project/requirements.txt`
+- **Output**: `reports/report.html`, `reports/screenshots/`, `reports/traces/`
 
 ### 3.3 Retry / Flaky Test Support
 - Add `pytest-rerunfailures` to requirements.
