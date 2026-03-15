@@ -92,40 +92,27 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
   - `testcaptive.autoWait`: enable/disable auto-wait insertion
   - `testcaptive.redactPII`: full | partial | none
 
-### 3.2 Page Object Model Generation
-- Extract locators into page classes. Generate `LoginPage`, `FormPage`, etc. from navigation boundaries.
-- Maintain locator → page class mapping.
-
-### 3.3 Screenshot on Failure
+### 3.2 Screenshot on Failure
 - Add `@pytest.fixture(autouse=True)` that captures a screenshot on test failure.
 - Include in `conftest.py` template.
 
-### 3.4 Retry / Flaky Test Support
+### 3.3 Retry / Flaky Test Support
 - Add `pytest-rerunfailures` to requirements.
 - Generate `@pytest.mark.flaky(reruns=2)` marker option.
 
-### 3.5 CI/CD Pipeline Generation
-- Generate `.github/workflows/test.yml` with Playwright setup steps.
-- Support Jenkins, GitLab CI, Azure DevOps pipeline formats.
-
-### 3.6 Session Schema Versioning
+### 3.4 Session Schema Versioning
 - Add `schemaVersion: number` to `SessionData` type.
 - Write migration functions for breaking changes.
 
-### 3.7 Network Wait Annotations
+### 3.5 Network Wait Annotations
 - In content script: use `PerformanceObserver` to detect pending XHR/fetch.
 - Annotate events with `networkBusy: true/false`.
 - Template generates `wait_for_load_state("networkidle")` when network was busy.
 
-### 3.8 Structured Logging
+### 3.6 Structured Logging
 - Replace `console.log` with VS Code Output Channel.
 - Add log levels (debug, info, warn, error).
 - Remove console logging of sensitive data.
-
-### 3.9 Session Management UI
-- Session list in sidebar with metadata (date, page, event count).
-- Delete, rename, re-export sessions.
-- Session size limits and auto-cleanup.
 
 ---
 
@@ -157,7 +144,7 @@ Not yet safe for: production enterprise environments, sensitive data, complex SP
 LOW EFFORT ---------+--------- HIGH EFFORT
                     |
     P4 Advanced    |    P3 Enterprise
-    (nice-to-have)  |    (3.1-3.9)
+    (nice-to-have)  |    (3.1-3.6)
                     |
                     LOW IMPACT
 ```
@@ -185,5 +172,5 @@ LOW EFFORT ---------+--------- HIGH EFFORT
 | 2.6 | Selector uniqueness | ✅ DONE | 2 |
 | 2.7 | Custom dropdowns | ✅ DONE | 2 |
 | 2.8 | Multi-tab | ✅ DONE | 2 |
-| 3.1-3.9 | Enterprise features | 🔴 TODO | 3 |
+| 3.1-3.6 | Enterprise features | 🔴 TODO | 3 |
 | 4.x | Advanced features | 🔴 TODO | 4 |
