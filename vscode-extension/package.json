@@ -93,6 +93,11 @@
           "default": true,
           "description": "Automatically insert wait_for_load_state() after navigation and clicks that trigger page loads"
         },
+        "testcaptive.stepScreenshots": {
+          "type": "boolean",
+          "default": false,
+          "description": "Capture a screenshot after every test step (navigation, click, fill, select, etc.) for visual debugging"
+        },
         "testcaptive.logLevel": {
           "type": "string",
           "enum": [

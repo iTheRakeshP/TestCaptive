@@ -3,6 +3,7 @@ import json
 import re
 import pytest
 from playwright.async_api import expect
+from conftest import capture_step
 
 DATA_DIR = os.path.dirname(__file__)
 with open(os.path.join(DATA_DIR, "test_data.json"), "r") as f:
@@ -103,18 +104,21 @@ async def test_recorded_flow(page):
     # Select option in dropdown
     test_value = TEST_DATA.get("{{#if element.testid}}{{element.testid}}{{else if element.id}}{{element.id}}{{else if element.name}}{{element.name}}{{else}}select_value{{/if}}", "")
     {{#if element.testid}}
-    await page.get_by_test_id("{{element.testid}}").select_option(test_value)
+    _dropdown = page.get_by_test_id("{{element.testid}}")
     {{else if element.ariaLabel}}
-    await page.get_by_label("{{element.ariaLabel}}").select_option(test_value)
+    _dropdown = page.get_by_label("{{element.ariaLabel}}")
     {{else if element.id}}
-    await page.locator('#{{element.id}}').select_option(test_value)
+    _dropdown = page.locator('#{{element.id}}')
     {{else if element.name}}
-    await page.locator('[name="{{element.name}}"]').select_option(test_value)
+    _dropdown = page.locator('[name="{{element.name}}"]')
     {{else if element.xpath}}
-    await page.locator('xpath={{element.xpath}}').select_option(test_value)
+    _dropdown = page.locator('xpath={{element.xpath}}')
     {{else}}
-    await page.locator('{{element.cssSelector}}').select_option(test_value)
+    _dropdown = page.locator('{{element.cssSelector}}')
     {{/if}}
+    await _dropdown.select_option(test_value)
+    await page.wait_for_load_state("networkidle")
+    await expect(_dropdown).to_have_value(test_value)
     
     {{else if (eq event 'check')}}
     # Toggle checkbox/radio
@@ -137,10 +141,18 @@ async def test_recorded_flow(page):
     await page.locator('#{{element.id}}').uncheck()
     {{/if}}
     {{else if element.name}}
+    {{#if element.value}}
+    {{#if value}}
+    await page.locator('[name="{{element.name}}"][value="{{element.value}}"]').check()
+    {{else}}
+    await page.locator('[name="{{element.name}}"][value="{{element.value}}"]').uncheck()
+    {{/if}}
+    {{else}}
     {{#if value}}
     await page.locator('[name="{{element.name}}"]').check()
     {{else}}
     await page.locator('[name="{{element.name}}"]').uncheck()
+    {{/if}}
     {{/if}}
     {{else if element.xpath}}
     {{#if value}}
@@ -328,6 +340,9 @@ async def test_recorded_flow(page):
     
     {{/if}}
     
+    {{/if}}
+    {{#if stepScreenshots}}
+    await capture_step(page, "{{event}}_step{{stepIndex}}")
     {{/if}}
     {{/events}}
 

@@ -4,7 +4,22 @@ from playwright.async_api import async_playwright
 
 REPORTS_DIR = os.path.join(os.path.dirname(__file__), "reports")
 SCREENSHOTS_DIR = os.path.join(REPORTS_DIR, "screenshots")
+STEP_SCREENSHOTS_DIR = os.path.join(SCREENSHOTS_DIR, "steps")
 TRACES_DIR = os.path.join(REPORTS_DIR, "traces")
+
+_step_counter = 0
+
+async def capture_step(page, label: str):
+    """Capture a full-page screenshot for visual step-by-step debugging.
+    
+    Call this from generated tests after navigation or click events.
+    Screenshots are saved to reports/screenshots/steps/ with sequential numbering.
+    """
+    global _step_counter
+    _step_counter += 1
+    os.makedirs(STEP_SCREENSHOTS_DIR, exist_ok=True)
+    filename = f"step_{_step_counter:03d}_{label}.png"
+    await page.screenshot(path=os.path.join(STEP_SCREENSHOTS_DIR, filename), full_page=True)
 
 
 @pytest.fixture

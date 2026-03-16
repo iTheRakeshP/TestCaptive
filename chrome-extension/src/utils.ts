@@ -132,10 +132,17 @@ export function generateSelector(element: Element): string {
     candidates.push(`#${escapeCSSValue(element.id)}`);
   }
 
-  // 4. name attribute
+  // 4. name attribute (for radio buttons, include value to disambiguate radio groups)
   const name = element.getAttribute('name');
   if (name) {
-    candidates.push(`${element.tagName.toLowerCase()}[name="${escapeCSSValue(name)}"]`);
+    const tag = element.tagName.toLowerCase();
+    const inputType = (element as HTMLInputElement).type?.toLowerCase();
+    const inputValue = element.getAttribute('value');
+    if (inputType === 'radio' && inputValue) {
+      candidates.push(`${tag}[name="${escapeCSSValue(name)}"][value="${escapeCSSValue(inputValue)}"]`);
+    } else {
+      candidates.push(`${tag}[name="${escapeCSSValue(name)}"]`);
+    }
   }
 
   // 5. Role + accessible name

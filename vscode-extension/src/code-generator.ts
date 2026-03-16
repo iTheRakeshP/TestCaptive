@@ -6,7 +6,7 @@ import { TestEvent, SessionData } from './types';
 import { logger } from './logger';
 
 export interface TemplateEngine {
-  compile(template: string, data: any, options?: { selectorStrategy?: string; autoWait?: boolean }): string;
+  compile(template: string, data: any, options?: { selectorStrategy?: string; autoWait?: boolean; stepScreenshots?: boolean }): string;
 }
 
 // Simple template engine implementation
@@ -25,11 +25,12 @@ class SimpleTemplateEngine implements TemplateEngine {
       .replace(/\t/g, '\\t');   // tabs
   }
 
-  compile(template: string, data: any, options?: { selectorStrategy?: string; autoWait?: boolean }): string {
+  compile(template: string, data: any, options?: { selectorStrategy?: string; autoWait?: boolean; stepScreenshots?: boolean }): string {
     try {
       let result = template;
       const selectorStrategy = options?.selectorStrategy || 'testid-first';
       const autoWait = options?.autoWait !== false;
+      const stepScreenshots = options?.stepScreenshots === true;
 
     // Handle {{#events}} loops
     const eventsMatch = result.match(/{{#events}}([\s\S]*?){{\/events}}/);
@@ -225,6 +226,11 @@ class SimpleTemplateEngine implements TemplateEngine {
         } else {
           (event as any).triggersNavigation = false;
         }
+
+        // Propagate stepScreenshots flag only for page-changing actions (navigation, clicks)
+        const screenshotEvents = new Set(['navigation', 'spa-navigation', 'click', 'dblclick', 'submit']);
+        (event as any).stepScreenshots = stepScreenshots && screenshotEvents.has(eventType);
+        (event as any).stepIndex = index + 1;
         
         // Copy selector to element.cssSelector if it doesn't exist
         if (event.element && (event as any).selector && !event.element.cssSelector) {
@@ -913,6 +919,10 @@ export class CodeGenerator {
     return vscode.workspace.getConfiguration('testcaptive').get<boolean>('autoWait', true);
   }
 
+  get stepScreenshots(): boolean {
+    return vscode.workspace.getConfiguration('testcaptive').get<boolean>('stepScreenshots', false);
+  }
+
   constructor() {
     this.templateEngine = new SimpleTemplateEngine();
     // Try multiple possible template locations
@@ -961,7 +971,8 @@ export class CodeGenerator {
 
     const result = this.templateEngine.compile(template, templateData, {
       selectorStrategy: this.selectorStrategy,
-      autoWait: this.autoWait
+      autoWait: this.autoWait,
+      stepScreenshots: this.stepScreenshots
     });
     
     // Verify no unresolved template tags remain (except comments)
