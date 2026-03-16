@@ -1,4 +1,6 @@
 import os
+import base64
+import datetime
 import pytest
 from playwright.async_api import async_playwright
 
@@ -8,6 +10,23 @@ STEP_SCREENSHOTS_DIR = os.path.join(SCREENSHOTS_DIR, "steps")
 TRACES_DIR = os.path.join(REPORTS_DIR, "traces")
 
 _step_counter = 0
+
+
+# ── Report customisation ───────────────────────────────────────
+def pytest_configure(config):
+    """Add project metadata shown in the Environment table of the HTML report."""
+    config.stash.setdefault("metadata", {})
+    if hasattr(config, "_metadata"):
+        config._metadata["Project"] = "TestCaptive"
+        config._metadata["Test Runner"] = "Playwright + pytest"
+        config._metadata["Report Generated"] = datetime.datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+
+def pytest_html_report_title(report):
+    """Set a custom report title instead of the default 'report.html'."""
+    report.title = "TestCaptive – Test Execution Report"
 
 async def capture_step(page, label: str):
     """Capture a full-page screenshot for visual step-by-step debugging.
@@ -39,19 +58,58 @@ async def page(request):
             # Connect to existing Chrome with SSO session already active
             browser = await p.chromium.connect_over_cdp(cdp_url)
             context = browser.contexts[0] if browser.contexts else await browser.new_context(
-                viewport={"width": 1280, "height": 720}
+                viewport={"width": 1920, "height": 1080}
             )
         else:
             # Launch a fresh browser (default / local dev mode)
             headless = os.environ.get("HEADLESS", "false").lower() == "true"
-            browser = await p.chromium.launch(headless=headless)
-            context = await browser.new_context(viewport={"width": 1280, "height": 720})
+            browser = await p.chromium.launch(headless=headless, args=["--start-maximized"])
+            context = await browser.new_context(viewport={"width": 1920, "height": 1080})
             owns_browser = True
 
         # Start tracing for every test (captures DOM snapshots, network, console)
         await context.tracing.start(screenshots=True, snapshots=True, sources=True)
 
         pg = await context.new_page()
+
+        # PRE-navigation: capture current step state when Next/Submit buttons are clicked
+        async def capture_before_nav(source):
+            global _step_counter
+            _step_counter += 1
+            os.makedirs(STEP_SCREENSHOTS_DIR, exist_ok=True)
+            url_slug = pg.url.split("/")[-1].replace("#", "").replace("?", "_")[:40]
+            filename = f"step_{_step_counter:03d}_before_{url_slug}.png"
+            try:
+                await pg.screenshot(path=os.path.join(STEP_SCREENSHOTS_DIR, filename), full_page=True)
+            except Exception:
+                pass
+
+        await pg.expose_binding("__captureBeforeNav__", capture_before_nav)
+        await pg.add_init_script("""
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('button, a');
+                if (btn && /next|submit/i.test((btn.textContent || '').trim())) {
+                    window.__captureBeforeNav__();
+                }
+            }, true);
+        """)
+
+        # POST-navigation: wait for Angular to render, then capture the loaded page
+        async def on_navigation(frame):
+            if frame == pg.main_frame:
+                global _step_counter
+                _step_counter += 1
+                os.makedirs(STEP_SCREENSHOTS_DIR, exist_ok=True)
+                url_slug = frame.url.split("/")[-1].replace("#", "").replace("?", "_")[:40]
+                filename = f"step_{_step_counter:03d}_after_{url_slug}.png"
+                try:
+                    await pg.wait_for_load_state("networkidle", timeout=10000)
+                    await pg.screenshot(path=os.path.join(STEP_SCREENSHOTS_DIR, filename), full_page=True)
+                except Exception:
+                    pass
+
+        pg.on("framenavigated", on_navigation)
+
         yield pg
 
         # After test: check if it failed
@@ -81,7 +139,29 @@ async def page(request):
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Attach test outcome to the request node so the page fixture can read it."""
+    """Attach test outcome to the request node and embed screenshot in report."""
     outcome = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)
+
+    # Embed screenshot in the HTML report (call phase only)
+    if rep.when == "call":
+        test_name = item.name
+        screenshot_path = os.path.join(SCREENSHOTS_DIR, f"{test_name}.png")
+        if os.path.isfile(screenshot_path):
+            with open(screenshot_path, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode("ascii")
+            extra_html = (
+                f'<div class="screenshot-wrapper">'
+                f'<img class="image" src="data:image/png;base64,{encoded}" '
+                f'alt="{test_name}" style="max-width:100%;" />'
+                f"</div>"
+            )
+            # pytest-html 4.x uses report.extras list
+            extras = getattr(rep, "extras", [])
+            try:
+                from pytest_html import extras as html_extras
+                extras.append(html_extras.html(extra_html))
+            except ImportError:
+                pass
+            rep.extras = extras
