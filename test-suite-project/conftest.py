@@ -1,6 +1,4 @@
 import os
-import base64
-import datetime
 import pytest
 from playwright.async_api import async_playwright
 
@@ -11,22 +9,6 @@ TRACES_DIR = os.path.join(REPORTS_DIR, "traces")
 
 _step_counter = 0
 
-
-# ── Report customisation ───────────────────────────────────────
-def pytest_configure(config):
-    """Add project metadata shown in the Environment table of the HTML report."""
-    config.stash.setdefault("metadata", {})
-    if hasattr(config, "_metadata"):
-        config._metadata["Project"] = "TestCaptive"
-        config._metadata["Test Runner"] = "Playwright + pytest"
-        config._metadata["Report Generated"] = datetime.datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-
-
-def pytest_html_report_title(report):
-    """Set a custom report title instead of the default 'report.html'."""
-    report.title = "TestCaptive – Test Execution Report"
 
 async def capture_step(page, label: str):
     """Capture a full-page screenshot for visual step-by-step debugging.
@@ -139,29 +121,7 @@ async def page(request):
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Attach test outcome to the request node and embed screenshot in report."""
+    """Attach test outcome to the request node so the page fixture can read it."""
     outcome = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)
-
-    # Embed screenshot in the HTML report (call phase only)
-    if rep.when == "call":
-        test_name = item.name
-        screenshot_path = os.path.join(SCREENSHOTS_DIR, f"{test_name}.png")
-        if os.path.isfile(screenshot_path):
-            with open(screenshot_path, "rb") as f:
-                encoded = base64.b64encode(f.read()).decode("ascii")
-            extra_html = (
-                f'<div class="screenshot-wrapper">'
-                f'<img class="image" src="data:image/png;base64,{encoded}" '
-                f'alt="{test_name}" style="max-width:100%;" />'
-                f"</div>"
-            )
-            # pytest-html 4.x uses report.extras list
-            extras = getattr(rep, "extras", [])
-            try:
-                from pytest_html import extras as html_extras
-                extras.append(html_extras.html(extra_html))
-            except ImportError:
-                pass
-            rep.extras = extras
