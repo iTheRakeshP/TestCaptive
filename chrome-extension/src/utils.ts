@@ -99,6 +99,117 @@ export function escapeCSSValue(value: string): string {
   return value.replace(/([!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, '\\$1');
 }
 
+// ===== Selector Confidence (v1.3) =====
+
+/**
+ * Selector tier (mirrors the priority ladder).
+ * Each tier carries a base confidence score (0-100); the actual generated selector
+ * may degrade the score (e.g. if uniqueness required nth-of-type refinement).
+ */
+export type SelectorTier = 'testid' | 'aria-label' | 'id' | 'name' | 'role-text' | 'class' | 'xpath' | 'nth-child';
+
+export interface SelectorResult {
+  selector: string;
+  tier: SelectorTier;
+  confidence: number;
+}
+
+const TIER_SCORE: Record<SelectorTier, number> = {
+  'testid':     100,
+  'aria-label':  90,
+  'id':          80,
+  'name':        70,
+  'role-text':   55,
+  'class':       50,
+  'xpath':       30,
+  'nth-child':   10,
+};
+
+/**
+ * Generate the best CSS selector for an element, with tier + confidence info.
+ * Use `generateSelector(element)` for the string-only convenience wrapper.
+ */
+export function generateSelectorWithMeta(element: Element): SelectorResult {
+  const candidates: Array<{ selector: string; tier: SelectorTier }> = [];
+
+  const testId = element.getAttribute('data-testid') || element.getAttribute('data-test-id');
+  if (testId) candidates.push({ selector: `[data-testid="${escapeCSSValue(testId)}"]`, tier: 'testid' });
+
+  const ariaLabel = element.getAttribute('aria-label');
+  if (ariaLabel) candidates.push({ selector: `[aria-label="${escapeCSSValue(ariaLabel)}"]`, tier: 'aria-label' });
+
+  if (element.id && !isDynamicId(element.id)) {
+    candidates.push({ selector: `#${escapeCSSValue(element.id)}`, tier: 'id' });
+  }
+
+  const name = element.getAttribute('name');
+  if (name) {
+    const tag = element.tagName.toLowerCase();
+    const inputType = (element as HTMLInputElement).type?.toLowerCase();
+    const inputValue = element.getAttribute('value');
+    if (inputType === 'radio' && inputValue) {
+      candidates.push({ selector: `${tag}[name="${escapeCSSValue(name)}"][value="${escapeCSSValue(inputValue)}"]`, tier: 'name' });
+    } else {
+      candidates.push({ selector: `${tag}[name="${escapeCSSValue(name)}"]`, tier: 'name' });
+    }
+  }
+
+  const role = element.getAttribute('role');
+  if (role && (element.textContent?.trim() || '').length > 0) {
+    candidates.push({ selector: `[role="${role}"]`, tier: 'role-text' });
+  }
+
+  const tagLower = element.tagName.toLowerCase();
+  if (element.className && typeof element.className === 'string') {
+    const stableClasses = element.className
+      .split(' ')
+      .filter(c => c.trim() && !isDynamicClass(c.trim()))
+      .slice(0, 2);
+    if (stableClasses.length > 0) {
+      candidates.push({ selector: tagLower + '.' + stableClasses.map(c => escapeCSSValue(c)).join('.'), tier: 'class' });
+    }
+  }
+
+  // Validate candidates for uniqueness
+  for (const c of candidates) {
+    try {
+      const matches = document.querySelectorAll(c.selector);
+      if (matches.length === 1) {
+        return { selector: c.selector, tier: c.tier, confidence: TIER_SCORE[c.tier] };
+      }
+    } catch (_) { /* invalid, skip */ }
+  }
+
+  // Refine the strongest candidate with :nth-of-type (-20 confidence)
+  for (const c of candidates) {
+    try {
+      const matches = document.querySelectorAll(c.selector);
+      if (matches.length > 1) {
+        const idx = Array.from(matches).indexOf(element);
+        if (idx >= 0) {
+          return {
+            selector: `${c.selector}:nth-of-type(${idx + 1})`,
+            tier: c.tier,
+            confidence: Math.max(20, TIER_SCORE[c.tier] - 20),
+          };
+        }
+      }
+    } catch (_) { /* skip */ }
+  }
+
+  // Tag + nth-child fallback
+  const parent = element.parentElement;
+  if (parent) {
+    const siblings = Array.from(parent.children).filter(el => el.tagName === element.tagName);
+    const index = siblings.indexOf(element) + 1;
+    if (siblings.length > 1) {
+      return { selector: `${tagLower}:nth-child(${index})`, tier: 'nth-child', confidence: TIER_SCORE['nth-child'] };
+    }
+  }
+
+  return { selector: tagLower, tier: 'nth-child', confidence: TIER_SCORE['nth-child'] };
+}
+
 /**
  * Generate the best CSS selector for an element, following priority:
  * 1. data-testid / data-test-id
@@ -273,6 +384,7 @@ export function getShadowHostPath(element: Element): string | null {
 export function getElementInfo(element: Element): ElementInfo {
   const el = element as HTMLElement;
   const inputEl = element as HTMLInputElement;
+  const selectorMeta = generateSelectorWithMeta(element);
 
   return {
     tag: el.tagName?.toLowerCase() || '',
@@ -287,7 +399,9 @@ export function getElementInfo(element: Element): ElementInfo {
     ariaLabel: el.getAttribute('aria-label') || '',
     role: el.getAttribute('role') || '',
     xpath: generateXPath(element),
-    cssSelector: generateSelector(element),
+    cssSelector: selectorMeta.selector,
+    selectorTier: selectorMeta.tier,
+    selectorConfidence: selectorMeta.confidence,
     checked: inputEl.checked,
     href: (el as HTMLAnchorElement).href || '',
     src: (el as HTMLImageElement).src || '',

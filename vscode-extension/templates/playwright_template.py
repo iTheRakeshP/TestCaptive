@@ -2,6 +2,7 @@ import os
 import json
 import re
 import pytest
+import allure
 from playwright.async_api import expect
 from conftest import capture_step
 
@@ -10,6 +11,8 @@ with open(os.path.join(DATA_DIR, "test_data.json"), "r") as f:
     TEST_DATA = json.load(f)
 
 
+@allure.feature("Recorded UI Flow")
+@allure.severity(allure.severity_level.NORMAL)
 @pytest.mark.asyncio
 async def test_recorded_flow(page):
     """Generated test case from recorded interactions"""

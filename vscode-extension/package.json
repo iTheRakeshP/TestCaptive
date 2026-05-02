@@ -95,7 +95,7 @@
         },
         "testcaptive.stepScreenshots": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Capture a screenshot after every test step (navigation, click, fill, select, etc.) for visual debugging"
         },
         "testcaptive.logLevel": {

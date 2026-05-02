@@ -25,6 +25,56 @@ class SimpleTemplateEngine implements TemplateEngine {
       .replace(/\t/g, '\\t');   // tabs
   }
 
+  /**
+   * Build a human-readable Allure step name from an event (e.g. "Click 'Submit'", "Fill #email").
+   * Falls back to event type if no descriptive context is available.
+   */
+  private buildStepName(event: TestEvent, stepIndex: number): string {
+    const eventType = event.event || (event as any).type || 'step';
+    const el = event.element || ({} as any);
+    const target = el.text || el.testid || el.ariaLabel || el.id || el.name || el.placeholder || el.tag || '';
+    const value = event.inputValue || event.value || '';
+    const trimTarget = String(target).trim().substring(0, 40);
+    let name: string;
+    switch (eventType) {
+      case 'navigation':
+      case 'spa-navigation':
+        name = `Navigate to ${event.page?.url || trimTarget || 'page'}`;
+        break;
+      case 'click': name = trimTarget ? `Click "${trimTarget}"` : 'Click element'; break;
+      case 'dblclick': name = trimTarget ? `Double-click "${trimTarget}"` : 'Double-click element'; break;
+      case 'fill': name = trimTarget ? `Fill ${trimTarget}` : 'Fill input'; break;
+      case 'select': name = trimTarget ? `Select ${value} in ${trimTarget}` : `Select ${value}`; break;
+      case 'check': name = trimTarget ? `Toggle ${trimTarget}` : 'Toggle checkbox/radio'; break;
+      case 'keydown': name = `Press ${value || 'key'}`; break;
+      case 'hover': name = trimTarget ? `Hover ${trimTarget}` : 'Hover element'; break;
+      case 'scroll': name = 'Scroll page'; break;
+      case 'file-upload': name = trimTarget ? `Upload file to ${trimTarget}` : 'Upload file'; break;
+      case 'drag-drop': name = 'Drag and drop'; break;
+      case 'dialog': name = 'Handle dialog'; break;
+      case 'submit': name = 'Submit form'; break;
+      case 'assertion': name = `Assert: ${event.assertion?.description || event.assertion?.type || 'expectation'}`; break;
+      case 'new-tab': name = 'New tab opened'; break;
+      default: name = String(eventType);
+    }
+    return `${stepIndex}. ${name}`;
+  }
+
+  /**
+   * Wrap an already-rendered event chunk in `with allure.step("..."):`.
+   * The chunk's existing 4-space indent is preserved by indenting all body lines by 4 more spaces.
+   * Comment lines at the start of the chunk are kept above the `async with` so they remain in source.
+   */
+  private wrapInAllureStep(eventCode: string, event: TestEvent, stepIndex: number): string {
+    const stepName = this.buildStepName(event, stepIndex);
+    // Strip leading/trailing blank lines but preserve internal structure
+    const lines = eventCode.replace(/^\r?\n+/, '').replace(/\r?\n\s*$/, '').split('\n');
+    // Indent every line by 4 extra spaces (so it sits inside the `async with` block)
+    const body = lines.map(l => l.length === 0 ? '' : '    ' + l).join('\n');
+    return `    with allure.step(${JSON.stringify(stepName)}):\n${body}\n`;
+  }
+
+
   compile(template: string, data: any, options?: { selectorStrategy?: string; autoWait?: boolean; stepScreenshots?: boolean }): string {
     try {
       let result = template;
@@ -52,6 +102,38 @@ class SimpleTemplateEngine implements TemplateEngine {
 
           // Skip focus/blur events entirely (legacy sessions may have them)
           if (currentType === 'focus' || currentType === 'blur') {
+            i++;
+            continue;
+          }
+
+          // ===== v1.3 evidence-only event types: never become Playwright code =====
+          // network / console / page-error / storage-snapshot are reporting artifacts;
+          // they are surfaced by Allure attachments at runtime, not generated as actions.
+          if (currentType === 'network' || currentType === 'console' ||
+              currentType === 'page-error' || currentType === 'storage-snapshot') {
+            i++;
+            continue;
+          }
+
+          // ===== v1.3 wait-hint: convert into a wait_for_load_state when meaningful =====
+          // Only emit a wait when autoWait is on AND the gap was substantial (>= 1500ms)
+          // and was network-driven. Otherwise skip — Playwright's auto-waiting handles short gaps.
+          if (currentType === 'wait-hint') {
+            const hint = (current as any).waitHint;
+            if (autoWait && hint && hint.durationMs >= 1500 &&
+                (hint.reason === 'network-idle' || hint.reason === 'time-gap')) {
+              // Synthetic event: handled below as a special pseudo-type
+              processedEvents.push({
+                ...current,
+                event: 'wait-hint' as any,
+              } as any);
+            }
+            i++;
+            continue;
+          }
+
+          // Skip user-disabled steps (set by review panel via __tcDisabled flag)
+          if ((current as any).__tcDisabled === true) {
             i++;
             continue;
           }
@@ -202,8 +284,21 @@ class SimpleTemplateEngine implements TemplateEngine {
       }
 
       processedEvents.forEach((event: TestEvent, index: number) => {
-        let eventCode = eventTemplate;
         const eventType = event.event || (event as any).type || '';
+
+        // ===== Synthetic wait-hint emission (v1.3) =====
+        if (eventType === 'wait-hint') {
+          const hint = (event as any).waitHint || {};
+          const ms = Math.min(Math.max(0, hint.durationMs || 0), 30000);
+          const reason = hint.reason || 'time-gap';
+          const stepName = `Wait for ${reason} (~${ms}ms)`;
+          const body = `        await page.wait_for_load_state("networkidle", timeout=${Math.max(5000, ms + 5000)})`;
+          const wrapped = `    # Implicit wait inferred from recording (${reason}, ${ms}ms)\n    with allure.step(${JSON.stringify(stepName)}):\n${body}\n`;
+          generatedEvents.push(wrapped);
+          return;
+        }
+
+        let eventCode = eventTemplate;
         // For scroll events, extract scrollY from scrollPosition
         let eventValue = event.inputValue || event.value || (event.element && event.element.value) || '';
         if (eventType === 'scroll' && !eventValue) {
@@ -214,7 +309,7 @@ class SimpleTemplateEngine implements TemplateEngine {
             eventValue = String((event.page as any).scrollY);
           }
         }
-        
+
         if (eventType === 'navigation') {
             navigationCount++;
             (event as any).isFirstNavigation = (navigationCount === 1);
@@ -227,11 +322,17 @@ class SimpleTemplateEngine implements TemplateEngine {
           (event as any).triggersNavigation = false;
         }
 
-        // Propagate stepScreenshots flag only for page-changing actions (navigation, clicks)
-        const screenshotEvents = new Set(['navigation', 'spa-navigation', 'click', 'dblclick', 'submit']);
+        // Propagate stepScreenshots flag for all visible actions (broader = more evidence)
+        const screenshotEvents = new Set([
+          'navigation', 'spa-navigation',
+          'click', 'dblclick', 'submit',
+          'fill', 'check', 'select', 'change',
+          'hover', 'file-upload', 'drag-drop',
+          'assertion'
+        ]);
         (event as any).stepScreenshots = stepScreenshots && screenshotEvents.has(eventType);
         (event as any).stepIndex = index + 1;
-        
+
         // Copy selector to element.cssSelector if it doesn't exist
         if (event.element && (event as any).selector && !event.element.cssSelector) {
           (event.element as any).cssSelector = (event as any).selector;
@@ -242,13 +343,13 @@ class SimpleTemplateEngine implements TemplateEngine {
         eventCode = eventCode.replace(/{{timestamp}}/g, event.timestamp);
         eventCode = eventCode.replace(/{{sessionId}}/g, event.sessionId);
         eventCode = eventCode.replace(/{{value}}/g, this.escapePythonString(eventValue));
-        
+
         // Replace page variables
         if (event.page) {
           eventCode = eventCode.replace(/{{page\.url}}/g, this.escapePythonString(event.page.url || ''));
           eventCode = eventCode.replace(/{{page\.title}}/g, this.escapePythonString(event.page.title || ''));
         }
-        
+
         // Replace element variables BEFORE conditionals
         if (event.element) {
           Object.keys(event.element).forEach(key => {
@@ -258,10 +359,10 @@ class SimpleTemplateEngine implements TemplateEngine {
             }
           });
         }
-        
+
         // Handle conditional statements
         eventCode = this.handleConditionals(eventCode, event);
-        
+
         // Replace element variables AFTER conditionals (in case they were in selected branches)
         if (event.element) {
           Object.keys(event.element).forEach(key => {
@@ -271,14 +372,16 @@ class SimpleTemplateEngine implements TemplateEngine {
             }
           });
         }
-        
+
         // Only add if the code is not empty (after conditional processing)
         if (eventCode.trim()) {
-            generatedEvents.push(eventCode);
+          // ===== v1.3: wrap each action in an Allure step for evidence reporting =====
+          const wrapped = this.wrapInAllureStep(eventCode, event, index + 1);
+          generatedEvents.push(wrapped);
         }
       });
 
-      result = result.replace(/{{#events}}[\s\S]*?{{\/events}}/g, generatedEvents.join('\n'));
+      result = result.replace(/[ \t]*{{#events}}[\s\S]*?{{\/events}}/g, generatedEvents.join('\n'));
     }
 
     // Replace simple variables

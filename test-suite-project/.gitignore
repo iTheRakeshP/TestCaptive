@@ -47,7 +47,11 @@ coverage/
 .pytest_cache/
 .cache/
 
-# Reports
+# Reports (entire folder is generated test output — never check in)
+reports/
 report.html
 assets/
 results.xml
+
+# Generated tests folder — every test file here is produced by the VS Code extension
+tests/

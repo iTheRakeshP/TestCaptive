@@ -1,5 +1,7 @@
 // Review panel webview provider for event review and test code generation
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as cp from 'child_process';
 import { TestDataManager } from '../test-data-manager';
 import { SessionData } from '../types';
 import { CodeGenerator } from '../code-generator';
@@ -9,6 +11,10 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
     private testDataManager: TestDataManager;
     private codeGenerator: CodeGenerator;
     private currentSessionId: string | null = null;
+    /** Indices of events the user disabled in the review panel; excluded from generation. */
+    private disabledStepIndices: Set<number> = new Set();
+    /** Output channel used to stream pytest output for the Run Test command. */
+    private testRunChannel: vscode.OutputChannel | undefined;
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
@@ -49,6 +55,14 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                     break;
                 case 'exportTestData':
                     await this.exportTestData(data.data);
+                    break;
+                case 'toggleStep':
+                    // Receive the full set of disabled indices from the webview each time
+                    this.disabledStepIndices = new Set<number>(Array.isArray(data.disabledIndices) ? data.disabledIndices : []);
+                    await this.generateCode('playwright');
+                    break;
+                case 'runTest':
+                    await this.runGeneratedTest(data.code);
                     break;
             }
         });
@@ -98,8 +112,19 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             session.framework = framework;
             this.testDataManager.updateSessionConfig(this.currentSessionId, { framework });
 
+            // Apply user-disabled steps before generation (the generator filters __tcDisabled)
+            if (Array.isArray(session.events)) {
+                session.events.forEach((evt: any, idx: number) => {
+                    if (this.disabledStepIndices.has(idx)) {
+                        evt.__tcDisabled = true;
+                    } else if (evt && evt.__tcDisabled) {
+                        delete evt.__tcDisabled;
+                    }
+                });
+            }
+
             const code = this.codeGenerator.generateTestCode(session);
-            
+
             if (this._view) {
                 this._view.webview.postMessage({
                     type: 'codeGenerated',
@@ -110,6 +135,83 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         } catch (error) {
             vscode.window.showErrorMessage(`Error generating ${framework} code: ${error}`);
         }
+    }
+
+    /**
+     * Run the generated test code against the bundled test-suite-project.
+     * Writes the code to test-suite-project/tests/session_<ts>/test_recorded.py,
+     * writes test_data.json beside it, then spawns pytest and streams output to an OutputChannel.
+     */
+    private async runGeneratedTest(code: string): Promise<void> {
+        if (!this.currentSessionId) {
+            vscode.window.showWarningMessage('TestCaptive: no session loaded.');
+            return;
+        }
+        if (!code || !code.trim()) {
+            vscode.window.showWarningMessage('TestCaptive: no generated code to run.');
+            return;
+        }
+
+        // Locate the test-suite-project at the workspace root (sibling of the extension).
+        const wsFolders = vscode.workspace.workspaceFolders;
+        if (!wsFolders || wsFolders.length === 0) {
+            vscode.window.showErrorMessage('TestCaptive: open the TestCaptive workspace to run tests.');
+            return;
+        }
+        const root = wsFolders[0].uri.fsPath;
+        const suiteDir = path.join(root, 'test-suite-project');
+        try {
+            await vscode.workspace.fs.stat(vscode.Uri.file(suiteDir));
+        } catch {
+            vscode.window.showErrorMessage(`TestCaptive: test-suite-project not found at ${suiteDir}`);
+            return;
+        }
+
+        const sessionFolder = path.join(suiteDir, 'tests', this.currentSessionId);
+        await vscode.workspace.fs.createDirectory(vscode.Uri.file(sessionFolder));
+        const testFile = path.join(sessionFolder, 'test_recorded.py');
+        const dataFile = path.join(sessionFolder, 'test_data.json');
+
+        const session = this.testDataManager.getSession(this.currentSessionId);
+        const testData = (session && (session as any).testData) || {};
+        await vscode.workspace.fs.writeFile(vscode.Uri.file(testFile), Buffer.from(code, 'utf8'));
+        await vscode.workspace.fs.writeFile(vscode.Uri.file(dataFile), Buffer.from(JSON.stringify(testData, null, 2), 'utf8'));
+
+        if (!this.testRunChannel) {
+            this.testRunChannel = vscode.window.createOutputChannel('TestCaptive: Test Run');
+        }
+        const channel = this.testRunChannel;
+        channel.show(true);
+        channel.appendLine(`▶ Running pytest ${testFile}`);
+        channel.appendLine(`  cwd: ${suiteDir}`);
+        channel.appendLine('');
+
+        const venvPython = process.platform === 'win32'
+            ? path.join(suiteDir, '.venv', 'Scripts', 'python.exe')
+            : path.join(suiteDir, '.venv', 'bin', 'python');
+        let pythonCmd = 'python';
+        try {
+            await vscode.workspace.fs.stat(vscode.Uri.file(venvPython));
+            pythonCmd = venvPython;
+        } catch { /* fall back to system python */ }
+
+        const child = cp.spawn(pythonCmd, ['-m', 'pytest', testFile, '-v'], {
+            cwd: suiteDir,
+            shell: false,
+        });
+        child.stdout.on('data', (d) => channel.append(d.toString()));
+        child.stderr.on('data', (d) => channel.append(d.toString()));
+        child.on('error', (err) => {
+            channel.appendLine(`\n❌ Failed to start pytest: ${err.message}`);
+            vscode.window.showErrorMessage(`TestCaptive: failed to start pytest (${err.message}). Run setup-env.bat in test-suite-project first.`);
+        });
+        child.on('close', (exitCode) => {
+            channel.appendLine(`\n✓ pytest exited with code ${exitCode}`);
+            channel.appendLine(`Generate Allure report:  cd test-suite-project && generate-report.bat`);
+            if (this._view) {
+                this._view.webview.postMessage({ type: 'testRunFinished', exitCode });
+            }
+        });
     }
 
     private async exportCode(framework: string, code: string): Promise<void> {
@@ -348,6 +450,15 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         .event-details { flex: 1; overflow: hidden; }
         .event-title { font-weight: 600; font-size: 12px; margin-bottom: 2px; }
         .event-subtitle { font-size: 11px; color: var(--vscode-descriptionForeground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* v1.3: confidence pill + disable checkbox */
+        .conf-pill { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 8px; margin-left: 6px; font-weight: 600; }
+        .conf-high { background: #1b5e2010; color: #2e7d32; border: 1px solid #2e7d3240; }
+        .conf-med  { background: #f9a82510; color: #f57c00; border: 1px solid #f57c0040; }
+        .conf-low  { background: #c6282810; color: #c62828; border: 1px solid #c6282840; }
+        .conf-evidence { background: #6a1b9a10; color: #6a1b9a; border: 1px solid #6a1b9a40; }
+        .step-toggle { margin-right: 6px; cursor: pointer; }
+        .event-item.disabled { opacity: 0.45; }
+        .event-item.disabled .event-title { text-decoration: line-through; }
         
         /* Data Table */
         .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -456,6 +567,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             <div class="panel-header">
                 <span>GENERATED TEST CODE</span>
                 <div style="display: flex; gap: 6px;">
+                    <button class="btn btn-sm" id="runTestBtn" title="Run pytest against the bundled test-suite-project">▶ Run</button>
                     <button class="btn btn-sm" id="refreshCodeBtn" title="Refresh Code">🔄 Refresh</button>
                     <button class="btn btn-sm" id="copyCodeBtn" title="Copy Code">📋 Copy</button>
                 </div>
@@ -475,6 +587,8 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         let currentEvents = [];
         let currentTestData = {};
         let currentSessionId = null;
+        // v1.3: indices of events disabled by user via checkbox
+        let disabledIndices = new Set();
 
         // --- File Handling ---
         function handleFileUpload(input) {
@@ -601,6 +715,12 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                 if (eventType === 'select') { icon = '📋'; color = '#17a2b8'; }
                 if (eventType === 'navigation') { icon = '🧭'; color = '#ffc107'; }
                 if (eventType === 'assertion') { icon = '✅'; color = '#9333ea'; }
+                // v1.3 evidence event types
+                if (eventType === 'network')          { icon = '🌐'; color = '#6a1b9a'; }
+                if (eventType === 'console')          { icon = '📝'; color = '#6a1b9a'; }
+                if (eventType === 'page-error')       { icon = '💥'; color = '#c62828'; }
+                if (eventType === 'wait-hint')        { icon = '⏳'; color = '#888'; }
+                if (eventType === 'storage-snapshot') { icon = '💾'; color = '#6a1b9a'; }
                 
                 // Smart Target Display
                 let target = 'Window';
@@ -645,10 +765,43 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                     details = \`Clicked: "\${event.element.text.trim().substring(0, 30)}"\`;
                 }
 
+                // v1.3 evidence event details + non-actionable hint
+                let isEvidence = false;
+                if (eventType === 'network' && event.network) {
+                    target = \`\${event.network.method} \${event.network.url}\`;
+                    details = (event.network.status ? 'Status: ' + event.network.status : '') + (event.network.durationMs ? '  •  ' + event.network.durationMs + 'ms' : '');
+                    isEvidence = true;
+                } else if (eventType === 'console' && event.console) {
+                    target = '[' + event.console.level.toUpperCase() + '] ' + event.console.text.substring(0, 60);
+                    isEvidence = true;
+                } else if (eventType === 'page-error' && event.pageError) {
+                    target = 'Page error';
+                    details = (event.pageError.message || '').substring(0, 80);
+                    isEvidence = true;
+                } else if (eventType === 'wait-hint' && event.waitHint) {
+                    target = 'Implicit wait (' + event.waitHint.reason + ')';
+                    details = event.waitHint.durationMs + 'ms';
+                } else if (eventType === 'storage-snapshot') {
+                    target = 'Storage snapshot at session start';
+                    isEvidence = true;
+                }
+
+                // v1.3: confidence pill (only meaningful for action events with an element)
+                let confPillHtml = '';
+                if (isEvidence) {
+                    confPillHtml = ' <span class="conf-pill conf-evidence" title="Evidence-only — not generated as code">EVIDENCE</span>';
+                } else if (event.element && typeof event.element.selectorConfidence === 'number') {
+                    const c = event.element.selectorConfidence;
+                    const tier = event.element.selectorTier || 'unknown';
+                    const cls = c >= 80 ? 'conf-high' : (c >= 50 ? 'conf-med' : 'conf-low');
+                    confPillHtml = ' <span class="conf-pill ' + cls + '" title="Selector tier: ' + tier + ' — confidence ' + c + '/100">' + c + '</span>';
+                }
+
                 div.innerHTML = \`
+                    <input type="checkbox" class="step-toggle" data-step-index="\${index}" \${disabledIndices.has(index) ? '' : 'checked'} title="Include this step in the generated test" />
                     <div class="event-icon" style="background-color: \${color}20; color: \${color}">\${icon}</div>
                     <div class="event-details">
-                        <div class="event-title">\${eventType.toUpperCase()}</div>
+                        <div class="event-title">\${eventType.toUpperCase()}\${confPillHtml}</div>
                         <div class="event-subtitle" style="font-weight: 500; color: var(--vscode-foreground);">\${target}</div>
                         \${details ? \`<div class="event-subtitle" style="margin-top: 2px; color: var(--vscode-textLink-foreground);">\${details}</div>\` : ''}
                     </div>
@@ -656,7 +809,20 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                         <div style="font-size: 10px; color: var(--vscode-descriptionForeground);">#\${index + 1}</div>
                     </div>
                 \`;
-                
+                if (disabledIndices.has(index)) div.classList.add('disabled');
+                const cb = div.querySelector('.step-toggle');
+                if (cb) {
+                    cb.addEventListener('change', (e) => {
+                        const target = e.target;
+                        const idx = parseInt(target.getAttribute('data-step-index'), 10);
+                        if (target.checked) disabledIndices.delete(idx);
+                        else disabledIndices.add(idx);
+                        if (target.checked) div.classList.remove('disabled');
+                        else div.classList.add('disabled');
+                        vscode.postMessage({ type: 'toggleStep', disabledIndices: Array.from(disabledIndices) });
+                    });
+                }
+
                 list.appendChild(div);
             });
         }
@@ -795,6 +961,12 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         document.getElementById('exportTestDataBtn').addEventListener('click', exportTestData);
         document.getElementById('refreshCodeBtn').addEventListener('click', refreshCode);
         document.getElementById('copyCodeBtn').addEventListener('click', copyCode);
+        const runBtn = document.getElementById('runTestBtn');
+        if (runBtn) runBtn.addEventListener('click', () => {
+            const code = document.getElementById('codeEditor').value || '';
+            if (!code.trim()) { return; }
+            vscode.postMessage({ type: 'runTest', code });
+        });
         
         // Framework tab buttons
         document.querySelectorAll('.tab-btn').forEach(btn => {

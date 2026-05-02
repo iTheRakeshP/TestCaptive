@@ -23,7 +23,11 @@ pytest "%~dp0" %*
 
 echo.
 echo ============================================
-echo   Tests complete! Check reports\ folder
-echo   Open reports\report.html in browser
+echo   Tests complete!
+echo     Allure raw results: reports\allure-results\
+echo     Smoke HTML report:  reports\report.html
+echo.
+echo   Generate the rich Allure report:
+echo     generate-report.bat
 echo ============================================
 pause

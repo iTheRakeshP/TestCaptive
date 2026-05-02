@@ -1,5 +1,7 @@
 import os
+import json
 import pytest
+import allure
 from playwright.async_api import async_playwright
 
 REPORTS_DIR = os.path.join(os.path.dirname(__file__), "reports")
@@ -12,25 +14,40 @@ _step_counter = 0
 
 async def capture_step(page, label: str):
     """Capture a full-page screenshot for visual step-by-step debugging.
-    
-    Call this from generated tests after navigation or click events.
-    Screenshots are saved to reports/screenshots/steps/ with sequential numbering.
+
+    Saves to reports/screenshots/steps/ AND attaches to the active Allure step
+    so the screenshot appears inline in the Allure report.
     """
     global _step_counter
     _step_counter += 1
     os.makedirs(STEP_SCREENSHOTS_DIR, exist_ok=True)
     filename = f"step_{_step_counter:03d}_{label}.png"
-    await page.screenshot(path=os.path.join(STEP_SCREENSHOTS_DIR, filename), full_page=True)
+    path = os.path.join(STEP_SCREENSHOTS_DIR, filename)
+    png_bytes = await page.screenshot(full_page=True)
+    with open(path, "wb") as f:
+        f.write(png_bytes)
+    try:
+        allure.attach(png_bytes, name=label, attachment_type=allure.attachment_type.PNG)
+    except Exception:
+        # Allure not running (e.g., user invoked pytest without --alluredir): swallow
+        pass
 
 
 @pytest.fixture
 async def page(request):
     """Create a new browser page for each test with screenshot-on-failure and tracing.
-    
+
     Modes:
       - Default: Launches a fresh Chromium browser.
       - CDP mode: Set CHROME_CDP_URL env var (e.g. http://localhost:9222) to connect
         to an already-running Chrome session (useful for SSO-authenticated VMs).
+
+    Evidence captured per test (attached to Allure on failure):
+      - Final screenshot
+      - Playwright trace (.zip, openable with `playwright show-trace`)
+      - Console log (warn + error)
+      - Network log (method, url, status, duration)
+      - Page errors (uncaught JS exceptions)
     """
     async with async_playwright() as p:
         cdp_url = os.environ.get("CHROME_CDP_URL")  # e.g. "http://localhost:9222"
@@ -53,6 +70,51 @@ async def page(request):
         await context.tracing.start(screenshots=True, snapshots=True, sources=True)
 
         pg = await context.new_page()
+
+        # ---------- Evidence collectors (v1.3) ----------
+        console_log: list[dict] = []
+        network_log: list[dict] = []
+        page_errors: list[dict] = []
+
+        def _on_console(msg):
+            try:
+                if msg.type in ("warning", "error"):
+                    console_log.append({"type": msg.type, "text": msg.text, "location": str(msg.location)})
+            except Exception:
+                pass
+
+        def _on_pageerror(err):
+            try:
+                page_errors.append({"message": str(err)})
+            except Exception:
+                pass
+
+        def _on_request_finished(req):
+            try:
+                resp = req.response_sync() if hasattr(req, "response_sync") else None
+                # Use async-safe path: just record what we can synchronously read
+                network_log.append({
+                    "method": req.method,
+                    "url": req.url,
+                    "resource_type": req.resource_type,
+                })
+            except Exception:
+                pass
+
+        def _on_response(resp):
+            try:
+                network_log.append({
+                    "method": resp.request.method,
+                    "url": resp.url,
+                    "status": resp.status,
+                    "ok": resp.ok,
+                })
+            except Exception:
+                pass
+
+        pg.on("console", _on_console)
+        pg.on("pageerror", _on_pageerror)
+        pg.on("response", _on_response)
 
         # PRE-navigation: capture current step state when Next/Submit buttons are clicked
         async def capture_before_nav(source):
@@ -101,13 +163,43 @@ async def page(request):
         # Always save screenshot (pass or fail) as visual proof
         os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
         screenshot_path = os.path.join(SCREENSHOTS_DIR, f"{test_name}.png")
-        await pg.screenshot(path=screenshot_path, full_page=True)
+        try:
+            png_bytes = await pg.screenshot(full_page=True)
+            with open(screenshot_path, "wb") as f:
+                f.write(png_bytes)
+            # Attach final screenshot to Allure
+            try:
+                allure.attach(png_bytes, name="final-screenshot", attachment_type=allure.attachment_type.PNG)
+            except Exception:
+                pass
+        except Exception:
+            png_bytes = None
+
+        # Attach console + network + page errors to Allure (always — useful for passing tests too)
+        try:
+            if console_log:
+                allure.attach(json.dumps(console_log, indent=2), name="console-log",
+                              attachment_type=allure.attachment_type.JSON)
+            if network_log:
+                allure.attach(json.dumps(network_log, indent=2), name="network-log",
+                              attachment_type=allure.attachment_type.JSON)
+            if page_errors:
+                allure.attach(json.dumps(page_errors, indent=2), name="page-errors",
+                              attachment_type=allure.attachment_type.JSON)
+        except Exception:
+            pass
 
         if failed:
             # Save trace only on failure (openable via: playwright show-trace trace.zip)
             os.makedirs(TRACES_DIR, exist_ok=True)
             trace_path = os.path.join(TRACES_DIR, f"{test_name}.zip")
             await context.tracing.stop(path=trace_path)
+            try:
+                with open(trace_path, "rb") as f:
+                    allure.attach(f.read(), name="playwright-trace.zip",
+                                  attachment_type=allure.attachment_type.ZIP)
+            except Exception:
+                pass
         else:
             await context.tracing.stop()
 

@@ -26,7 +26,15 @@ export type RecordedEventType =
   | 'file-upload'
   | 'drag-drop'
   | 'dialog'
-  | 'assertion';
+  | 'submit'
+  | 'new-tab'
+  | 'assertion'
+  // v1.3 evidence + flow types
+  | 'network'
+  | 'console'
+  | 'page-error'
+  | 'wait-hint'
+  | 'storage-snapshot';
 
 export interface ElementInfo {
   tag: string;

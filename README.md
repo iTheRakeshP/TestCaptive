@@ -1,6 +1,6 @@
 # TestCaptive - UI Behavior Recording & Test Generation
 
-![TestCaptive](https://img.shields.io/badge/TestCaptive-v1.2.0-blue) ![License](https://img.shields.io/badge/License-MIT-yellow)
+![TestCaptive](https://img.shields.io/badge/TestCaptive-v1.3.0-blue) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 **TestCaptive** captures user interactions in Chrome and generates Playwright (Python) test scripts via a VS Code extension. No server, no WebSocket bridge — fully offline.
 
@@ -9,7 +9,10 @@
 - **Smart Event Capture** — Records clicks, fills, selects, checkboxes, scrolls, and navigation with intelligent deduplication
 - **Action-Based Recording** — Coalesces raw DOM events into high-level actions (fill, check, select) like Playwright Codegen
 - **Assertion Capture** — Right-click context menu with 7 assertion types (text, visibility, state, URL, attribute, count)
-- **Smart Selector Priority** — Prefers `data-testid` → `aria-label` → `id` → `name` → `xpath` → CSS fallback
+- **Smart Selector Priority** — Prefers `data-testid` → `aria-label` → `id` → `name` → `xpath` → CSS fallback, with a 0–100 confidence score on every selector
+- **Evidence Capture (v1.3)** — Network calls, console warnings/errors, page errors, storage snapshots, and implicit-wait hints recorded alongside user actions
+- **Allure Reporting (v1.3)** — Every generated step is wrapped in `allure.step(...)` and console/network/page-errors/screenshots are auto-attached
+- **Interactive Review Panel (v1.3)** — Per-step enable/disable checkboxes, selector-confidence pills, and a ▶ Run Test button that executes the test directly from VS Code
 - **Playwright Code Generation** — Template-based engine with nesting-aware conditional processing
 - **Automatic Test Data Extraction** — Captures form values as parameterized test data (JSON)
 - **VS Code Integration** — Split-pane UI for session import, event review, and code export
@@ -20,11 +23,11 @@
 TestCaptive/
 ├── chrome-extension/           # Chrome Extension (Manifest V3)
 │   ├── src/
-│   │   ├── content.ts          # Event capture with smart coalescing
+│   │   ├── content.ts          # Event capture + evidence (network/console/errors/wait-hints)
 │   │   ├── background.ts       # Service worker, session management
 │   │   ├── popup.ts            # Extension popup UI
-│   │   ├── types.ts            # Shared type definitions
-│   │   └── utils.ts            # Utility functions
+│   │   ├── types.ts            # Shared type definitions (incl. SelectorTier + evidence types)
+│   │   └── utils.ts            # Utilities incl. generateSelectorWithMeta() (tier + confidence)
 │   ├── dist/                   # Built extension (load unpacked from here)
 │   ├── build.js                # Build script
 │   ├── manifest.json
@@ -33,24 +36,30 @@ TestCaptive/
 ├── vscode-extension/           # VS Code Extension
 │   ├── src/
 │   │   ├── extension.ts        # Extension entry point
-│   │   ├── code-generator.ts   # Template engine + code generation
+│   │   ├── code-generator.ts   # Template engine + Allure step wrapping + evidence filter
 │   │   ├── test-data-manager.ts # Session & test data management
 │   │   ├── types.ts            # Type definitions
 │   │   └── webview-ui/
-│   │       └── review-panel.ts # Main UI panel (split-pane layout)
+│   │       └── review-panel.ts # Main UI: confidence pills, step toggles, Run Test button
 │   ├── templates/
-│   │   └── playwright_template.py  # Playwright code template
-│   ├── out/                    # Compiled JS
-│   └── testcaptive-1.0.0.vsix # Installable package
+│   │   └── playwright_template.py  # Playwright + allure decorated template
+│   └── out/                    # Compiled JS
 │
 ├── test-suite-project/         # Pre-configured Playwright test runner
-│   └── playwright-suite/       # pytest + Playwright setup
+│   ├── conftest.py             # Allure attachments: console / network / errors / trace
+│   ├── pytest.ini              # Allure + pytest-html dual reporting
+│   ├── requirements.txt        # incl. allure-pytest>=2.13.5
+│   ├── run-tests.bat           # Run pytest
+│   ├── generate-report.bat     # NEW: build the Allure HTML report
+│   └── reports/
+│       ├── allure-results/     # Raw Allure data (per run)
+│       ├── allure-html/        # Generated Allure report (open index.html)
+│       └── report.html         # pytest-html legacy report
 │
 ├── architecture/               # PlantUML architecture diagrams
-├── TechSpecs/                  # Technical specification
-├── Test-Session/               # Sample recorded sessions
 ├── demo.html                   # Demo page for testing
 ├── build-extensions.bat        # Build both extensions
+├── CLEANUP_CANDIDATES.md       # Review-only list of files safe to remove (nothing auto-deleted)
 └── package.json                # Root project scripts
 ```
 
@@ -60,6 +69,7 @@ TestCaptive/
 - **VS Code** v1.74+
 - **Chrome** or Edge browser
 - **Python** 3.8+ (for running generated tests)
+- **Allure CLI** (optional, only required to render the HTML Allure report — install via `scoop install allure` or `npm i -g allure-commandline`)
 
 ## Installation
 
@@ -108,15 +118,23 @@ code --install-extension vscode-extension/testcaptive-1.0.0.vsix
 1. Open **TestCaptive** panel (record icon in Activity Bar)
 2. Drag & drop the session JSON into the import area
 3. Events display with color-coded icons; test code generates automatically
-4. **Copy** or **Export** the generated Playwright code
+4. **Review** each step — uncheck any to exclude it from the generated code; selector-confidence pills (green / orange / red) flag fragile selectors at a glance
+5. **▶ Run Test** to execute the test directly from VS Code (output streams to the *TestCaptive: Test Run* Output channel), or **Copy** / **Export** the generated Playwright code
 
 ### 3. Run Tests
 ```bash
-cd test-suite-project/playwright-suite
-pip install -r requirements.txt    # First time only
+cd test-suite-project
+pip install -r requirements.txt    # First time only (incl. allure-pytest)
 playwright install                  # First time only
-pytest test_generated.py
+run-tests.bat                       # or: pytest
 ```
+
+### 4. Generate Allure Report
+```bash
+cd test-suite-project
+generate-report.bat                 # builds reports/allure-html/index.html and opens it
+```
+Requires the Allure CLI on `PATH` (install with `scoop install allure` or `npm i -g allure-commandline`). The legacy pytest-html report is still produced at `reports/report.html`.
 
 ## Example Output
 

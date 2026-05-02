@@ -1,5 +1,46 @@
 # TestCaptive Changelog
 
+## [1.3.0] - Evidence Capture, Allure Reporting & Interactive Review
+
+### Chrome Extension — Evidence & Selector Confidence
+- **Evidence event capture** alongside user actions:
+  - `network` — fetch/XHR with method, URL, status, duration, and a 500-char body preview for JSON/text responses (with sane filters to avoid binary noise)
+  - `console` — `console.warn` and `console.error` only (info/debug skipped to reduce noise)
+  - `page-error` — uncaught `window.error` and `unhandledrejection`
+  - `storage-snapshot` — localStorage / sessionStorage / cookies snapshot at session start
+  - `wait-hint` — synthetic events injected when the gap before the next user action is ≥ 800ms (reason: `network-idle` if requests in flight, else `time-gap`)
+- **Selector confidence + tier on every captured element** — every `ElementInfo` now carries `selectorTier` (`testid` / `aria-label` / `id` / `name` / `role-text` / `class` / `xpath` / `nth-child`) and a 0–100 `selectorConfidence` score (with a 20-point penalty when an `nth-of-type` refinement was needed). Tiers are scored: `testid=100`, `aria-label=90`, `id=80`, `name=70`, `role-text=55`, `class=50`, `xpath=30`, `nth-child=10`.
+
+### VS Code Extension — Interactive Review Panel
+- **▶ Run Test button** — runs the currently displayed generated test directly via the test-suite project's venv (`.venv/Scripts/python.exe` on Windows, system `python` fallback). Output streams to a dedicated **TestCaptive: Test Run** Output channel.
+- **Per-step enable/disable** — every event row now has a checkbox. Disabled steps are tagged `__tcDisabled` and skipped by the generator; the regenerated code updates live in the editor pane.
+- **Selector confidence pill** — each action shows a colored badge (green ≥ 80, orange ≥ 50, red < 50) with the tier on hover.
+- **Evidence rendering** — new icons and detail rows for `network` 🌐, `console` 📝, `page-error` 💥, `wait-hint` ⏳, and `storage-snapshot` 💾. Evidence rows are tagged with a purple `EVIDENCE` pill so reviewers know they are not generated as Playwright code.
+- **Auto-wait promotion** — when `autoWait` is enabled and a `wait-hint` is ≥ 1500ms with reason `network-idle` or `time-gap`, the generator emits a real `await page.wait_for_load_state("networkidle", timeout=...)` wrapped in its own Allure step.
+
+### Code Generator — Allure Step Wrapping
+- Every generated user action is now wrapped in `async with allure.step("N. <action description>"):` for clean Allure reports.
+- Evidence-only event types (`network`, `console`, `page-error`, `storage-snapshot`) are filtered out of generated code — they are surfaced as Allure attachments at runtime instead.
+- Disabled steps (via the review panel checkbox) are skipped via a `__tcDisabled === true` filter.
+- Fixed leading-whitespace bug in the `{{#events}}` template replacement that previously double-indented the first generated step.
+- New `RecordedEventType` values added: `submit`, `new-tab`, `network`, `console`, `page-error`, `wait-hint`, `storage-snapshot`.
+
+### Test Suite — Allure Reporting
+- **`allure-pytest>=2.13.5`** added to `requirements.txt`.
+- **`pytest.ini`** updated: `addopts` now writes Allure raw results to `reports/allure-results` (`--alluredir=reports/allure-results --clean-alluredir`) alongside the existing pytest-html report.
+- **`conftest.py`** enhancements:
+  - `capture_step()` writes the screenshot file *and* attaches it to the active Allure step.
+  - The `page` fixture now collects `console_log`, `network_log`, and `page_errors` lists via Playwright's `page.on("console" / "pageerror" / "response")` events.
+  - On every test (pass or fail) the final screenshot, console log, network log, and page-errors log are attached to the Allure report. On failure the Playwright trace ZIP is also attached.
+- **`generate-report.bat`** new helper script — verifies the Allure CLI is on PATH (with install hints for scoop/npm/manual), runs `allure generate reports/allure-results -o reports/allure-html --clean`, and opens the resulting `index.html`.
+- **`vscode-extension/templates/playwright_template.py`** — adds `import allure` plus `@allure.feature("Recorded UI Flow")` and `@allure.severity(allure.severity_level.NORMAL)` decorators.
+
+### Files Added
+- `test-suite-project/generate-report.bat`
+- `CLEANUP_CANDIDATES.md` (review-only — nothing was deleted)
+
+---
+
 ## [1.2.0] - March 14, 2026 - Smart Event Capture & Code Generation
 
 ### Chrome Extension — Smart Capture

@@ -80,6 +80,11 @@ import {
   // SPA navigation state
   let lastUrl = window.location.href;
 
+  // Wait-hint state: timestamp of last user action (used to infer implicit waits)
+  let lastActionTimestamp = Date.now();
+  const WAIT_HINT_THRESHOLD_MS = 800;   // gaps shorter than this are not recorded
+  const WAIT_HINT_MAX_MS = 30000;       // gaps longer than this are clamped (likely just user idle)
+
   // Dialog interception state
   let originalAlert: typeof window.alert;
   let originalConfirm: typeof window.confirm;
@@ -210,6 +215,35 @@ import {
       return;
     }
 
+    // ===== Wait-hint inference (v1.3) =====
+    // Insert a 'wait-hint' event before user-driven actions whenever the gap since
+    // the previous action exceeds the threshold. Skipped for events that are themselves
+    // not user-driven (network/console/page-error/wait-hint/storage-snapshot).
+    const isUserAction = !['network', 'console', 'page-error', 'wait-hint', 'storage-snapshot'].includes(String(eventData.type));
+    if (isUserAction && lastActionTimestamp) {
+      const gap = now - lastActionTimestamp;
+      if (gap >= WAIT_HINT_THRESHOLD_MS) {
+        const waitMs = Math.min(gap, WAIT_HINT_MAX_MS);
+        const waitEvent: RecordedEvent = {
+          type: 'wait-hint',
+          timestamp: new Date().toISOString(),
+          element: eventData.element,
+          page: eventData.page,
+          sessionId: sessionId!,
+          waitHint: {
+            reason: pendingNetworkRequests > 0 ? 'network-idle' : 'time-gap',
+            durationMs: waitMs,
+            context: eventData.page?.url,
+          },
+        };
+        recordedEvents.push(waitEvent);
+        try {
+          chrome.runtime.sendMessage({ type: 'event-captured', data: waitEvent });
+        } catch (_) { /* ignore */ }
+      }
+    }
+    if (isUserAction) lastActionTimestamp = now;
+
     // Attach frame info for iframe-sourced events
     if (cachedFrameInfo) {
       eventData.frameInfo = cachedFrameInfo;
@@ -305,13 +339,19 @@ import {
       fillCommitTimer = null;
     }
     lastEmittedEvent = null;
+    lastActionTimestamp = Date.now();
     cachedFrameInfo = getFrameInfo();
 
     lastUrl = window.location.href;
 
+    // Capture storage snapshot first so SSO-authenticated flows can replay (v1.3)
+    captureStorageSnapshot();
+
     attachEventListeners();
     attachSPAListeners();
     attachDialogInterceptors();
+    attachConsoleAndErrorCapture();
+    attachNetworkCapture();
     highlightRecordableElements();
 
     console.log('🔴 Recording started:', sessionId);
@@ -324,6 +364,8 @@ import {
     removeEventListeners();
     removeSPAListeners();
     removeDialogInterceptors();
+    removeConsoleAndErrorCapture();
+    removeNetworkCapture();
     removeHighlights();
 
     console.log('⏹️ Recording stopped. Events captured:', eventCount);
@@ -1264,4 +1306,268 @@ import {
   }
 
   console.log('TestCaptive: Content script ready (enterprise mode)');
+
+  // ===== v1.3 Robustness: Storage Snapshot, Console/Error/Network capture =====
+
+  /**
+   * Capture localStorage / sessionStorage / cookies at recording start so generated
+   * tests can replay against SSO-authenticated apps without re-login.
+   * Cookie capture is intentionally limited to non-HttpOnly cookies (document.cookie).
+   * The background script can supplement with chrome.cookies API in the future.
+   */
+  function captureStorageSnapshot(): void {
+    if (!sessionId) return;
+    try {
+      const ls: Record<string, string> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k) ls[k] = localStorage.getItem(k) || '';
+      }
+      const ss: Record<string, string> = {};
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const k = sessionStorage.key(i);
+        if (k) ss[k] = sessionStorage.getItem(k) || '';
+      }
+      const cookies = document.cookie
+        .split(';')
+        .map(c => c.trim())
+        .filter(Boolean)
+        .map(pair => {
+          const idx = pair.indexOf('=');
+          return idx === -1
+            ? { name: pair, value: '' }
+            : { name: pair.substring(0, idx), value: pair.substring(idx + 1) };
+        });
+
+      const snapshotEvent: RecordedEvent = {
+        type: 'storage-snapshot',
+        timestamp: new Date().toISOString(),
+        element: { tag: 'window', id: '', className: '', text: '', value: '', type: '', name: '', placeholder: '', testid: '', ariaLabel: '', role: '', xpath: '' },
+        page: { url: window.location.href, title: document.title },
+        sessionId: sessionId,
+        storageSnapshot: {
+          url: window.location.href,
+          origin: window.location.origin,
+          localStorage: ls,
+          sessionStorage: ss,
+          cookies,
+        },
+      };
+      recordedEvents.push(snapshotEvent);
+      try { chrome.runtime.sendMessage({ type: 'event-captured', data: snapshotEvent }); } catch (_) { /* ignore */ }
+    } catch (e) {
+      console.warn('TestCaptive: Storage snapshot failed:', e);
+    }
+  }
+
+  // ----- Console + page-error capture -----
+  const originalConsole: Partial<Record<keyof Console, (...args: any[]) => void>> = {};
+  let pageErrorHandler: ((e: ErrorEvent) => void) | null = null;
+  let unhandledRejectionHandler: ((e: PromiseRejectionEvent) => void) | null = null;
+
+  function attachConsoleAndErrorCapture(): void {
+    const levels: Array<'log' | 'info' | 'warn' | 'error' | 'debug'> = ['warn', 'error']; // log/info/debug skipped to reduce noise
+    levels.forEach(level => {
+      const orig = (console as any)[level]?.bind(console);
+      if (!orig) return;
+      originalConsole[level] = orig;
+      (console as any)[level] = (...args: any[]) => {
+        try {
+          if (isRecording && sessionId) {
+            const text = args.map(a => safeStringify(a)).join(' ').substring(0, 2000);
+            const evt: RecordedEvent = {
+              type: 'console',
+              timestamp: new Date().toISOString(),
+              element: { tag: 'window', id: '', className: '', text: '', value: '', type: '', name: '', placeholder: '', testid: '', ariaLabel: '', role: '', xpath: '' },
+              page: { url: window.location.href, title: document.title },
+              sessionId,
+              console: { level, text, url: window.location.href },
+            };
+            recordedEvents.push(evt);
+            try { chrome.runtime.sendMessage({ type: 'event-captured', data: evt }); } catch (_) { /* ignore */ }
+          }
+        } catch (_) { /* never throw from console interceptor */ }
+        orig(...args);
+      };
+    });
+
+    pageErrorHandler = (e: ErrorEvent) => {
+      if (!isRecording || !sessionId) return;
+      const evt: RecordedEvent = {
+        type: 'page-error',
+        timestamp: new Date().toISOString(),
+        element: { tag: 'window', id: '', className: '', text: '', value: '', type: '', name: '', placeholder: '', testid: '', ariaLabel: '', role: '', xpath: '' },
+        page: { url: window.location.href, title: document.title },
+        sessionId,
+        pageError: {
+          message: String(e.message || '').substring(0, 1000),
+          stack: e.error?.stack?.substring(0, 2000),
+          url: e.filename,
+          lineno: e.lineno,
+          colno: e.colno,
+        },
+      };
+      recordedEvents.push(evt);
+      try { chrome.runtime.sendMessage({ type: 'event-captured', data: evt }); } catch (_) { /* ignore */ }
+    };
+    window.addEventListener('error', pageErrorHandler);
+
+    unhandledRejectionHandler = (e: PromiseRejectionEvent) => {
+      if (!isRecording || !sessionId) return;
+      const reason = e.reason;
+      const evt: RecordedEvent = {
+        type: 'page-error',
+        timestamp: new Date().toISOString(),
+        element: { tag: 'window', id: '', className: '', text: '', value: '', type: '', name: '', placeholder: '', testid: '', ariaLabel: '', role: '', xpath: '' },
+        page: { url: window.location.href, title: document.title },
+        sessionId,
+        pageError: {
+          message: 'Unhandled promise rejection: ' + safeStringify(reason).substring(0, 1000),
+          stack: reason?.stack?.substring(0, 2000),
+        },
+      };
+      recordedEvents.push(evt);
+      try { chrome.runtime.sendMessage({ type: 'event-captured', data: evt }); } catch (_) { /* ignore */ }
+    };
+    window.addEventListener('unhandledrejection', unhandledRejectionHandler);
+  }
+
+  function removeConsoleAndErrorCapture(): void {
+    Object.keys(originalConsole).forEach(level => {
+      const orig = (originalConsole as any)[level];
+      if (orig) (console as any)[level] = orig;
+    });
+    if (pageErrorHandler) window.removeEventListener('error', pageErrorHandler);
+    if (unhandledRejectionHandler) window.removeEventListener('unhandledrejection', unhandledRejectionHandler);
+    pageErrorHandler = null;
+    unhandledRejectionHandler = null;
+  }
+
+  function safeStringify(value: any): string {
+    if (value === null || value === undefined) return String(value);
+    if (typeof value === 'string') return value;
+    try { return JSON.stringify(value); } catch (_) { return String(value); }
+  }
+
+  // ----- Network capture (fetch + XHR) -----
+  let originalFetch: typeof window.fetch | null = null;
+  let originalXHROpen: typeof XMLHttpRequest.prototype.open | null = null;
+  let originalXHRSend: typeof XMLHttpRequest.prototype.send | null = null;
+
+  // Filter: skip TestCaptive's own messages, chrome-extension URLs, data:/blob:
+  function shouldRecordNetwork(url: string): boolean {
+    if (!url) return false;
+    if (url.startsWith('chrome-extension://')) return false;
+    if (url.startsWith('data:') || url.startsWith('blob:')) return false;
+    return true;
+  }
+
+  function emitNetworkEvent(data: { method: string; url: string; status?: number; durationMs?: number; ok?: boolean; contentType?: string; bodyPreview?: string; initiator: 'fetch' | 'xhr' }): void {
+    if (!isRecording || !sessionId) return;
+    if (!shouldRecordNetwork(data.url)) return;
+    pendingNetworkRequests = Math.max(0, pendingNetworkRequests - 1);
+    const evt: RecordedEvent = {
+      type: 'network',
+      timestamp: new Date().toISOString(),
+      element: { tag: 'window', id: '', className: '', text: '', value: '', type: '', name: '', placeholder: '', testid: '', ariaLabel: '', role: '', xpath: '' },
+      page: { url: window.location.href, title: document.title },
+      sessionId,
+      network: {
+        method: data.method,
+        url: data.url,
+        status: data.status,
+        durationMs: data.durationMs,
+        ok: data.ok,
+        responseContentType: data.contentType,
+        responseBodyPreview: data.bodyPreview,
+        initiator: data.initiator,
+      },
+    };
+    recordedEvents.push(evt);
+    try { chrome.runtime.sendMessage({ type: 'event-captured', data: evt }); } catch (_) { /* ignore */ }
+  }
+
+  function attachNetworkCapture(): void {
+    // ----- fetch -----
+    originalFetch = window.fetch.bind(window);
+    window.fetch = async (...args: Parameters<typeof window.fetch>) => {
+      const start = Date.now();
+      const req = args[0];
+      const init = args[1] || {};
+      const url = typeof req === 'string' ? req : (req instanceof URL ? req.toString() : (req as Request).url);
+      const method = (init.method || (typeof req === 'object' && (req as Request).method) || 'GET').toUpperCase();
+      pendingNetworkRequests++;
+      try {
+        const response = await originalFetch!(...args);
+        try {
+          const ct = response.headers.get('content-type') || '';
+          let preview: string | undefined;
+          if (ct.includes('application/json') || ct.startsWith('text/')) {
+            try {
+              const cloned = response.clone();
+              const text = await cloned.text();
+              preview = text.substring(0, 500);
+            } catch (_) { /* ignore body read errors */ }
+          }
+          emitNetworkEvent({
+            method,
+            url,
+            status: response.status,
+            durationMs: Date.now() - start,
+            ok: response.ok,
+            contentType: ct,
+            bodyPreview: preview,
+            initiator: 'fetch',
+          });
+        } catch (_) { pendingNetworkRequests = Math.max(0, pendingNetworkRequests - 1); }
+        return response;
+      } catch (err) {
+        emitNetworkEvent({ method, url, durationMs: Date.now() - start, ok: false, initiator: 'fetch' });
+        throw err;
+      }
+    };
+
+    // ----- XHR -----
+    originalXHROpen = XMLHttpRequest.prototype.open;
+    originalXHRSend = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function (method: string, url: string | URL, ...rest: any[]) {
+      (this as any).__tc_method = method;
+      (this as any).__tc_url = typeof url === 'string' ? url : url.toString();
+      return (originalXHROpen as any).call(this, method, url, ...rest);
+    };
+    XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
+      const start = Date.now();
+      pendingNetworkRequests++;
+      this.addEventListener('loadend', () => {
+        try {
+          const ct = this.getResponseHeader('content-type') || '';
+          let preview: string | undefined;
+          if ((ct.includes('application/json') || ct.startsWith('text/')) && typeof this.responseText === 'string') {
+            preview = this.responseText.substring(0, 500);
+          }
+          emitNetworkEvent({
+            method: (this as any).__tc_method || 'GET',
+            url: (this as any).__tc_url || '',
+            status: this.status,
+            durationMs: Date.now() - start,
+            ok: this.status >= 200 && this.status < 400,
+            contentType: ct,
+            bodyPreview: preview,
+            initiator: 'xhr',
+          });
+        } catch (_) { pendingNetworkRequests = Math.max(0, pendingNetworkRequests - 1); }
+      });
+      return (originalXHRSend as any).call(this, body);
+    };
+  }
+
+  function removeNetworkCapture(): void {
+    if (originalFetch) window.fetch = originalFetch;
+    if (originalXHROpen) XMLHttpRequest.prototype.open = originalXHROpen;
+    if (originalXHRSend) XMLHttpRequest.prototype.send = originalXHRSend;
+    originalFetch = null;
+    originalXHROpen = null;
+    originalXHRSend = null;
+    pendingNetworkRequests = 0;
+  }
 })();
