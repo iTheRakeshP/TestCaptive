@@ -63,13 +63,13 @@ class SimpleTemplateEngine implements TemplateEngine {
   /**
    * Wrap an already-rendered event chunk in `with allure.step("..."):`.
    * The chunk's existing 4-space indent is preserved by indenting all body lines by 4 more spaces.
-   * Comment lines at the start of the chunk are kept above the `async with` so they remain in source.
+   * Comment lines at the start of the chunk are kept above the `with` block so they remain in source.
    */
   private wrapInAllureStep(eventCode: string, event: TestEvent, stepIndex: number): string {
     const stepName = this.buildStepName(event, stepIndex);
     // Strip leading/trailing blank lines but preserve internal structure
     const lines = eventCode.replace(/^\r?\n+/, '').replace(/\r?\n\s*$/, '').split('\n');
-    // Indent every line by 4 extra spaces (so it sits inside the `async with` block)
+    // Indent every line by 4 extra spaces (so it sits inside the `with` block)
     const body = lines.map(l => l.length === 0 ? '' : '    ' + l).join('\n');
     return `    with allure.step(${JSON.stringify(stepName)}):\n${body}\n`;
   }
@@ -343,6 +343,7 @@ class SimpleTemplateEngine implements TemplateEngine {
         eventCode = eventCode.replace(/{{timestamp}}/g, event.timestamp);
         eventCode = eventCode.replace(/{{sessionId}}/g, event.sessionId);
         eventCode = eventCode.replace(/{{value}}/g, this.escapePythonString(eventValue));
+        eventCode = eventCode.replace(/{{stepIndex}}/g, String(index + 1));
 
         // Replace page variables
         if (event.page) {
@@ -425,8 +426,17 @@ class SimpleTemplateEngine implements TemplateEngine {
     result = this.processEventTypeChain(result, eventType);
 
     // Resolve ALL element property conditional chains (selector chains, field name chains, text checks)
-    // Uses nesting-aware depth tracking — handles any number of branches correctly
-    result = this.processElementSelectorChain(result, event);
+    // Uses nesting-aware depth tracking — handles any number of branches correctly.
+    // Loop until stable so that nested element blocks exposed by an outer resolution
+    // (e.g. {{#if element.value}} inside the {{else if element.name}} branch) are fully
+    // resolved BEFORE the cleanup at the end of this pass removes their {{/if}} / {{else}} tags.
+    {
+      let prev: string;
+      do {
+        prev = result;
+        result = this.processElementSelectorChain(result, event);
+      } while (result !== prev);
+    }
 
     // Handle {{#if value}} (Check if value exists/is not empty)
     const valueIfMatches = result.matchAll(/{{#if value}}([\s\S]*?){{else}}([\s\S]*?){{\/if}}/g);

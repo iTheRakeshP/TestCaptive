@@ -78,10 +78,10 @@ async def test_recorded_flow(page):
     await page.locator('#{{element.id}}').fill(test_value)
     {{else if element.name}}
     await page.locator('[name="{{element.name}}"]').fill(test_value)
-    {{else if element.placeholder}}
-    await page.get_by_placeholder("{{element.placeholder}}").fill(test_value)
     {{else if element.xpath}}
     await page.locator('xpath={{element.xpath}}').fill(test_value)
+    {{else if element.placeholder}}
+    await page.get_by_placeholder("{{element.placeholder}}").fill(test_value)
     {{else}}
     await page.locator('{{element.cssSelector}}').fill(test_value)
     {{/if}}
