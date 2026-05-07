@@ -338,6 +338,23 @@ class SimpleTemplateEngine implements TemplateEngine {
           (event.element as any).cssSelector = (event as any).selector;
         }
 
+        // Pre-compute nameLocator for check events so the template never needs nested
+        // {{#if element.value}} inside {{#if element.name}} — which confuses the element
+        // selector chain processor when both conditions are present (radio buttons).
+        // CSS attribute values sit inside single-quoted Python strings so only backslashes
+        // and single quotes need escaping; double quotes must NOT be escaped here.
+        if (eventType === 'check' && event.element) {
+          const el = event.element as any;
+          if (el.name) {
+            const escapeCss = (v: string) => String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const escapedName = escapeCss(el.name);
+            const escapedVal  = el.value ? escapeCss(String(el.value)) : '';
+            el.nameLocator = escapedVal
+              ? `[name="${escapedName}"][value="${escapedVal}"]`
+              : `[name="${escapedName}"]`;
+          }
+        }
+
         // Replace event-specific variables
         eventCode = eventCode.replace(/{{event}}/g, eventType);
         eventCode = eventCode.replace(/{{timestamp}}/g, event.timestamp);

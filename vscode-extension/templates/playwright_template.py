@@ -144,18 +144,10 @@ async def test_recorded_flow(page):
     await page.locator('#{{element.id}}').uncheck()
     {{/if}}
     {{else if element.name}}
-    {{#if element.value}}
     {{#if value}}
-    await page.locator('[name="{{element.name}}"][value="{{element.value}}"]').check()
+    await page.locator('{{element.nameLocator}}').check()
     {{else}}
-    await page.locator('[name="{{element.name}}"][value="{{element.value}}"]').uncheck()
-    {{/if}}
-    {{else}}
-    {{#if value}}
-    await page.locator('[name="{{element.name}}"]').check()
-    {{else}}
-    await page.locator('[name="{{element.name}}"]').uncheck()
-    {{/if}}
+    await page.locator('{{element.nameLocator}}').uncheck()
     {{/if}}
     {{else if element.xpath}}
     {{#if value}}
