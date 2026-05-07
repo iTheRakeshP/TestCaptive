@@ -1,7 +1,6 @@
 // Review panel webview provider for event review and test code generation
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as cp from 'child_process';
 import { TestDataManager } from '../test-data-manager';
 import { SessionData } from '../types';
 import { CodeGenerator } from '../code-generator';
@@ -13,8 +12,6 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
     private currentSessionId: string | null = null;
     /** Indices of events the user disabled in the review panel; excluded from generation. */
     private disabledStepIndices: Set<number> = new Set();
-    /** Output channel used to stream pytest output for the Run Test command. */
-    private testRunChannel: vscode.OutputChannel | undefined;
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
@@ -61,8 +58,8 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
                     this.disabledStepIndices = new Set<number>(Array.isArray(data.disabledIndices) ? data.disabledIndices : []);
                     await this.generateCode('playwright');
                     break;
-                case 'runTest':
-                    await this.runGeneratedTest(data.code);
+                case 'saveCode':
+                    await this.exportCode(data.framework, data.code);
                     break;
             }
         });
@@ -135,83 +132,6 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         } catch (error) {
             vscode.window.showErrorMessage(`Error generating ${framework} code: ${error}`);
         }
-    }
-
-    /**
-     * Run the generated test code against the bundled test-suite-project.
-     * Writes the code to test-suite-project/tests/session_<ts>/test_recorded.py,
-     * writes test_data.json beside it, then spawns pytest and streams output to an OutputChannel.
-     */
-    private async runGeneratedTest(code: string): Promise<void> {
-        if (!this.currentSessionId) {
-            vscode.window.showWarningMessage('TestCaptive: no session loaded.');
-            return;
-        }
-        if (!code || !code.trim()) {
-            vscode.window.showWarningMessage('TestCaptive: no generated code to run.');
-            return;
-        }
-
-        // Locate the test-suite-project at the workspace root (sibling of the extension).
-        const wsFolders = vscode.workspace.workspaceFolders;
-        if (!wsFolders || wsFolders.length === 0) {
-            vscode.window.showErrorMessage('TestCaptive: open the TestCaptive workspace to run tests.');
-            return;
-        }
-        const root = wsFolders[0].uri.fsPath;
-        const suiteDir = path.join(root, 'test-suite-project');
-        try {
-            await vscode.workspace.fs.stat(vscode.Uri.file(suiteDir));
-        } catch {
-            vscode.window.showErrorMessage(`TestCaptive: test-suite-project not found at ${suiteDir}`);
-            return;
-        }
-
-        const sessionFolder = path.join(suiteDir, 'tests', this.currentSessionId);
-        await vscode.workspace.fs.createDirectory(vscode.Uri.file(sessionFolder));
-        const testFile = path.join(sessionFolder, 'test_recorded.py');
-        const dataFile = path.join(sessionFolder, 'test_data.json');
-
-        const session = this.testDataManager.getSession(this.currentSessionId);
-        const testData = (session && (session as any).testData) || {};
-        await vscode.workspace.fs.writeFile(vscode.Uri.file(testFile), Buffer.from(code, 'utf8'));
-        await vscode.workspace.fs.writeFile(vscode.Uri.file(dataFile), Buffer.from(JSON.stringify(testData, null, 2), 'utf8'));
-
-        if (!this.testRunChannel) {
-            this.testRunChannel = vscode.window.createOutputChannel('TestCaptive: Test Run');
-        }
-        const channel = this.testRunChannel;
-        channel.show(true);
-        channel.appendLine(`▶ Running pytest ${testFile}`);
-        channel.appendLine(`  cwd: ${suiteDir}`);
-        channel.appendLine('');
-
-        const venvPython = process.platform === 'win32'
-            ? path.join(suiteDir, '.venv', 'Scripts', 'python.exe')
-            : path.join(suiteDir, '.venv', 'bin', 'python');
-        let pythonCmd = 'python';
-        try {
-            await vscode.workspace.fs.stat(vscode.Uri.file(venvPython));
-            pythonCmd = venvPython;
-        } catch { /* fall back to system python */ }
-
-        const child = cp.spawn(pythonCmd, ['-m', 'pytest', testFile, '-v'], {
-            cwd: suiteDir,
-            shell: false,
-        });
-        child.stdout.on('data', (d) => channel.append(d.toString()));
-        child.stderr.on('data', (d) => channel.append(d.toString()));
-        child.on('error', (err) => {
-            channel.appendLine(`\n❌ Failed to start pytest: ${err.message}`);
-            vscode.window.showErrorMessage(`TestCaptive: failed to start pytest (${err.message}). Run setup-env.bat in test-suite-project first.`);
-        });
-        child.on('close', (exitCode) => {
-            channel.appendLine(`\n✓ pytest exited with code ${exitCode}`);
-            channel.appendLine(`Generate Allure report:  cd test-suite-project && generate-report.bat`);
-            if (this._view) {
-                this._view.webview.postMessage({ type: 'testRunFinished', exitCode });
-            }
-        });
     }
 
     private async exportCode(framework: string, code: string): Promise<void> {
@@ -567,7 +487,7 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
             <div class="panel-header">
                 <span>GENERATED TEST CODE</span>
                 <div style="display: flex; gap: 6px;">
-                    <button class="btn btn-sm" id="runTestBtn" title="Run pytest against the bundled test-suite-project">▶ Run</button>
+                    <button class="btn btn-sm" id="saveCodeBtn" title="Save generated test as .py file">💾 Save As</button>
                     <button class="btn btn-sm" id="refreshCodeBtn" title="Refresh Code">🔄 Refresh</button>
                     <button class="btn btn-sm" id="copyCodeBtn" title="Copy Code">📋 Copy</button>
                 </div>
@@ -961,11 +881,10 @@ export class ReviewWebviewProvider implements vscode.WebviewViewProvider {
         document.getElementById('exportTestDataBtn').addEventListener('click', exportTestData);
         document.getElementById('refreshCodeBtn').addEventListener('click', refreshCode);
         document.getElementById('copyCodeBtn').addEventListener('click', copyCode);
-        const runBtn = document.getElementById('runTestBtn');
-        if (runBtn) runBtn.addEventListener('click', () => {
+        document.getElementById('saveCodeBtn').addEventListener('click', () => {
             const code = document.getElementById('codeEditor').value || '';
             if (!code.trim()) { return; }
-            vscode.postMessage({ type: 'runTest', code });
+            vscode.postMessage({ type: 'saveCode', framework: currentFramework, code });
         });
         
         // Framework tab buttons
